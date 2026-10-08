@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+const bytes = readFileSync(new URL('../web/cores/dolphin/dolphin-core-upstream.wasm', import.meta.url));
+assert.equal(WebAssembly.validate(bytes), true, 'Dolphin core must be valid WASM');
+const build = JSON.parse(readFileSync(new URL('../web/cores/dolphin/dolphin-core-upstream.build.json', import.meta.url)));
+assert.equal(`sha256:${createHash('sha256').update(bytes).digest('hex')}`, build.coreId, 'WASM must match recorded build identity');
+const module = await WebAssembly.compile(bytes);
+const exports = WebAssembly.Module.exports(module).map(e => e.name);
+assert(WebAssembly.Module.imports(module).some(e => e.kind === 'memory'), 'Threaded core must import shared memory');
+assert(exports.length > 20, 'Core must contain emulator exports');
+console.log(`Validated Dolphin core: ${bytes.length} bytes, ${exports.length} exports, ${build.coreId}`);

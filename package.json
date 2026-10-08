@@ -1,0 +1,17 @@
+{
+  "name": "dolphin_web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "cd web && node tools/serve.mjs",
+    "play": "cd web && node tools/serve.mjs --open",
+    "smoke": "node tests/artifacts.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "check": "npm run smoke && npm test"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.13.0"
+  }
+}
