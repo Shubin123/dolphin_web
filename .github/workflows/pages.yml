@@ -22,7 +22,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: npm run smoke && npm test
+      - run: npm ci
+      - name: WASM smoke and library regression tests
+        run: npm run check
+      - name: Browser library and emulator core end-to-end tests
+        run: npm run test:e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

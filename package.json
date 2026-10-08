@@ -1,6 +1,6 @@
 {
   "name": "dolphin_web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,11 @@
     "smoke": "node tests/artifacts.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.mjs",
-    "check": "npm run smoke && npm test"
+    "check": "npm run smoke && npm test",
+    "test:e2e": "node tests/browser.mjs && node tests/core-browser.mjs",
+    "test:regression": "npm test",
+    "test:core": "node tests/core-browser.mjs",
+    "test:live": "node tests/live-archive.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "^25.13.0"

@@ -16,3 +16,14 @@ body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index
 .topbar { background:#1a1a2e; border-color:#0f3460; } .crt-footer { background:#16213e; } .lcd-strip { background:#111b30; }
 .library-toolbar select { width:auto; } .transport button,.transport select { background:#22365b; border-color:#0f3460; }
 .screen-osd > span:nth-child(n+5) { display:none; }
+.library-section a { color:#89b4fa; }
+.library-table-scroll { overflow-x:auto; }
+.library-table td:last-child { min-width:200px; }
+.library-download-link { display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #0f3460; border-radius:6px; text-decoration:none; background:#22365b; }
+.library-download, .library-ready { padding:12px; border:1px solid #0f3460; border-radius:6px; margin:12px 0; background:#111b30; }
+.library-download progress { display:block; width:100%; height:18px; margin:10px 0; accent-color:#89b4fa; }
+.library-ready h3 { margin:0 0 8px; font-size:.95rem; color:#89b4fa; }
+.library-ready ul { padding:0; margin:0; list-style:none; }
+.library-ready-game { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid #0f3460; }
+.library-ready-game div { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
+@media(max-width:600px) { .library-ready-game { flex-direction:column; align-items:flex-start; } }
