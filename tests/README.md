@@ -27,3 +27,5 @@ Set `CHROME_PATH` for a Chrome executable outside the default macOS location. Th
 - Shipped core SHA-256: `d7395b3a94080f5b7d08a0522f59096007419d117b7b0eb868246429adee6f5c`.
 
 These checks establish the library flow and actual guest CPU execution. They do not qualify commercial-game graphics, Wii Remote input, or sustained gameplay performance. No full multi-gigabyte commercial image is downloaded by the test suite.
+
+Input E2E checks cover keyboard press/release, search-field typing isolation, persisted remapping, blur cleanup, mouse analog movement and centering, simulated Bluetooth controller buttons/axes, device detection, disabling and disconnection. Actual Bluetooth pairing and physical hardware are not automated.

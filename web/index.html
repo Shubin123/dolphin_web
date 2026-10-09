@@ -277,7 +277,25 @@
                             </div>
                             </form>
 
-                            <section class="debug-panel" id="debugPanel" aria-label="Diagnostics" hidden>
+                            <section class="panel-block">
+                            <div class="section-heading">
+                            <h2>Input</h2>
+                            <span id="inputSource">Keyboard</span>
+                            </div>
+                            <div class="control-grid" id="controlGrid"></div>
+                            <details class="input-settings"><summary>Keyboard, mouse &amp; Bluetooth controller</summary>
+                            <p>GameCube controller input (port 1). Keyboard: WASD main stick, IJKL C-stick, arrows D-pad, X/Z/V/B face buttons, Enter Start, Q/E triggers, C Z.</p>
+                            <div id="keyboardBindings" class="control-grid"></div>
+                            <button type="button" id="resetBindings">Reset keyboard bindings</button>
+                            <label>Mouse stick <select id="mouseMode"><option value="off">Disabled</option><option value="stick">Main stick</option><option value="cstick">C-stick</option></select></label>
+                            <p>Hold and drag on the game screen: position controls the selected stick. Left / right / middle buttons = A / B / Z. Release to center.</p>
+                            <label>Controller <select id="controllerSelect"><option value="auto">Automatic</option><option value="off">Disabled</option></select></label>
+                            <label>Stick deadzone <input id="controllerDeadzone" type="range" min="0" max="0.5" step="0.01" value="0.18"></label>
+                            <p id="controllerStatus" role="status">Pair in device Bluetooth settings, then press a controller button.</p>
+                            <p>USB and Bluetooth standard controllers: face buttons A/B/X/Y, left/right sticks, D-pad, Start, shoulders L/R, triggers analog L/R, Select Z. Controller support depends on your browser and device. Wii Remote motion input is not available.</p>
+                            </details>
+                            </section>
+<section class="debug-panel" id="debugPanel" aria-label="Diagnostics" hidden>
                             <section class="panel-block">
                             <div class="section-heading">
                             <h2>Boot</h2>
@@ -378,13 +396,7 @@
                             </div>
                             </section>
 
-                            <section class="panel-block">
-                            <div class="section-heading">
-                            <h2>Input</h2>
-                            <span id="inputSource">Keyboard</span>
-                            </div>
-                            <div class="control-grid" id="controlGrid"></div>
-                            </section>
+
 
                             <section class="panel-block">
                             <div class="section-heading">

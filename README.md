@@ -63,3 +63,7 @@ The browser test serves a Pages-style subpath without isolation headers. It chec
 [Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.1).
 
 The Pages workflow runs `npm ci`, the WASM smoke and library regression tests, and both browser E2E suites before publishing. Archive tests use generated disc fixtures; the optional live test cancels the stream after reading its header. Test programs and generators are committed under `tests/`; game images are not.
+
+### Input controls
+
+Open **Keyboard, mouse & Bluetooth controller** in the side panel. Click a keyboard binding and press a new key; mappings persist locally and can be reset. Enable the main stick or C-stick mouse mode and hold/drag on the game screen; left/right/middle mouse buttons send A/B/Z and releasing centers the stick. Pair Bluetooth controllers in your operating system, then press a button while the page is open. USB controllers also work through the Gamepad API. Choose a detected controller or disable controller input, and adjust the stick deadzone. These controls target GameCube port 1; Wii Remote motion is not implemented.

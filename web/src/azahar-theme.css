@@ -27,3 +27,9 @@ body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index
 .library-ready-game { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid #0f3460; }
 .library-ready-game div { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
 @media(max-width:600px) { .library-ready-game { flex-direction:column; align-items:flex-start; } }
+
+.input-settings { margin-top: 1rem; }
+.input-settings summary { cursor: pointer; }
+.input-settings label { display: grid; gap: .4rem; margin: .8rem 0; }
+.input-settings p { font-size: .85rem; line-height: 1.5; }
+#keyboardBindings button { font-size: .75rem; padding: .45rem; }

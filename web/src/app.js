@@ -6,6 +6,7 @@ import { startMainThreadProfiler } from "./main-profiler.js";
 import { createCausalTelemetry, deepMerge } from "./causal-telemetry.js";
 import {
   CONTROL_LABELS,
+  DEFAULT_KEY_BINDINGS,
   formatControlLabel,
   gamepadInputsEqual,
   inputStateFromPressed,
@@ -128,6 +129,16 @@ const DEBUG_PREF_KEY = "wasm-dolphin.debug-open";
 const OSD_PREF_KEY = "wasm-dolphin.osd-visible";
 
 const keyboardPressed = new Set();
+let keyboardBindings = { ...DEFAULT_KEY_BINDINGS };
+try { const saved = JSON.parse(localStorage.getItem("dolphin-keyboard-bindings") || "null"); if (saved && typeof saved === "object" && !Array.isArray(saved)) keyboardBindings = Object.fromEntries(Object.entries(saved).filter(([code, control]) => typeof code === "string" && CONTROL_LABELS.includes(control))); } catch {}
+let mousePressed = new Set();
+let mouseInputState = null;
+const mouseMode = document.querySelector("#mouseMode");
+const controllerSelect = document.querySelector("#controllerSelect");
+const controllerStatus = document.querySelector("#controllerStatus");
+const controllerDeadzone = document.querySelector("#controllerDeadzone");
+let controllerSignature = "";
+
 let touchPressed = new Set();
 let gamepadPressed = new Set();
 let gamepadInputState = null;
@@ -942,12 +953,54 @@ function renderRootEntries(entries) {
 }
 
 function wireKeyboard() {
+  const bindings = document.querySelector("#keyboardBindings");
+  function renderBindings() {
+    bindings.replaceChildren();
+    for (const control of CONTROL_LABELS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.binding = control;
+      const key = Object.keys(keyboardBindings).find(code => keyboardBindings[code] === control);
+      button.textContent = `${formatControlLabel(control)}: ${key || "Unassigned"}`;
+      button.addEventListener("click", () => {
+        button.textContent = `${formatControlLabel(control)}: press a key (Escape cancels)`;
+        button.focus();
+        const capture = event => {
+          event.preventDefault(); event.stopImmediatePropagation();
+          if (event.code !== "Escape") {
+            for (const code of Object.keys(keyboardBindings)) if (keyboardBindings[code] === control) delete keyboardBindings[code];
+            keyboardBindings[event.code] = control;
+            try { localStorage.setItem("dolphin-keyboard-bindings", JSON.stringify(keyboardBindings)); } catch {}
+          }
+          keyboardPressed.clear(); syncInput("Keyboard");
+          renderBindings();
+        };
+        button.addEventListener("keydown", capture, { once: true });
+      });
+      bindings.append(button);
+    }
+  }
+  renderBindings();
+  document.querySelector("#resetBindings").addEventListener("click", () => {
+    keyboardBindings = { ...DEFAULT_KEY_BINDINGS };
+    try { localStorage.removeItem("dolphin-keyboard-bindings"); } catch {}
+    keyboardPressed.clear(); syncInput("Keyboard"); renderBindings();
+  });
+  const releaseAll = () => {
+    keyboardPressed.clear(); touchPressed.clear(); mousePressed.clear(); mouseInputState = null;
+    gamepadPressed.clear(); gamepadInputState = null; lastGamepadInput = null;
+    syncInput("Ready");
+  };
+  window.addEventListener("blur", releaseAll);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) releaseAll(); });
+  wireMouse();
   document.addEventListener("keydown", (event) => {
+    if (event.target.closest?.("input, select, textarea, button, [contenteditable=true]")) return;
     if (event.repeat) {
       return;
     }
 
-    const button = resolveKeyboardButton(event.code);
+    const button = resolveKeyboardButton(event.code, keyboardBindings);
     if (!button) {
       return;
     }
@@ -960,7 +1013,7 @@ function wireKeyboard() {
   });
 
   document.addEventListener("keyup", (event) => {
-    const button = resolveKeyboardButton(event.code);
+    const button = resolveKeyboardButton(event.code, keyboardBindings);
     if (!button) {
       return;
     }
@@ -969,6 +1022,38 @@ function wireKeyboard() {
     keyboardPressed.delete(button);
     syncInput("Keyboard");
   });
+}
+
+function wireMouse() {
+  const canvas = elements.screen;
+  canvas.style.touchAction = "none";
+  const release = () => { mousePressed.clear(); mouseInputState = null; syncInput("Mouse"); };
+  mouseMode.addEventListener("change", release);
+  canvas.addEventListener("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
+  canvas.addEventListener("pointerdown", event => {
+    if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
+    event.preventDefault();
+    canvas.setPointerCapture(event.pointerId);
+    const control = ["A", "Z", "B"][event.button];
+    if (control) mousePressed.add(control);
+    move(event);
+  });
+  function move(event) {
+    if (event.pointerType !== "mouse" || mouseMode.value === "off" || !canvas.hasPointerCapture(event.pointerId)) return;
+    const rect = canvas.getBoundingClientRect();
+    const axis = (position, start, size) => Math.round(128 + Math.max(-1, Math.min(1, (position - start) / size * 2 - 1)) * 96);
+    const x = axis(event.clientX, rect.left, rect.width);
+    const y = 256 - axis(event.clientY, rect.top, rect.height);
+    mouseInputState = mouseMode.value === "stick" ? { stickX: x, stickY: y } : { cStickX: x, cStickY: y };
+    syncInput("Mouse");
+  }
+  canvas.addEventListener("pointermove", move);
+  canvas.addEventListener("pointerup", event => {
+    mousePressed.delete(["A", "Z", "B"][event.button]);
+    if (!event.buttons) release(); else syncInput("Mouse");
+  });
+  canvas.addEventListener("pointercancel", release);
+  canvas.addEventListener("lostpointercapture", release);
 }
 
 function wireTouchControls() {
@@ -1048,7 +1133,17 @@ function wireGamepadPolling() {
     // assumptions. Fall back to first non-null only if no standard pad
     // is present. Among multiple standard pads, the one with the highest
     // button count usually wins (Xbox Wireless = 17, generic = fewer).
-    const firstPad = selectPreferredGamepad(pads);
+    const devices = Array.from(pads).filter(pad => pad?.connected !== false && pad);
+    const signature = devices.map(pad => `${pad.index}:${pad.id}`).join("|");
+    if (signature !== controllerSignature) {
+      controllerSignature = signature;
+      const selected = controllerSelect.value;
+      controllerSelect.replaceChildren(new Option("Automatic", "auto"), new Option("Disabled", "off"), ...devices.map(pad => new Option(pad.id, String(pad.index))));
+      controllerSelect.value = Array.from(controllerSelect.options).some(option => option.value === selected) ? selected : "auto";
+    }
+    const firstPad = document.hidden || controllerSelect.value === "off" ? null : controllerSelect.value === "auto" ? selectPreferredGamepad(devices) : devices.find(pad => String(pad.index) === controllerSelect.value);
+    const status = firstPad ? `${firstPad.id} · ${firstPad.mapping || "nonstandard mapping"}` : controllerSelect.value === "off" ? "Controller disabled" : "Pair in device Bluetooth settings, then press a controller button.";
+    if (controllerStatus.textContent !== status) controllerStatus.textContent = status;
 
     if (debugGamepad) {
       const now = performance.now();
@@ -1084,7 +1179,7 @@ function wireGamepadPolling() {
       }
     }
 
-    const nextGamepadInput = firstPad ? readGamepadInput(firstPad) : null;
+    const nextGamepadInput = firstPad ? readGamepadInput(firstPad, 0.55, Number(controllerDeadzone.value)) : null;
     if (!legacyGamepadPoll && gamepadInputsEqual(lastGamepadInput, nextGamepadInput)) {
       return;
     }
@@ -1104,8 +1199,8 @@ function wireGamepadPolling() {
 }
 
 function syncInput(source) {
-  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed);
-  host.setInputState(inputStateFromPressed(combinedPressed, gamepadInputState));
+  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed);
+  host.setInputState(inputStateFromPressed(combinedPressed, mouseInputState ? { ...gamepadInputState, ...mouseInputState } : gamepadInputState));
   elements.inputSource.textContent = source;
 
   for (const chip of elements.controlGrid.children) {

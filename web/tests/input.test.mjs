@@ -127,7 +127,7 @@ test("gamepad polling suppresses unchanged sync work with a legacy control", asy
   const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 
   assert.match(source, /legacygamepadpoll/);
-  assert.match(source, /selectPreferredGamepad\(pads\)/);
+  assert.match(source, /selectPreferredGamepad\(devices\)/);
   assert.match(source, /gamepadInputsEqual\(lastGamepadInput, nextGamepadInput\)/);
 });
 
