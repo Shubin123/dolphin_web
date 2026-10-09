@@ -101,6 +101,22 @@ try {
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiB===0,{timeout:10000});
   // Trusted multi-touch events must reach visible controls in fullscreen.
   await page.select('#touchMode','on');
+  // Releasing one finger must leave the remaining stick owner visible and active.
+  await page.$eval('[data-touch-stick="main"]', el => {
+    const rect = el.getBoundingClientRect();
+    for (const [pointerId,x] of [[175,.8],[176,.2]]) el.dispatchEvent(new PointerEvent('pointerdown',{
+      bubbles:true,pointerType:'touch',pointerId,clientX:rect.x+rect.width*x,clientY:rect.y+rect.height/2
+    }));
+    el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerType:'touch',pointerId:176}));
+  });
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).stickX>160,{timeout:10000});
+  const stickVisual = await page.$eval('[data-touch-stick="main"]',el=>({
+    active:el.classList.contains('is-active'),offset:parseFloat(el.style.getPropertyValue('--stick-x')),
+    travel:(el.clientWidth-el.querySelector('.touch-stick-knob').offsetWidth)/2
+  }));
+  assert(stickVisual.active && stickVisual.offset>0 && stickVisual.offset<=stickVisual.travel,'stick knob must follow the remaining finger and stay inside its base');
+  await page.$eval('[data-touch-stick="main"]',el=>el.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerType:'touch',pointerId:175})));
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).stickX===128,{timeout:10000});
   await page.click('#fullscreenButton');
   await page.waitForFunction(()=>document.fullscreenElement?.id==='dropZone');
   const touchB=await (await page.$('[data-touch-button="B"]')).boundingBox();
@@ -115,6 +131,33 @@ try {
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===0&&s.stickX===128;},{timeout:10000});
   await page.click('.fullscreen-exit');
   await page.waitForFunction(()=>!document.fullscreenElement);
+  // A fast screen tap must retain its aim together with A until native polling.
+  const screenTap = await page.$eval('#screen', async el => {
+    const rect = el.getBoundingClientRect();
+    for (const type of ['pointerdown', 'pointerup']) el.dispatchEvent(new PointerEvent(type, {
+      bubbles:true,pointerType:'touch',pointerId:173,clientX:rect.x+rect.width*.8,clientY:rect.y+rect.height*.2
+    }));
+    return window.__host.adapter.request('validationReadWebInput');
+  });
+  assert.equal(screenTap.wiiA,1,'screen tap must press native A');
+  assert(screenTap.cStickX>180 && screenTap.cStickY>180,'screen tap must preserve its aiming position while A is latched');
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiA===0&&s.cStickX===128&&s.cStickY===128;},{timeout:10000});
+  // Sliding from a held B to A starts a new press window for A.
+  await (await page.$('[data-touch-button="A"]')).scrollIntoView();
+  await page.$eval('[data-touch-button="B"]',el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch',pointerId:174})));
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).wiiB===1,{timeout:10000});
+  await new Promise(resolve=>setTimeout(resolve,1100));
+  const slideTap = await page.evaluate(async()=> {
+    const from = document.querySelector('[data-touch-button="B"]');
+    const target = document.querySelector('[data-touch-button="A"]').getBoundingClientRect();
+    for (const type of ['pointermove','pointerup']) from.dispatchEvent(new PointerEvent(type,{
+      bubbles:true,pointerType:'touch',pointerId:174,clientX:target.x+target.width/2,clientY:target.y+target.height/2
+    }));
+    return window.__host.adapter.request('validationReadWebInput');
+  });
+  assert.equal(slideTap.wiiA,1,'a brief slide onto A must survive native polling');
+  assert.equal(slideTap.wiiB,0,'sliding off held B must release it');
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).mask===0,{timeout:10000});
   await page.select('#mouseMode','cstick');
   const screen=await page.$('#screen');await screen.scrollIntoView();const box=await screen.boundingBox();
   await page.mouse.move(box.x+box.width*0.75,box.y+box.height*0.25);await page.mouse.down();

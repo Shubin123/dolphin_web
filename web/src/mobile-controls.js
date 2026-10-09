@@ -5,26 +5,42 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
   const delayed = new Map();
   const emit = () => {
     const pressed = new Set(); const axes = {};
-    for (const entry of [...pointers.values(), ...delayed.values()]) {
+    for (const entry of [...delayed.values(), ...pointers.values()]) {
       if (entry.control) pressed.add(entry.control);
       if (entry.axes) Object.assign(axes, entry.axes);
     }
     root.querySelectorAll('[data-touch-button]').forEach(element => element.classList.toggle('is-pressed', pressed.has(element.dataset.touchButton)));
-    root.querySelectorAll('[data-touch-stick]').forEach(element => element.classList.toggle('is-active', [...pointers.values()].some(entry => entry.element === element)));
+    root.querySelectorAll('[data-touch-stick]').forEach(element => {
+      const owner = [...pointers.values()].findLast(entry => entry.element === element);
+      element.classList.toggle('is-active', Boolean(owner));
+      if (!owner) {
+        element.style.removeProperty('--stick-x'); element.style.removeProperty('--stick-y');
+        return;
+      }
+      const knob = element.querySelector('.touch-stick-knob');
+      const travel = Math.max(0, (element.clientWidth - (knob?.offsetWidth || 0)) / 2);
+      const prefix = element.dataset.touchStick === 'main' ? 'stick' : 'cStick';
+      element.style.setProperty('--stick-x', `${(owner.axes[`${prefix}X`] - 128) / 96 * travel}px`);
+      element.style.setProperty('--stick-y', `${(128 - owner.axes[`${prefix}Y`]) / 96 * travel}px`);
+    });
     onChange(pressed, axes);
   };
   const capture = (element, id) => { try { element.setPointerCapture(id); } catch {} };
+  const retainBriefPress = entry => {
+    const remaining = (typeof minimumPressMs === 'function' ? minimumPressMs() : minimumPressMs) - (performance.now() - entry.started);
+    if (!entry.control || remaining <= 0) return;
+    const token = Symbol();
+    // Screen taps publish aim and A as one input, including after pointerup.
+    const retained = { control: entry.control, axes: entry.axes };
+    retained.timer = setTimeout(() => { delayed.delete(token); emit(); }, remaining);
+    delayed.set(token, retained);
+  };
   const finish = (event, cancel = false) => {
     const entry = pointers.get(event.pointerId);
     if (!entry) return;
     event.preventDefault(); pointers.delete(event.pointerId);
     entry.element.style.removeProperty('--stick-x'); entry.element.style.removeProperty('--stick-y');
-    const remaining = (typeof minimumPressMs === 'function' ? minimumPressMs() : minimumPressMs) - (performance.now() - entry.started);
-    if (!cancel && entry.control && remaining > 0) {
-      const token = Symbol();
-      delayed.set(token, { control: entry.control });
-      delayed.get(token).timer = setTimeout(() => { delayed.delete(token); emit(); }, remaining);
-    }
+    if (!cancel) retainBriefPress(entry);
     emit();
   };
   const bind = (element, kind) => {
@@ -35,7 +51,6 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       if (kind !== 'screen') { const length = Math.hypot(x, y); if (length > 1) { x /= length; y /= length; } }
       x = Math.max(-1, Math.min(1, x)); y = Math.max(-1, Math.min(1, y));
       const prefix = kind === 'main' ? 'stick' : 'cStick';
-      if (kind !== 'screen') { element.style.setProperty('--stick-x', `${x * 30}px`); element.style.setProperty('--stick-y', `${-y * 30}px`); }
       return { [`${prefix}X`]: Math.round(128 + x * 96), [`${prefix}Y`]: Math.round(128 + y * 96) };
     };
     element.addEventListener('pointerdown', event => {
@@ -52,7 +67,12 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       if (kind === 'button') {
         // Like Azahar, a finger can slide from one button to another.
         const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-touch-button]');
-        entry.control = target && root.contains?.(target) ? target.dataset.touchButton : null;
+        const control = target && root.contains?.(target) ? target.dataset.touchButton : null;
+        if (control !== entry.control) {
+          retainBriefPress(entry);
+          entry.control = control;
+          entry.started = performance.now();
+        }
       } else entry.axes = position(event);
       emit();
     });

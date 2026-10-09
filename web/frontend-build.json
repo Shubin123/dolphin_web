@@ -54,8 +54,8 @@
     },
     {
       "path": "src/mobile-controls.js",
-      "size": 4351,
-      "sha256": "b8038421dd5f67f4166a6c7b987ff858c66daa759780cb8616193cda8d523033"
+      "size": 5187,
+      "sha256": "20ff8d1ac265e0cd027eb471209a85b6303ebf627052c581b1d9c8969962ad68"
     },
     {
       "path": "src/opfs-writer-worker.js",

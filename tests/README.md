@@ -31,3 +31,5 @@ These checks establish the library flow and actual guest CPU execution. They do 
 Input E2E checks cover keyboard press/release, search-field typing isolation, persisted remapping, blur cleanup, mouse analog movement and centering, simulated Bluetooth controller buttons/axes, device detection, disabling and disconnection. Actual Bluetooth pairing and physical hardware are not automated.
 
 Short keyboard taps are retained for native polling at the reported game speed. The core browser suite also sends trusted simultaneous touch events to the visible movement stick and B button in fullscreen, checks native Wii/GC values and release, and verifies the on-screen Exit button. The Azahar widget layout has collapse/reset coverage; commercial captures stay under ignored local logs.
+
+Native touch regressions also verify screen-tap aim retention, a brief slide from a held button onto another button, and stick input/knob ownership when one of two fingers releases. Held fingers take precedence over retained taps for analog axes.
