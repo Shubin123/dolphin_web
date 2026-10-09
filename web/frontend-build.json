@@ -14,23 +14,33 @@
     },
     {
       "path": "index.html",
-      "size": 24390,
-      "sha256": "bf4e67318550ae36ff9ae63d0505df3964465ee6307d2703e0020d908c445dd4"
+      "size": 27016,
+      "sha256": "8d36fbfd8cfd8331326f77ad195fb942b5b124e7d8fa675a8e1a7627401976c5"
     },
     {
       "path": "src/app.js",
-      "size": 55828,
-      "sha256": "46eba78c1a261cd260cb25ae2336de6f27fd0de7bc9d61604c1de6e5313f5a2e"
+      "size": 59170,
+      "sha256": "b2df65d185d1b64516b63022f0edcc53c77e00169f80074994fa693216df586a"
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 3337,
-      "sha256": "952586673a756a7d4ed217fdc05ade24d63e69d8f6e397bcaa9dcc2b1f08521d"
+      "size": 23775,
+      "sha256": "cd00ea5d78bc21a1976b2c19f6583e52d3d56372a4a52ea0b3795a8c78f43fe9"
+    },
+    {
+      "path": "src/boot-progress.js",
+      "size": 5305,
+      "sha256": "1423416b15495db617190e93b92e701c87cae57bb2a810722dd86b06d07230ca"
     },
     {
       "path": "src/bootstrap.js",
       "size": 501,
       "sha256": "29e7b611b70383194a94b64e78bd0bef383db3c31fd0360818223023726acf58"
+    },
+    {
+      "path": "src/button-source.js",
+      "size": 1104,
+      "sha256": "5e17b2abf64d32e8f4b4f1417629b2fced509db0aa121e43b6b60a50dd63f809"
     },
     {
       "path": "src/library-download.js",
@@ -39,13 +49,13 @@
     },
     {
       "path": "src/library.js",
-      "size": 14373,
-      "sha256": "f2b2e82ceb911d36fa0245241168f96bd818fa478251e57a7ce4590caaf82b49"
+      "size": 15213,
+      "sha256": "af4ba420186db301f328bd45d3702fb52b45abc4d3d8749d1dda6938394d0e9f"
     },
     {
       "path": "src/mobile-controls.js",
-      "size": 3654,
-      "sha256": "17ac5c9568c43f58d88c7c410b0d79d1389f33046a60ff59180e11252d10ed8f"
+      "size": 4351,
+      "sha256": "b8038421dd5f67f4166a6c7b987ff858c66daa759780cb8616193cda8d523033"
     },
     {
       "path": "src/opfs-writer-worker.js",
@@ -64,8 +74,13 @@
     },
     {
       "path": "src/styles.css",
-      "size": 25486,
-      "sha256": "f3c0d8cf2d3716389d3aa1a490a1850071799f5acf01a463f9e28aab93b37b64"
+      "size": 27367,
+      "sha256": "74dd89d4cc74cfa0516479a45f24fed5c1ad059dbd5503e28fac98f38ca08687"
+    },
+    {
+      "path": "src/widget-layout.js",
+      "size": 15891,
+      "sha256": "b082b0d370cb1bf5378b1f9fb44236a15de1de32f0403783a7a0b75974a157bc"
     },
     {
       "path": "src/wii-catalog.json",

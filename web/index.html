@@ -11,10 +11,11 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
+        <button type="button" class="menu-toggle" id="btn-layout-menu" aria-label="Layout menu" aria-expanded="false" aria-controls="layout-menu"><span></span><span></span><span></span></button>
         <div class="brand">
           <span class="mark" aria-hidden="true"></span>
           <div>
-            <h1>Dolphin Web</h1>
+            <h1>🎮 Dolphin Web</h1>
             <p id="coreLabel">GameCube / Wii emulator in your browser</p>
           </div>
         </div>
@@ -29,8 +30,38 @@
         </div>
       </header>
 
-      <main class="workspace">
-        <section class="play-area" aria-label="Emulator">
+          <aside class="layout-menu" id="layout-menu" hidden aria-label="Layout menu">
+        <div class="layout-menu-header">
+            <h2>☰ Layout</h2>
+            <button type="button" class="btn btn-secondary layout-menu-close" id="btn-layout-menu-close" aria-label="Close layout menu">✕</button>
+        </div>
+        <div class="speed-control">
+            <label for="layout-widget-width">
+                <span>Widget width</span><output id="layout-widget-width-value">260px</output>
+            </label>
+            <input id="layout-widget-width" type="range" min="200" max="480" step="10" value="260"
+                   aria-label="Minimum widget width">
+        </div>
+        <div class="speed-control">
+            <label for="layout-gap">
+                <span>Spacing</span><output id="layout-gap-value">12px</output>
+            </label>
+            <input id="layout-gap" type="range" min="4" max="28" step="2" value="12" aria-label="Spacing between widgets">
+        </div>
+        <label class="mode-help audio-toggle">
+            <input type="checkbox" id="layout-beside-screen" checked>
+            Place widgets beside the screen when there is room
+        </label>
+        <h3 class="layout-menu-subhead">Widgets</h3>
+        <ul class="layout-widget-list" id="layout-widget-list"></ul>
+        <div class="mode-help">Drag a widget by its title to move it, drag its corner to resize it, or use the buttons here. Double-click a corner to reset that widget's size.</div>
+        <button type="button" class="btn btn-primary" id="btn-layout-reset" style="margin-top:10px;">↺ Reset to default layout</button>
+    </aside>
+    <div class="layout-menu-backdrop" id="layout-menu-backdrop" hidden></div>
+
+
+      <main class="workspace main-layout">
+        <section class="play-area canvas-panel" aria-label="Emulator">
           <div class="crt-set" id="dropZone">
             <!-- LCD strip in the bezel. Carries the game identity that used to
                  live in the side panel, so the panel can be hidden entirely
@@ -117,44 +148,37 @@
                             </div>
                             </div>
 
-                            <div class="touch-controls" aria-label="Touch controls">
-                            <div class="touch-stick" data-touch-stick="main" role="group" aria-label="Movement stick"><span>Move</span><i></i></div>
-                            <div class="touch-stick" data-touch-stick="pointer" role="group" aria-label="Wii pointer stick"><span>Aim</span><i></i></div>
-                            <div class="touch-dpad">
-                            <button data-touch-button="D_UP" aria-label="D-pad up">Up</button>
-                            <button data-touch-button="D_LEFT" aria-label="D-pad left">Left</button>
-                            <button data-touch-button="D_RIGHT" aria-label="D-pad right">Right</button>
-                            <button data-touch-button="D_DOWN" aria-label="D-pad down">Down</button>
-                            </div>
-                            <div class="touch-face">
-                            <button data-touch-button="B" aria-label="B">B</button>
-                            <button data-touch-button="A" aria-label="A">A</button>
-                            <button data-touch-button="X" aria-label="Wii 1 / GameCube X">1 / X</button>
-                            <button data-touch-button="Y" aria-label="Wii 2 / GameCube Y">2 / Y</button>
-                            <button data-touch-button="L" aria-label="Nunchuk C / left trigger">C / L</button>
-                            <button data-touch-button="R" aria-label="Nunchuk Z / right trigger">Z / R</button>
-                            <button data-touch-button="START" aria-label="Plus / Start">+</button>
-                            <button data-touch-button="Z" aria-label="Minus / GameCube Z">−</button>
-                            <button data-touch-button="WII_HOME" aria-label="Wii Home">Home</button>
-                            </div>
-                            </div>
+              <div class="touch-controls" id="touch-controls" role="group" aria-label="On-screen controls" hidden>
+                <div class="touch-half touch-left">
+                  <div class="touch-shoulders"><button class="touch-btn touch-shoulder" data-touch-button="L" aria-label="Nunchuk C / left trigger">C / L</button><button class="touch-btn touch-shoulder" data-touch-button="R" aria-label="Nunchuk Z / right trigger">Z / R</button></div>
+                  <div class="touch-stick" data-touch-stick="main" role="group" aria-label="Movement stick"><i class="touch-stick-knob"></i></div>
+                  <div class="touch-dpad" role="group" aria-label="D-pad">
+                    <button class="touch-dpad-arm touch-dpad-up" data-touch-button="D_UP" aria-label="D-pad up"></button><button class="touch-dpad-arm touch-dpad-left" data-touch-button="D_LEFT" aria-label="D-pad left"></button><button class="touch-dpad-arm touch-dpad-right" data-touch-button="D_RIGHT" aria-label="D-pad right"></button><button class="touch-dpad-arm touch-dpad-down" data-touch-button="D_DOWN" aria-label="D-pad down"></button><span class="touch-dpad-center"></span>
+                  </div>
+                  <div class="touch-system"><button class="touch-btn touch-system-btn" data-touch-button="Z" aria-label="Minus / GameCube Z">− / Z</button><button class="touch-btn touch-system-btn" data-touch-button="WII_HOME">HOME</button></div>
+                </div>
+                <div class="touch-half touch-right">
+                  <div class="touch-shoulders"><button class="touch-btn touch-shoulder" data-touch-button="START" aria-label="Plus / Start">+ / START</button></div>
+                  <div class="touch-stick touch-stick-cstick" data-touch-stick="pointer" role="group" aria-label="Wii pointer / C-stick"><i class="touch-stick-knob"></i></div>
+                  <div class="touch-face">
+                    <button class="touch-btn touch-face-btn touch-face-x" data-touch-button="X" aria-label="Wii 1 / GameCube X">1 / X</button><button class="touch-btn touch-face-btn touch-face-y" data-touch-button="Y" aria-label="Wii 2 / GameCube Y">2 / Y</button><button class="touch-btn touch-face-btn touch-face-a" data-touch-button="A">A</button><button class="touch-btn touch-face-btn touch-face-b" data-touch-button="B">B</button>
+                  </div>
+                </div>
+              </div>
                             </section>
 
                             <aside class="control-panel" id="controlPanel" aria-label="Emulator controls">
-                            <section class="panel-block game-block">
-                            <div class="section-heading">
+                            <div class="controls-panel" id="widget-grid">
+                            <section class="panel-block game-block card" data-widget="game">
                             <h2>Game</h2>
-                            <span id="gameSize">No file</span>
-                            </div>
+<span id="gameSize">No file</span>
                             <p class="game-title" id="gameTitle">No game loaded</p>
                             <p class="muted" id="mountNote">Dolphin WASM core</p>
                             </section>
 
-                            <form class="settings-panel" id="settingsForm">
-                            <div class="section-heading">
+                            <form class="settings-panel card" data-widget="settings" data-default-span="2" id="settingsForm">
                             <h2>Settings</h2>
-                            <span id="settingsSummary">Startup</span>
-                            </div>
+<span id="settingsSummary">Startup</span>
 
                             <div class="setting-grid">
                             <label>
@@ -286,12 +310,12 @@
                             </div>
                             </form>
 
-                            <section class="panel-block">
-                            <div class="section-heading">
+                            <section class="panel-block card" data-widget="input">
                             <h2>Input</h2>
-                            <span id="inputSource">Keyboard</span>
-                            </div>
+<span id="inputSource">Keyboard</span>
                             <div class="control-grid" id="controlGrid"></div>
+                            <label class="touch-mode-label">On-screen controls <select id="touchMode"><option value="auto">Automatic</option><option value="on">Always show</option><option value="off">Hidden</option></select></label>
+                            <p class="keyboard-hint">X = A · Z = B · Enter = Start / + · WASD = move · IJKL = aim</p>
                             <details class="input-settings"><summary>Keyboard, mouse &amp; Bluetooth controller</summary>
                             <p>GameCube port 1 and Wii Remote + Nunchuk. Wii: X = A, Z = B, V/B = 1/2, Enter = +, C = −, Q/E = Nunchuk C/Z, H = Home. Keyboard: WASD main stick, IJKL C-stick, arrows D-pad, X/Z/V/B face buttons, Enter Start, Q/E triggers, C Z.</p>
                             <div id="keyboardBindings" class="control-grid"></div>
@@ -415,7 +439,8 @@
                             <p class="muted compact">Dolphin is free software. <a href="./LICENSE">License</a> · <a id="sourceDownload" href="https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.3">Download source</a></p>
                             </section>
                             </section>
-                            </aside>
+                            </div>
+</aside>
                             </main>
                             </div>
 

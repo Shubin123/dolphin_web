@@ -1,5 +1,7 @@
+import { createButtonSource } from "./button-source.js";
 import { wireMobileControls } from "./mobile-controls.js";
 import { initLibrary } from "./library.js";
+import { createBootProgress } from "./boot-progress.js";
 import { lookupGameProfile, readGameId } from "./game-profiles.js";
 import { AudioController } from "./audio.js";
 import { EmulatorHost } from "./core-host.js";
@@ -14,8 +16,7 @@ import {
   mergePressedSets,
   readGamepadInput,
   resolveKeyboardButton,
-  selectPreferredGamepad,
-  updatePressedSet
+  selectPreferredGamepad
 } from "./input.js";
 import {
   buildPlayablePresetHref,
@@ -160,6 +161,7 @@ if (elements.blankProbeNotice && shouldShowIntentionalBlankWgpuNotice(window.loc
     `Intentional blank diagnostic: ${requestedWgpuProbe}. Remove wgpurenderprobe to render game output.`;
 }
 
+const bootProgress = createBootProgress(elements.screen.parentElement);
 const audio = new AudioController();
 // Exposed for the validator: lets it unmute programmatically and tap the
 // AudioContext via an AnalyserNode to check that audio is actually being
@@ -294,6 +296,7 @@ function handleFrame(info) {
   }
   if (lastCausalTelemetry) info.causalTelemetry = lastCausalTelemetry;
   lastFrameInfo = info;
+  bootProgress.frame(info);
   // Expose to the validator. Reading via window is cheaper than DOM
   // querySelector + textContent parsing and preserves structured
   // numeric fields (histogram array, stddev) without round-tripping
@@ -461,7 +464,15 @@ function wireTransport() {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
     } else {
-      await elements.dropZone.requestFullscreen();
+      if (elements.dropZone.classList.contains("is-pseudo-fullscreen")) {
+        elements.dropZone.classList.remove("is-pseudo-fullscreen");
+      } else if (elements.dropZone.requestFullscreen) {
+        try { await elements.dropZone.requestFullscreen(); }
+        catch { elements.dropZone.classList.add("is-pseudo-fullscreen"); }
+      } else {
+        elements.dropZone.classList.add("is-pseudo-fullscreen");
+      }
+      window.__touchControls?.update();
     }
   });
 }
@@ -640,6 +651,8 @@ function wirePanelToggle() {
   const toggle = elements.panelToggle;
   const panel = elements.controlPanel;
   if (!toggle || !panel) return;
+  // Widget visibility now lives in the Azahar layout menu.
+  if (document.querySelector("#widget-grid")) { panel.hidden = false; document.body.classList.remove("panel-hidden"); return; }
   const apply = (open) => {
     panel.hidden = !open;
     document.body.classList.toggle("panel-hidden", !open);
@@ -741,7 +754,7 @@ function wireScreenFit() {
   window.addEventListener("resize", measure, { passive: true });
   document.addEventListener("fullscreenchange", measure);
   // The panel toggle and aspect changes both reflow the console.
-  if (window.ResizeObserver) new ResizeObserver(measure).observe(set);
+  if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(measure)).observe(set);
 }
 
 function wireFileMounting() {
@@ -879,10 +892,16 @@ async function applyGameProfile(file) {
   }
 }
 
-async function mountFile(file) {
+async function mountFile(file, { progress = true } = {}) {
+  // The library may already have started the bar for a download or cache read.
+  if (progress && !bootProgress.active) bootProgress.begin(file.name);
+  bootProgress.stage("core");
   try {
     await applyGameProfile(file);
     const game = await host.mountFile(file);
+    // A failed adapter falls back to the demo core instead of throwing.
+    if (host.mode === "dolphin") bootProgress.stage("boot");
+    else bootProgress.fail(elements.statusPill.textContent || "The Dolphin core could not start.");
     // Auto-unmute on disc boot. AudioController defaults to muted because
     // the AudioContext can only be created after a user gesture; the disc
     // mount click is the user gesture, so unmute here so audio actually
@@ -902,6 +921,7 @@ async function mountFile(file) {
     return true;
   } catch (error) {
     setStatus(error.message, "error");
+    bootProgress.fail(error.message);
     return false;
   }
 }
@@ -964,6 +984,11 @@ function renderRootEntries(entries) {
 }
 
 function wireKeyboard() {
+  const source = createButtonSource(pressed => {
+    keyboardPressed.clear();
+    for (const control of pressed) keyboardPressed.add(control);
+    syncInput("Keyboard");
+  }, minimumInputPressMs);
   const bindings = document.querySelector("#keyboardBindings");
   function renderBindings() {
     bindings.replaceChildren();
@@ -983,7 +1008,7 @@ function wireKeyboard() {
             keyboardBindings[event.code] = control;
             try { localStorage.setItem("dolphin-keyboard-bindings", JSON.stringify(keyboardBindings)); } catch {}
           }
-          keyboardPressed.clear(); syncInput("Keyboard");
+          source.reset();
           renderBindings();
         };
         button.addEventListener("keydown", capture, { once: true });
@@ -995,10 +1020,10 @@ function wireKeyboard() {
   document.querySelector("#resetBindings").addEventListener("click", () => {
     keyboardBindings = { ...DEFAULT_KEY_BINDINGS };
     try { localStorage.removeItem("dolphin-keyboard-bindings"); } catch {}
-    keyboardPressed.clear(); syncInput("Keyboard"); renderBindings();
+    source.reset(); renderBindings();
   });
   const releaseAll = () => {
-    keyboardPressed.clear(); touchPressed.clear(); mousePressed.clear(); mouseInputState = null;
+    source.reset(); touchPressed.clear(); mousePressed.clear(); mouseInputState = null;
     gamepadPressed.clear(); gamepadInputState = null; lastGamepadInput = null;
     syncInput("Ready");
   };
@@ -1017,10 +1042,7 @@ function wireKeyboard() {
     }
 
     event.preventDefault();
-    const nextKeyboard = updatePressedSet(keyboardPressed, button, true);
-    keyboardPressed.clear();
-    for (const pressed of nextKeyboard) keyboardPressed.add(pressed);
-    syncInput("Keyboard");
+    source.down(event.code, button);
   });
 
   document.addEventListener("keyup", (event) => {
@@ -1030,8 +1052,7 @@ function wireKeyboard() {
     }
 
     event.preventDefault();
-    keyboardPressed.delete(button);
-    syncInput("Keyboard");
+    source.up(event.code);
   });
 }
 
@@ -1069,10 +1090,41 @@ function wireMouse() {
   canvas.addEventListener("lostpointercapture", release);
 }
 
+function minimumInputPressMs() {
+  // Wii/GC controllers poll in guest time. At 10% speed a 60ms tap can fall
+  // entirely between polls; retain two guest frames, up to one wall second.
+  const speed = Number(lastFrameInfo?.gameSpeed) || 100;
+  return Math.max(100, Math.min(1000, Math.ceil(10000 / (3 * speed))));
+}
+
 function wireTouchControls() {
-  wireMobileControls({ canvas: elements.screen, onChange: (pressed, axes) => {
+  const deck = document.querySelector("#touch-controls");
+  elements.dropZone.append(deck);
+  const exit = document.createElement("button");
+  exit.className = "fullscreen-exit"; exit.type = "button"; exit.textContent = "✕ Exit";
+  exit.addEventListener("click", () => elements.fullscreenButton.click());
+  elements.dropZone.append(exit);
+  const controls = wireMobileControls({ canvas: elements.screen, minimumPressMs: minimumInputPressMs, onChange: (pressed, axes) => {
     touchPressed = pressed; touchInputState = axes; syncInput("Touch");
   } });
+  const mode = document.querySelector("#touchMode");
+  const coarse = matchMedia("(pointer: coarse)");
+  let connected = false;
+  try { const saved = localStorage.getItem("dolphin-touch-controls"); if (["auto", "on", "off"].includes(saved)) mode.value = saved; } catch {}
+  const update = () => {
+    deck.hidden = !(mode.value === "on" || (mode.value === "auto" && coarse.matches && !connected));
+    elements.dropZone.classList.toggle("has-touch-controls", !deck.hidden);
+    if (deck.hidden) controls.reset();
+    const height = deck.hidden ? 0 : deck.getBoundingClientRect().height;
+    elements.dropZone.style.setProperty("--screen-space", `calc(100dvh - ${height}px)`);
+  };
+  mode.addEventListener("change", () => { try { localStorage.setItem("dolphin-touch-controls", mode.value); } catch {} update(); });
+  coarse.addEventListener("change", update);
+  document.addEventListener("fullscreenchange", update);
+  window.addEventListener("resize", update);
+  document.addEventListener("keydown", event => { if (event.key === "Escape") { elements.dropZone.classList.remove("is-pseudo-fullscreen"); update(); } });
+  window.__touchControls = { setGamepadConnected(value) { if (connected !== value) { connected = value; update(); } }, update };
+  update();
 }
 
 function wireGamepadPolling() {
@@ -1181,6 +1233,7 @@ function wireGamepadPolling() {
       }
     }
 
+    window.__touchControls?.setGamepadConnected(Boolean(firstPad));
     const nextGamepadInput = firstPad ? readGamepadInput(firstPad, 0.55, Number(controllerDeadzone.value)) : null;
     if (!legacyGamepadPoll && gamepadInputsEqual(lastGamepadInput, nextGamepadInput)) {
       return;
@@ -1333,7 +1386,7 @@ async function runSmokeScenario() {
   const file = new File([header], "Super Smash Bros Melee.iso", {
     type: "application/octet-stream"
   });
-  await mountFile(file);
+  await mountFile(file, { progress: false });
   window.__wasmDolphinSmoke = {
     mode: host.mode,
     game: host.game
@@ -1347,7 +1400,7 @@ function writeU32BE(bytes, offset, value) {
   bytes[offset + 3] = value & 0xff;
 }
 
-initLibrary({ mountFile }).catch(error => console.error("Library:", error));
+initLibrary({ mountFile, bootProgress }).then(() => import("./widget-layout.js")).catch(error => console.error("Library:", error));
 
 // Release runtime packages carry their complete matching source archive.
 fetch(new URL("../backend-runtime.json",import.meta.url)).then(response=>response.json()).then(manifest=>{

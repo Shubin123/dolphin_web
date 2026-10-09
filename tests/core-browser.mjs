@@ -43,6 +43,10 @@ try {
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   await page.click('#libraryReadyList button');
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
+  // The generated guest draws nothing, so the loading bar stays in its boot
+  // stage instead of finishing on a first visible frame.
+  const loading=await page.$eval('.boot-progress',el=>({hidden:el.hidden,stage:el.querySelector('.boot-progress-stage').textContent}));
+  assert.deepEqual(loading,{hidden:false,stage:'Booting game'},'cached Play must show the loading bar until a game frame is visible');
   await page.waitForFunction(()=>document.activeElement?.id === 'screen',{timeout:10000});
   console.log('Boot accepted');
   const first = await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
@@ -71,6 +75,10 @@ try {
     const state=await window.__host.adapter.request('validationReadWebInput');
     return state.mask===0 && state.buttons===0 && state.wiiA===0;
   },{timeout:10000});
+  // A quick tap must survive long enough for native input polling.
+  await page.keyboard.press('x');
+  await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiA===1,{timeout:10000,polling:10});
+  await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiA===0,{timeout:10000,polling:10});
   await page.focus('#librarySearch');
   await page.keyboard.type('x');
   assert.equal((await nativeInput()).buttons,0,'typing in a search field must not press native A');
@@ -91,6 +99,22 @@ try {
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiB===1,{timeout:10000});
   await page.$eval('[data-touch-button="B"]',el=>el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:71,pointerType:'touch'})));
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiB===0,{timeout:10000});
+  // Trusted multi-touch events must reach visible controls in fullscreen.
+  await page.select('#touchMode','on');
+  await page.click('#fullscreenButton');
+  await page.waitForFunction(()=>document.fullscreenElement?.id==='dropZone');
+  const touchB=await (await page.$('[data-touch-button="B"]')).boundingBox();
+  const touchStick=await (await page.$('[data-touch-stick="main"]')).boundingBox();
+  const client=await page.createCDPSession();
+  await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[
+    {id:1,x:touchB.x+touchB.width/2,y:touchB.y+touchB.height/2},
+    {id:2,x:touchStick.x+touchStick.width*.8,y:touchStick.y+touchStick.height/2}
+  ]});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===1&&s.stickX>160;},{timeout:10000});
+  await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===0&&s.stickX===128;},{timeout:10000});
+  await page.click('.fullscreen-exit');
+  await page.waitForFunction(()=>!document.fullscreenElement);
   await page.select('#mouseMode','cstick');
   const screen=await page.$('#screen');await screen.scrollIntoView();const box=await screen.boundingBox();
   await page.mouse.move(box.x+box.width*0.75,box.y+box.height*0.25);await page.mouse.down();
@@ -129,7 +153,7 @@ try {
   assert.equal(resume.paused,false);
   await page.waitForFunction(async ticks=>(await window.__host.adapter.request('validationReadCoreProgress')).coreTicks>ticks,{timeout:10000},paused2.coreTicks);
   assert.deepEqual(errors,[]);
-  console.log('PASS: real Dolphin boots homebrew, executes PowerPC code, pauses/resumes, and consumes keyboard input through native GameCube and Wii Remote mappings. No graphics/gameplay benchmark.');
+  console.log('PASS: real Dolphin boots homebrew, executes PowerPC code, pauses/resumes, and consumes keyboard taps, touch, mouse and gamepad input through native GameCube and Wii Remote mappings, including simultaneous fullscreen touch. No graphics/gameplay benchmark.');
 } finally {
   await browser?.close(); await new Promise(done=>server.close(done)); await rm(temp,{recursive:true,force:true});
 }

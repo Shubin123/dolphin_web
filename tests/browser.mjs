@@ -75,15 +75,23 @@ try {
   });
   assert.equal(conditionalScript.status, 200, 'isolation worker must retrieve a full response on reload');
   assert.equal(conditionalScript.body, 'globalThis.__conditionalBootstrap = true;');
+  // Azahar widget controls persist and can restore hidden cards.
+  await page.waitForFunction(()=>window.DolphinLayout);
+  await page.click('[data-widget="game"] .widget-tool-collapse');
+  assert.equal(await page.$eval('[data-widget="game"]',el=>el.classList.contains('is-collapsed')),true);
+  await page.click('#btn-layout-menu');
+  await page.click('#btn-layout-reset');
+  assert.equal(await page.$eval('[data-widget="game"]',el=>el.classList.contains('is-collapsed')),false);
+  await page.click('#btn-layout-menu-close');
   // Exercise actual DOM events and capture the state sent to the emulator host.
   await page.evaluate(() => {
     const original = window.__host.setInputState.bind(window.__host);
     window.__host.setInputState = state => { window.__lastInput = state; original(state); };
   });
-  await page.focus('#saveButton');
   await page.keyboard.down('x');
   assert.equal(await page.evaluate(() => window.__lastInput.mask & 1), 1);
   await page.keyboard.up('x');
+  await page.waitForFunction(() => (window.__lastInput.mask & 1) === 0);
   assert.equal(await page.evaluate(() => window.__lastInput.mask & 1), 0);
   await page.focus('#librarySearch');
   await page.keyboard.type('x');
@@ -109,12 +117,22 @@ try {
   await page.mouse.up();
   assert.equal(await page.evaluate(() => window.__lastInput.stickX), 128);
   await page.evaluate(() => {
+    window.__padPollCount=0;window.__testPads=[];
+    Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPollCount++;return window.__testPads;}});
+  });
+  await new Promise(resolve=>setTimeout(resolve,550));
+  const idlePolls=await page.evaluate(()=>window.__padPollCount);
+  assert(idlePolls>=2&&idlePolls<=8,`idle gamepad polling should be bounded, got ${idlePolls}`);
+  await page.evaluate(() => {
     window.__testPads = [{index:0,id:'Test Bluetooth controller',connected:true,mapping:'standard',axes:[.8,0,0,0],buttons:Array.from({length:17},(_,i)=>({pressed:i===0,value:i===0?1:0}))}];
-    Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>window.__testPads});
+    window.__padPollCount=0;window.dispatchEvent(new Event('gamepadconnected'));
   });
   await page.waitForFunction(() => window.__lastInput?.mask & 1);
   assert.ok(await page.evaluate(() => window.__lastInput.stickX > 180));
   assert.match(await page.$eval('#controllerStatus', el => el.textContent), /Test Bluetooth/);
+  await new Promise(resolve=>setTimeout(resolve,150));
+  const activePolls=await page.evaluate(()=>window.__padPollCount);
+  assert(activePolls>8&&activePolls<35,`connected controller polling should remain responsive and bounded, got ${activePolls}`);
   await page.select('#controllerSelect','off');
   await page.waitForFunction(() => window.__lastInput?.mask === 0 && window.__lastInput.stickX === 128);
   await page.select('#controllerSelect','auto');
@@ -133,8 +151,10 @@ try {
   bytes.write('2026/10/08',0x2440); bytes.write('opening.bnr',0x2818); bytes.write('BNR1',0x2900);
   discBytes = bytes;
   const image = join(temp, 'Dolphin test.iso'); await writeFile(image, bytes);
+  await page.evaluate(()=>{ window.__originalCreateWritable=FileSystemFileHandle.prototype.createWritable; FileSystemFileHandle.prototype.createWritable=undefined; });
   await (await page.$('#libraryFiles')).uploadFile(image);
   await page.waitForFunction(() => document.querySelector('#libraryCount').textContent === '(1)').catch(async error=>{console.log(await page.$eval('#libraryStatus',el=>el.textContent));throw error;});
+  await page.evaluate(()=>{ FileSystemFileHandle.prototype.createWritable=window.__originalCreateWritable; });
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?visit=2`, {waitUntil:'networkidle0'});
   await page.waitForFunction(() => document.querySelector('.library-section')?.dataset.ready === 'true');
   await page.select('#librarySource','local');
@@ -153,6 +173,9 @@ try {
   await page.select('#librarySource','local');
   await page.waitForFunction(() => document.querySelector('#libraryCount')?.textContent === '(0)');
 
+  // Run download cancellation and truncation cleanup through Safari's
+  // worker writer path as well as the normal native-writer unit tests.
+  await page.evaluate(()=>{ FileSystemFileHandle.prototype.createWritable=undefined; });
   // Archive catalog, download cancellation, truncation cleanup and cached replay.
   await page.waitForFunction(() => document.querySelector('.library-section')?.dataset.catalogLoaded === 'true');
   await page.select('#librarySource','archive');

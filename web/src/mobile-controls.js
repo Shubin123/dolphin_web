@@ -1,6 +1,6 @@
 // Pointer ownership prevents one finger releasing a control held by another.
 // Brief taps stay published long enough for the emulator's input polling.
-export function wireMobileControls({ root = document, canvas, onChange, minimumPressMs = 60 }) {
+export function wireMobileControls({ root = document, canvas, onChange, minimumPressMs = () => 100 }) {
   const pointers = new Map();
   const delayed = new Map();
   const emit = () => {
@@ -9,6 +9,8 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       if (entry.control) pressed.add(entry.control);
       if (entry.axes) Object.assign(axes, entry.axes);
     }
+    root.querySelectorAll('[data-touch-button]').forEach(element => element.classList.toggle('is-pressed', pressed.has(element.dataset.touchButton)));
+    root.querySelectorAll('[data-touch-stick]').forEach(element => element.classList.toggle('is-active', [...pointers.values()].some(entry => entry.element === element)));
     onChange(pressed, axes);
   };
   const capture = (element, id) => { try { element.setPointerCapture(id); } catch {} };
@@ -17,7 +19,7 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
     if (!entry) return;
     event.preventDefault(); pointers.delete(event.pointerId);
     entry.element.style.removeProperty('--stick-x'); entry.element.style.removeProperty('--stick-y');
-    const remaining = minimumPressMs - (performance.now() - entry.started);
+    const remaining = (typeof minimumPressMs === 'function' ? minimumPressMs() : minimumPressMs) - (performance.now() - entry.started);
     if (!cancel && entry.control && remaining > 0) {
       const token = Symbol();
       delayed.set(token, { control: entry.control });
@@ -45,8 +47,14 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
     });
     element.addEventListener('pointermove', event => {
       const entry = pointers.get(event.pointerId);
-      if (!entry || kind === 'button') return;
-      event.preventDefault(); entry.axes = position(event); emit();
+      if (!entry) return;
+      event.preventDefault();
+      if (kind === 'button') {
+        // Like Azahar, a finger can slide from one button to another.
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-touch-button]');
+        entry.control = target && root.contains?.(target) ? target.dataset.touchButton : null;
+      } else entry.axes = position(event);
+      emit();
     });
     element.addEventListener('pointerup', event => finish(event));
     element.addEventListener('pointercancel', event => finish(event, true));

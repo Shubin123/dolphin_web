@@ -29,3 +29,5 @@ Set `CHROME_PATH` for a Chrome executable outside the default macOS location. Th
 These checks establish the library flow and actual guest CPU execution. They do not qualify commercial-game graphics, Wii Remote input, or sustained gameplay performance. No full multi-gigabyte commercial image is downloaded by the test suite.
 
 Input E2E checks cover keyboard press/release, search-field typing isolation, persisted remapping, blur cleanup, mouse analog movement and centering, simulated Bluetooth controller buttons/axes, device detection, disabling and disconnection. Actual Bluetooth pairing and physical hardware are not automated.
+
+Short keyboard taps are retained for native polling at the reported game speed. The core browser suite also sends trusted simultaneous touch events to the visible movement stick and B button in fullscreen, checks native Wii/GC values and release, and verifies the on-screen Exit button. The Azahar widget layout has collapse/reset coverage; commercial captures stay under ignored local logs.

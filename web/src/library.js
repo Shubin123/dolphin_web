@@ -9,9 +9,13 @@ export function filterGames(games, query, region, sort) {
 }
 const bytes = size => size >= 1024 ** 3 ? `${(size / 1024 ** 3).toFixed(2)} GB` : `${(size / 1024 ** 2).toFixed(1)} MB`;
 
-export async function initLibrary({ mountFile }) {
+const noProgress = { active: false, begin() {}, stage() {}, download() {}, fail() {}, cancel() {} };
+
+export async function initLibrary({ mountFile, bootProgress = noProgress }) {
   const section = document.createElement('section');
-  section.className = 'library-section';
+  section.className = 'library-section card';
+  section.dataset.widget = 'library';
+  section.dataset.defaultSpan = '2';
   section.setAttribute('aria-label', 'Game library');
   section.innerHTML = `<h2>Game Library <span id="libraryCount">0</span></h2>
     <div class="library-toolbar"><select id="librarySource" aria-label="Library source"><option value="archive">Internet Archive · Wii ISO</option><option value="local">My cached games</option></select>
@@ -27,7 +31,7 @@ export async function initLibrary({ mountFile }) {
     <div class="library-table-scroll"><table class="library-table"><thead><tr><th>Title</th><th>Region</th><th class="size-column">Size</th><th>Actions</th></tr></thead><tbody id="libraryRows"></tbody></table></div>
     <div class="library-toolbar"><button id="libraryPrev" type="button">Previous</button><span id="libraryPage"></span><button id="libraryNext" type="button">Next</button></div>
     <div id="libraryReady" class="library-ready"><h3>Ready to play <span id="libraryReadyCount">(0)</span></h3><p class="library-note">Images stored in this browser. Removing one frees its cache space.</p><ul id="libraryReadyList"></ul></div>`;
-  document.querySelector('.play-area').append(section);
+  document.querySelector('#widget-grid').append(section);
   const el = id => section.querySelector(`#${id}`);
   const status = message => { el('libraryStatus').textContent = message; };
   let directory;
@@ -66,10 +70,12 @@ export async function initLibrary({ mountFile }) {
     render();
     try {
       status(`Loading cached ${game.title || game.name}…`);
-      if (await mountFile(await imageFile(game)) === false) throw new Error('The emulator rejected this image; see the emulator status for details.');
+      // A download-and-play already shows the bar; keep its progress.
+      if (bootProgress.active) bootProgress.stage('read'); else bootProgress.begin(game.title || game.name);
       document.querySelector('#screen').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (await mountFile(await imageFile(game)) === false) throw new Error('The emulator rejected this image; see the emulator status for details.');
       status(`Selected ${game.title || game.name} from the local cache.`);
-    } catch (error) { status(`Unable to load game: ${error.message}`); }
+    } catch (error) { status(`Unable to load game: ${error.message}`); bootProgress.fail(error.message); }
     finally { playing = false; render(); }
   }
   async function saveFile(game) {
@@ -105,6 +111,10 @@ export async function initLibrary({ mountFile }) {
     el('libraryProgress').value = 0;
     const started = performance.now();
     let lastUpdate = -Infinity;
+    if (shouldPlay) {
+      bootProgress.begin(game.title, { download: true });
+      document.querySelector('#screen').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     render();
     try {
       // A browser may decline the persistence request; normal OPFS still works.
@@ -119,6 +129,7 @@ export async function initLibrary({ mountFile }) {
           const speed = loaded / Math.max(.001, (now - started) / 1000);
           el('libraryProgress').value = percent;
           el('libraryDownloadStats').textContent = `${percent.toFixed(1)}% · ${bytes(loaded)} / ${bytes(game.size)} · ${bytes(speed)}/s${speed ? ` · ~${Math.ceil((game.size - loaded) / speed)}s remaining` : ''}`;
+          if (shouldPlay) bootProgress.download(loaded, game.size, speed);
         },
       });
       games.push(entry);
@@ -128,6 +139,8 @@ export async function initLibrary({ mountFile }) {
       if (shouldPlay) await play(entry);
     } catch (error) {
       status(controller.signal.aborted ? 'Download cancelled. Partial data was removed.' : `Download failed: ${error.message}`);
+      if (shouldPlay && controller.signal.aborted) bootProgress.cancel();
+      else if (shouldPlay) bootProgress.fail(`Download failed: ${error.message}`);
     } finally {
       activeDownload = null;
       el('libraryDownload').hidden = true;
