@@ -63,6 +63,7 @@ try {
     const original = window.__host.setInputState.bind(window.__host);
     window.__host.setInputState = state => { window.__lastInput = state; original(state); };
   });
+  await page.focus('#saveButton');
   await page.keyboard.down('x');
   assert.equal(await page.evaluate(() => window.__lastInput.mask & 1), 1);
   await page.keyboard.up('x');

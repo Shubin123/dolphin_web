@@ -28,8 +28,15 @@ try {
   page.on('console',message=>{if(message.type()==='error') console.log('CONSOLE',message.text())});
   await page.goto(`http://127.0.0.1:${server.address().port}/?video=software&presenter=2d&cpu=dual`);
   await page.waitForFunction(()=>window.__host && document.querySelector('#romInput'),{timeout:60000});
-  await (await page.$('#romInput')).uploadFile(file);
+  await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.ready === 'true',{timeout:60000});
+  await (await page.$('#libraryFiles')).uploadFile(file);
+  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  // Reload to prove that Play boots a persisted image rather than the import.
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  await page.click('#libraryReadyList button');
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
+  await page.waitForFunction(()=>document.activeElement?.id === 'screen',{timeout:10000});
   console.log('Boot accepted');
   const first = await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   console.log('First progress',first);
