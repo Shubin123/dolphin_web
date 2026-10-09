@@ -24,8 +24,8 @@
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 23775,
-      "sha256": "cd00ea5d78bc21a1976b2c19f6583e52d3d56372a4a52ea0b3795a8c78f43fe9"
+      "size": 23798,
+      "sha256": "ffd64693b8a75f680ca531132c9bf4292c937014ed9354a6c91caf26c95c7833"
     },
     {
       "path": "src/boot-progress.js",

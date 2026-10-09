@@ -117,16 +117,23 @@ try {
   assert(stickVisual.active && stickVisual.offset>0 && stickVisual.offset<=stickVisual.travel,'stick knob must follow the remaining finger and stay inside its base');
   await page.$eval('[data-touch-stick="main"]',el=>el.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerType:'touch',pointerId:175})));
   await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).stickX===128,{timeout:10000});
+  await page.setViewport({width:390,height:844});
   await page.click('#fullscreenButton');
   await page.waitForFunction(()=>document.fullscreenElement?.id==='dropZone');
   const touchB=await (await page.$('[data-touch-button="B"]')).boundingBox();
   const touchStick=await (await page.$('[data-touch-stick="main"]')).boundingBox();
+  const touchAim=await (await page.$('[data-touch-stick="pointer"]')).boundingBox();
   const client=await page.createCDPSession();
   await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[
     {id:1,x:touchB.x+touchB.width/2,y:touchB.y+touchB.height/2},
-    {id:2,x:touchStick.x+touchStick.width*.8,y:touchStick.y+touchStick.height/2}
+    {id:2,x:touchStick.x+touchStick.width*.8,y:touchStick.y+touchStick.height/2},
+    {id:3,x:touchAim.x+touchAim.width*.8,y:touchAim.y+touchAim.height*.2}
   ]});
-  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===1&&s.stickX>160;},{timeout:10000});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===1&&s.stickX>160&&s.cStickX>160;},{timeout:10000});
+  const mobileKnobs = await page.evaluate(()=>[...document.querySelectorAll('[data-touch-stick]')].map(el=>({
+    base:el.getBoundingClientRect().toJSON(),knob:el.querySelector('.touch-stick-knob').getBoundingClientRect().toJSON()
+  })));
+  for (const {base,knob} of mobileKnobs) assert(knob.left>=base.left-1&&knob.top>=base.top-1&&knob.right<=base.right+1&&knob.bottom<=base.bottom+1,'mobile stick knobs must fit inside their bases while held');
   await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===0&&s.stickX===128;},{timeout:10000});
   await page.click('.fullscreen-exit');

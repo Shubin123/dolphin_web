@@ -422,7 +422,7 @@ body { padding:16px; isolation:isolate; }
 .touch-controls button { min-height:0; padding:0; touch-action:none; }
 .touch-face { gap:0; justify-content:initial; } .touch-face button { width:auto; height:auto; }
 .touch-dpad { gap:0; } .touch-dpad button { width:auto; height:auto; }
-.touch-stick { padding:0; justify-self:auto; } .touch-stick i { position:static; display:block; transform:translate(var(--stick-x,0px),var(--stick-y,0px)); }
+.touch-stick { padding:0; justify-self:auto; } .touch-stick i { position:static; display:block; width:48%; height:48%; transform:translate(var(--stick-x,0px),var(--stick-y,0px)); }
 .touch-controls .touch-dpad button[data-touch-button="D_UP"] { grid-area:1/2; }
 .touch-controls .touch-dpad button[data-touch-button="D_LEFT"] { grid-area:2/1; }
 .touch-controls .touch-dpad button[data-touch-button="D_RIGHT"] { grid-area:2/3; }
