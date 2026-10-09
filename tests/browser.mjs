@@ -72,7 +72,7 @@ try {
   assert.equal(await page.evaluate(() => window.__lastInput.mask & 1), 0, 'typing must not press A');
   await page.$eval('#librarySearch', el => { el.value = ''; el.dispatchEvent(new Event('input')); el.blur(); });
   await page.$eval('.input-settings', el => el.open = true);
-  await page.click('[data-binding="A"]');
+  await page.locator('[data-binding="A"]').click();
   await page.keyboard.press('u');
   await page.evaluate(() => document.activeElement.blur());
   await page.keyboard.down('u');
@@ -124,11 +124,11 @@ try {
   await page.type('#librarySearch','no-match');
   assert.equal(await page.$eval('#libraryRows', node => node.textContent), 'No matching games.');
   await page.$eval('#librarySearch',node=>{node.value='';node.dispatchEvent(new Event('input'));});
-  await page.click('#libraryRows button');
+  await page.locator('#libraryRows button').click();
   await page.waitForFunction(() => window.__host?.game?.gameId === 'TSTE01', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.mode), 'dolphin');
   assert.equal(await page.evaluate(() => window.__host.game.bootDolOffset), 0x1000);
-  await page.click('#libraryRows button:last-child');
+  await page.locator('#libraryRows button:last-child').click();
   await page.waitForFunction(() => document.querySelector('#libraryCount').textContent === '(0)');
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?visit=3`);
   await page.waitForFunction(() => document.querySelector('.library-section')?.dataset.ready === 'true');
@@ -143,15 +143,15 @@ try {
   const remoteRow = '#libraryRows tr[data-name="Remote test (USA).iso"]';
   const cancelRow = '#libraryRows tr[data-name="Cancelled (USA).iso"]';
   const brokenRow = '#libraryRows tr[data-name="Broken (USA).iso"]';
-  await page.click(`${cancelRow} button:last-child`);
+  await page.locator(`${cancelRow} button:last-child`).click();
   await page.waitForFunction(() => !document.querySelector('#libraryDownload').hidden && document.querySelector('#libraryProgress').value > 0);
-  await page.click('#libraryCancel');
+  await page.locator('#libraryCancel').click();
   await page.waitForFunction(() => document.querySelector('#libraryStatus').textContent.includes('Download cancelled'));
   assert.equal(await page.$eval('#libraryReadyCount', node => node.textContent), '(0)');
-  await page.click(`${brokenRow} button:last-child`);
+  await page.locator(`${brokenRow} button:last-child`).click();
   await page.waitForFunction(() => document.querySelector('#libraryStatus').textContent.includes('incomplete'));
   assert.equal(await page.$eval('#libraryReadyCount', node => node.textContent), '(0)');
-  await page.click(`${remoteRow} button:last-child`);
+  await page.locator(`${remoteRow} button:last-child`).click();
   await page.waitForFunction(() => document.querySelector('#libraryReadyCount').textContent === '(1)');
   assert.equal(imageRequests,3);
   assert((await page.$eval(`${remoteRow} a`, node => node.href)).startsWith('https://archive.org/download/Wii_ISO/'));
@@ -162,7 +162,7 @@ try {
   assert.equal(save.length,2,'only the complete disc and metadata should remain');
   const session = await page.createCDPSession();
   await session.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:temp});
-  await page.click('#libraryReadyList button:nth-child(2)');
+  await page.locator('#libraryReadyList button:nth-child(2)').click();
   const saveDeadline = Date.now() + 5000;
   let savedFile;
   while (Date.now() < saveDeadline) {
@@ -173,7 +173,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?visit=4`);
   await page.waitForFunction(() => document.querySelector('#libraryReadyCount')?.textContent === '(1)');
   await page.setOfflineMode(true);
-  await page.click('#libraryReadyList button');
+  await page.locator('#libraryReadyList button').click();
   await page.waitForFunction(() => document.querySelector('#libraryStatus').textContent.includes('from the local cache'), {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.game.gameId),'TSTE01');
   assert.equal(imageRequests,3,'cached Play must not fetch the disc again');
@@ -181,7 +181,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#libraryReadyCount').textContent === '(0)');
   await page.setOfflineMode(false);
   await page.waitForFunction(() => document.querySelector('.library-section')?.dataset.catalogLoaded === 'true');
-  await page.click(`${remoteRow} button`);
+  await page.locator(`${remoteRow} button`).click();
   await page.waitForFunction(() => document.querySelector('#libraryStatus').textContent.includes('from the local cache') && document.querySelector('#libraryReadyCount').textContent === '(1)', {timeout:60000});
   assert.equal(imageRequests,4,'Play on an uncached archive row must download, cache and mount it');
   await page.$eval('#libraryReadyList button:last-child', button => button.click());
