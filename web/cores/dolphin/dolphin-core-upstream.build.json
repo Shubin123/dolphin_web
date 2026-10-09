@@ -1,16 +1,17 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-09T08:06:35.918Z",
-  "coreId": "sha256:b05f4b85cdebfabda37c45ec7d6f12d02f084d2f14e239afa8f7131cb24ad443",
+  "createdAt": "2026-10-09T22:18:19.599Z",
+  "coreId": "sha256:fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
   "repository": {
     "commit": "eaedd18828f8c9759c2a4ce0bf3a19077a596b54",
-    "status": "M .gitignore\n M CMakeLists.txt\n M README.md\n M core/upstream/dolphin_web_core.cpp\n M cores/dolphin/dolphin-core-upstream.build.json\n M cores/dolphin/dolphin-core-upstream.js\n M cores/dolphin/dolphin-core-upstream.wasm\n M index.html\n M package.json\n M provenance/dolphin-core-abi-v1.json\n M provenance/dolphin-source.lock.json\n M provenance/dolphin-vendor-snapshot-v1.json\n M src/app.js\n M src/input.js\n M src/upstream-discio-worker.js\n M src/upstream-worker-protocol.js\n M tools/build-corresponding-source.mjs\n M tools/build-upstream-target.mjs\n M tools/configure-upstream-wasm.mjs\n M tools/core-build-info.mjs\n M tools/dolphin-provenance.mjs\n M tools/export-web.mjs\n M tools/gameplay-regression.mjs\n M tools/update-core-abi.mjs\n M tools/wasm-toolchain.mjs\n?? .github/workflows/runtime.yml\n?? AGENTS.md\n?? core/upstream/dolphin_web_controller.h\n?? docs/development.md\n?? docs/runtime-sync.md\n?? patches/dolphin-wasm/snapshot/0068-local-webgpu-port.patch\n?? provenance/portable-toolchain.json\n?? tests/runtime-package.test.mjs\n?? tests/source-bundle.test.mjs\n?? tools/core-inputs.mjs\n?? tools/record-local-toolchain.mjs\n?? tools/refresh-runtime.mjs\n?? tools/runtime-package.mjs\n?? tools/setup.mjs\n?? tools/source-bundle.mjs\n?? tools/test-fresh-checkout.mjs\n?? tools/watch-runtime.mjs\n?? vendor/source/emdawnwebgpu.zip\n?? vendor/source/manifest.json\n?? vendor/source/repo-00-00.packpart\n?? vendor/source/repo-01-00.packpart\n?? vendor/source/repo-02-00.packpart\n?? vendor/source/repo-03-00.packpart\n?? vendor/source/repo-04-00.packpart\n?? vendor/source/repo-05-00.packpart\n?? vendor/source/repo-06-00.packpart\n?? vendor/source/repo-07-00.packpart\n?? vendor/source/repo-08-00.packpart\n?? vendor/source/repo-09-00.packpart\n?? vendor/source/repo-10-00.packpart\n?? vendor/source/repo-11-00.packpart\n?? vendor/source/repo-12-00.packpart\n?? vendor/source/repo-13-00.packpart\n?? vendor/source/repo-14-00.packpart\n?? vendor/source/repo-15-00.packpart\n?? vendor/source/repo-16-00.packpart\n?? vendor/source/repo-17-00.packpart\n?? vendor/source/repo-18-00.packpart\n?? vendor/source/repo-19-00.packpart\n?? vendor/source/repo-20-00.packpart\n?? vendor/source/repo-21-00.packpart\n?? vendor/source/repo-22-00.packpart\n?? vendor/source/repo-23-00.packpart\n?? vendor/source/repo-24-00.packpart\n?? vendor/source/repo-25-00.packpart\n?? vendor/source/repo-26-00.packpart\n?? vendor/source/repo-27-00.packpart\n?? vendor/source/repo-28-00.packpart\n?? vendor/source/repo-29-00.packpart\n?? vendor/source/repo-30-00.packpart\n?? vendor/source/repo-31-00.packpart\n?? vendor/source/repo-32-00.packpart\n?? vendor/source/repo-33-00.packpart\n?? vendor/source/repo-34-00.packpart\n?? vendor/source/repo-35-00.packpart\n?? vendor/source/repo-36-00.packpart\n?? vendor/source/repo-37-00.packpart\n?? vendor/source/rust-crates.tar.gz",
+    "status": "M .gitignore\n M CMakeLists.txt\n M README.md\n M core/upstream/dolphin_web_core.cpp\n M cores/dolphin/dolphin-core-upstream.build.json\n M cores/dolphin/dolphin-core-upstream.js\n M cores/dolphin/dolphin-core-upstream.wasm\n M docs/testing/city-folk-regression.md\n M index.html\n M package.json\n M provenance/dolphin-core-abi-v1.json\n M provenance/dolphin-source.lock.json\n M provenance/dolphin-vendor-snapshot-v1.json\n M src/app.js\n M src/input.js\n M src/upstream-discio-worker.js\n M src/upstream-worker-protocol.js\n M tests/input.test.mjs\n M tools/build-corresponding-source.mjs\n M tools/build-native-core.mjs\n M tools/build-upstream-target.mjs\n M tools/configure-upstream-wasm.mjs\n M tools/core-build-info.mjs\n M tools/dolphin-provenance.mjs\n M tools/export-web.mjs\n M tools/gameplay-regression.mjs\n M tools/update-core-abi.mjs\n M tools/wasm-toolchain.mjs\n?? .github/workflows/runtime.yml\n?? AGENTS.md\n?? core/upstream/dolphin_web_controller.h\n?? docs/development.md\n?? docs/runtime-sync.md\n?? patches/dolphin-wasm/snapshot/0068-local-webgpu-port.patch\n?? provenance/portable-toolchain.json\n?? tests/runtime-package.test.mjs\n?? tests/source-bundle.test.mjs\n?? tools/core-inputs.mjs\n?? tools/record-local-toolchain.mjs\n?? tools/refresh-runtime.mjs\n?? tools/runtime-package.mjs\n?? tools/setup.mjs\n?? tools/source-bundle.mjs\n?? tools/test-fresh-checkout.mjs\n?? tools/watch-runtime.mjs\n?? vendor/source/emdawnwebgpu.zip\n?? vendor/source/manifest.json\n?? vendor/source/repo-00-00.packpart\n?? vendor/source/repo-01-00.packpart\n?? vendor/source/repo-02-00.packpart\n?? vendor/source/repo-03-00.packpart\n?? vendor/source/repo-04-00.packpart\n?? vendor/source/repo-05-00.packpart\n?? vendor/source/repo-06-00.packpart\n?? vendor/source/repo-07-00.packpart\n?? vendor/source/repo-08-00.packpart\n?? vendor/source/repo-09-00.packpart\n?? vendor/source/repo-10-00.packpart\n?? vendor/source/repo-11-00.packpart\n?? vendor/source/repo-12-00.packpart\n?? vendor/source/repo-13-00.packpart\n?? vendor/source/repo-14-00.packpart\n?? vendor/source/repo-15-00.packpart\n?? vendor/source/repo-16-00.packpart\n?? vendor/source/repo-17-00.packpart\n?? vendor/source/repo-18-00.packpart\n?? vendor/source/repo-19-00.packpart\n?? vendor/source/repo-20-00.packpart\n?? vendor/source/repo-21-00.packpart\n?? vendor/source/repo-22-00.packpart\n?? vendor/source/repo-23-00.packpart\n?? vendor/source/repo-24-00.packpart\n?? vendor/source/repo-25-00.packpart\n?? vendor/source/repo-26-00.packpart\n?? vendor/source/repo-27-00.packpart\n?? vendor/source/repo-28-00.packpart\n?? vendor/source/repo-29-00.packpart\n?? vendor/source/repo-30-00.packpart\n?? vendor/source/repo-31-00.packpart\n?? vendor/source/repo-32-00.packpart\n?? vendor/source/repo-33-00.packpart\n?? vendor/source/repo-34-00.packpart\n?? vendor/source/repo-35-00.packpart\n?? vendor/source/repo-36-00.packpart\n?? vendor/source/repo-37-00.packpart\n?? vendor/source/rust-crates.tar.gz",
     "cleanTree": false,
     "dirtyBuildOverride": [
       ".gitignore",
       "CMakeLists.txt",
       "README.md",
       "core/upstream/dolphin_web_core.cpp",
+      "docs/testing/city-folk-regression.md",
       "index.html",
       "package.json",
       "provenance/dolphin-source.lock.json",
@@ -19,7 +20,9 @@
       "src/input.js",
       "src/upstream-discio-worker.js",
       "src/upstream-worker-protocol.js",
+      "tests/input.test.mjs",
       "tools/build-corresponding-source.mjs",
+      "tools/build-native-core.mjs",
       "tools/build-upstream-target.mjs",
       "tools/configure-upstream-wasm.mjs",
       "tools/core-build-info.mjs",
@@ -94,18 +97,18 @@
     "vendorResultTree": "d5ac2a1c3a375a636f8bf4411e01d2fd17b5f4aa",
     "sourceLockSha256": "de6b53be971e1322e3b686e2bcad9a1e89ab1ac4921c3d24b1b063c4ea828790",
     "vendorSnapshotSha256": "2b82bcc0f774d3a5ce57e59d52baa1c0d158abdf45b9436c34334935f4f09e67",
-    "localInputsSha256": "743435da88f6c93975cae5902031df9d107cd250d10d65745675f93dc0593f2b",
+    "localInputsSha256": "817212a7b65735d3ac14497d32150b51b3eccce3d60adbbc34e389dc3a3668a7",
     "localInputs": [
       {
         "path": "core/upstream/dolphin_web_core.cpp",
-        "size": 47226,
-        "sha256": "ab3adaeaf5bff6c98522c594ee7ac473695956474ecdd42674ab9c56aa962970",
+        "size": 49203,
+        "sha256": "0a5557381a3e092d0ee33f86e666caae1298b08182060cc227fcd27fbf37e3d6",
         "hashMode": "lf-normalized"
       },
       {
         "path": "core/upstream/dolphin_web_controller.h",
-        "size": 3412,
-        "sha256": "bedefe34b3cf118aa20c176def4488810c465630f678082d7a1912741d98651e",
+        "size": 3981,
+        "sha256": "020ee50971d2db47ee323152f48b3f151fcbec704f1e8c45cf2e7399bd03acd2",
         "hashMode": "lf-normalized"
       },
       {
@@ -275,30 +278,30 @@
     "js": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.js",
       "size": 270315,
-      "sha256": "2c4d466adeab1e24a08a1bb92e381366a656c5227243ba7682e299609f85f4df",
+      "sha256": "a2f9bcf89960f000a30ae73787d5bb55c68860a67b4c063aec34c796d6debdd6",
       "hashMode": "lf-normalized"
     },
     "wasm": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13216891,
-      "sha256": "b05f4b85cdebfabda37c45ec7d6f12d02f084d2f14e239afa8f7131cb24ad443",
+      "size": 13220073,
+      "sha256": "fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
       "hashMode": "raw"
     },
     "wasmSections": [
       {
         "id": 1,
         "size": 1980,
-        "sha256": "a2811d81c8d724116282a40a78bb0a3f1185e697610fe9694f382490a98ed477"
+        "sha256": "015940572e694b6da58d671f34d2862254ef25528d8505327ae7c51524b8c64a"
       },
       {
         "id": 2,
         "size": 2457,
-        "sha256": "6e772a2f12fc4e16c92011e03bdd79433e42eb70351d54ea033e97881e0be982"
+        "sha256": "095f48c13790bda507c070b7b24e3ee87d91963c3e463df04a30ab32b97dd3f2"
       },
       {
         "id": 3,
         "size": 12958,
-        "sha256": "fb0c098d14c730ca90f9058742a1ffbe51f145f862ebafbed2720a76d40ff443"
+        "sha256": "f7cb0ea7b8e73a7cac87c0026889e5cc588b14837b6516be4c4f3ef81fdc6596"
       },
       {
         "id": 4,
@@ -308,12 +311,12 @@
       {
         "id": 6,
         "size": 49,
-        "sha256": "43c1e7312449e7c1a889fb3a487f8fb7cccafdd47ab88a0c388d3f0f19d7bb08"
+        "sha256": "636e1e422c7a26f46ee3f8761debb80ccf389f6db6c291c5df84185db2fc1eed"
       },
       {
         "id": 7,
         "size": 1081,
-        "sha256": "30a7bb07b020cc20a9cf6c12a47489c4fb9cac0688961e58f40b3861f88ba489"
+        "sha256": "cd0e01acce437bbc9bf15e8418b78d07d6c140bc981397a43cc025e39593f142"
       },
       {
         "id": 8,
@@ -323,7 +326,7 @@
       {
         "id": 9,
         "size": 24124,
-        "sha256": "8c6c87aa7d5a275aeb77eaa3cc1857d763e1855a9c9ca518cdf7e4c0337f0518"
+        "sha256": "4da99b5ed813f6730968c08ed15a16ceab9f690fb29b902cb31d26249145863e"
       },
       {
         "id": 12,
@@ -332,13 +335,13 @@
       },
       {
         "id": 10,
-        "size": 10682856,
-        "sha256": "9a9aa593541b9536950ba63f573b13007e2710184dffb50e394bec89daad6d7b"
+        "size": 10685718,
+        "sha256": "02d40ab4bdb8ba2b7ec30bf853c84b6ffd4ca403ec611523c635146c1bfa352e"
       },
       {
         "id": 11,
-        "size": 2491335,
-        "sha256": "b18af47c2d36dbeb74798b741aaae87a35bfe83ef3627841b3cde3c4de99ea81"
+        "size": 2491655,
+        "sha256": "4a978616730c17cf8234976f0cb683da2901db60511416ac694baf451132888a"
       }
     ]
   }

@@ -146,6 +146,7 @@ let touchInputState = {};
 let gamepadPressed = new Set();
 let gamepadInputState = null;
 let lastGamepadInput = null;
+let pointerSource = null;
 let combinedPressed = new Set();
 let lastFrameInfo = null;
 let lastRuntimeUiTime = -Infinity;
@@ -264,6 +265,7 @@ wireDiagnostics();
 wirePanelToggle();
 wireVolumeDial();
 wireAspectSelect();
+wireUpscaling();
 wireScreenFit();
 wireFileMounting();
 wireTransport();
@@ -1025,6 +1027,7 @@ function wireKeyboard() {
   const releaseAll = () => {
     source.reset(); touchPressed.clear(); mousePressed.clear(); mouseInputState = null;
     gamepadPressed.clear(); gamepadInputState = null; lastGamepadInput = null;
+    pointerSource = null;
     syncInput("Ready");
   };
   window.addEventListener("blur", releaseAll);
@@ -1061,33 +1064,65 @@ function wireMouse() {
   canvas.tabIndex = 0;
   canvas.addEventListener("pointerdown", () => canvas.focus({ preventScroll: true }));
   canvas.style.touchAction = "none";
-  const release = () => { mousePressed.clear(); mouseInputState = null; syncInput("Mouse"); };
+  const buttons = createButtonSource(pressed => { mousePressed = pressed; syncInput("Mouse"); }, minimumInputPressMs);
+  const release = () => { mouseInputState = null; buttons.reset(); };
   mouseMode.addEventListener("change", release);
+  window.addEventListener("blur", release);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
   canvas.addEventListener("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
   canvas.addEventListener("pointerdown", event => {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
     event.preventDefault();
     canvas.setPointerCapture(event.pointerId);
     const control = ["A", "Z", "B"][event.button];
-    if (control) mousePressed.add(control);
     move(event);
+    if (control) buttons.down(event.button, control);
   });
   function move(event) {
-    if (event.pointerType !== "mouse" || mouseMode.value === "off" || !canvas.hasPointerCapture(event.pointerId)) return;
+    if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
+    if (mouseMode.value === "stick" && !canvas.hasPointerCapture(event.pointerId)) return;
     const rect = canvas.getBoundingClientRect();
     const axis = (position, start, size) => Math.round(128 + Math.max(-1, Math.min(1, (position - start) / size * 2 - 1)) * 96);
     const x = axis(event.clientX, rect.left, rect.width);
     const y = 256 - axis(event.clientY, rect.top, rect.height);
     mouseInputState = mouseMode.value === "stick" ? { stickX: x, stickY: y } : { cStickX: x, cStickY: y };
+    if (mouseMode.value === "cstick") pointerSource = "mouse";
     syncInput("Mouse");
   }
   canvas.addEventListener("pointermove", move);
   canvas.addEventListener("pointerup", event => {
-    mousePressed.delete(["A", "Z", "B"][event.button]);
-    if (!event.buttons) release(); else syncInput("Mouse");
+    if (event.pointerType !== "mouse") return;
+    if (!event.buttons && mouseMode.value === "stick") mouseInputState = null;
+    buttons.up(event.button);
+  });
+  canvas.addEventListener("pointerleave", event => {
+    if (event.pointerType === "mouse" && !event.buttons) release();
   });
   canvas.addEventListener("pointercancel", release);
-  canvas.addEventListener("lostpointercapture", release);
+  canvas.addEventListener("lostpointercapture", event => {
+    // Normal mouse-up ends capture, but absolute Wii aim stays at the click.
+    if (event.pointerType === "mouse" && !event.buttons && mouseMode.value === "cstick") return;
+    if (event.pointerType === "mouse") release();
+  });
+}
+
+function wireUpscaling() {
+  const select = document.querySelector("#displayUpscaling");
+  const preference = "dolphin-display-upscaling";
+  try {
+    const saved = localStorage.getItem(preference);
+    if (["default", "smooth", "crisp"].includes(saved)) select.value = saved;
+  } catch {}
+  const apply = () => {
+    // Browser composition scales the existing game surface, including an
+    // OffscreenCanvas. No additional framebuffer, render pass or upload.
+    elements.dropZone.dataset.upscaling = select.value;
+  };
+  apply();
+  select.addEventListener("change", () => {
+    apply();
+    try { localStorage.setItem(preference, select.value); } catch {}
+  });
 }
 
 function minimumInputPressMs() {
@@ -1104,7 +1139,8 @@ function wireTouchControls() {
   exit.className = "fullscreen-exit"; exit.type = "button"; exit.textContent = "✕ Exit";
   exit.addEventListener("click", () => elements.fullscreenButton.click());
   elements.dropZone.append(exit);
-  const controls = wireMobileControls({ canvas: elements.screen, minimumPressMs: minimumInputPressMs, onChange: (pressed, axes) => {
+  const controls = wireMobileControls({ canvas: elements.screen, minimumPressMs: minimumInputPressMs, onChange: (pressed, axes, aiming) => {
+    if (aiming) pointerSource = "touch";
     touchPressed = pressed; touchInputState = axes; syncInput("Touch");
   } });
   const mode = document.querySelector("#touchMode");
@@ -1239,6 +1275,10 @@ function wireGamepadPolling() {
       return;
     }
 
+    const pointerChanged = nextGamepadInput?.state.cStickX !== lastGamepadInput?.state.cStickX ||
+      nextGamepadInput?.state.cStickY !== lastGamepadInput?.state.cStickY;
+    if (pointerChanged && (pointerSource === "gamepad" ||
+        (nextGamepadInput && (nextGamepadInput.state.cStickX !== 128 || nextGamepadInput.state.cStickY !== 128)))) pointerSource = "gamepad";
     lastGamepadInput = nextGamepadInput;
     gamepadPressed = nextGamepadInput?.pressed ?? new Set();
     gamepadInputState = nextGamepadInput?.state ?? null;
@@ -1261,7 +1301,16 @@ function wireGamepadPolling() {
 
 function syncInput(source) {
   combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed);
-  host.setInputState(inputStateFromPressed(combinedPressed, { ...gamepadInputState, ...mouseInputState, ...touchInputState }));
+  const analog = { ...gamepadInputState, ...mouseInputState, ...touchInputState };
+  // Retained absolute aim belongs to the device that most recently moved it.
+  // A previous screen tap must not pin the cursor over later mouse/pad input.
+  const pointer = { mouse: mouseInputState, touch: touchInputState, gamepad: gamepadInputState }[pointerSource];
+  if (pointerSource) {
+    analog.cStickX = pointer?.cStickX ?? 128;
+    analog.cStickY = pointer?.cStickY ?? 128;
+  }
+  const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed);
+  host.setInputState(inputStateFromPressed(combinedPressed, analog, digitalPressed));
   elements.inputSource.textContent = source;
 
   for (const chip of elements.controlGrid.children) {

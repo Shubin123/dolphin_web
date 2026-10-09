@@ -67,6 +67,19 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/`);
   await page.waitForFunction(() => crossOriginIsolated && window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.coreKind), 'upstream');
+  // Display scaling uses composition; selecting it must preserve the existing
+  // frame dimensions, core settings and default filtering across a reload.
+  const displayBefore = await page.$eval('#screen', el => ({width:el.width,height:el.height,filter:getComputedStyle(el).imageRendering}));
+  assert.equal(await page.$eval('#displayUpscaling',el=>el.value),'default');
+  const originalUrl = page.url();
+  await page.select('#displayUpscaling','smooth');
+  assert.deepEqual(await page.$eval('#screen',el=>({width:el.width,height:el.height,filter:getComputedStyle(el).imageRendering})),{...displayBefore,filter:'auto'});
+  assert.equal(page.url(),originalUrl,'display scaling must not restart emulation');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('dolphin-display-upscaling')),'smooth');
+  await page.select('#displayUpscaling','crisp');
+  assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).imageRendering),'pixelated');
+  await page.select('#displayUpscaling','default');
+  assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).imageRendering),displayBefore.filter);
   const conditionalScript = await page.evaluate(async () => {
     const response = await fetch('./conditional-script.js', {
       headers: {'If-None-Match':'"bootstrap-v1"', 'If-Modified-Since':'Thu, 08 Oct 2026 00:00:00 GMT'}
@@ -116,6 +129,15 @@ try {
   assert.ok(await page.evaluate(() => window.__lastInput.stickX > 180));
   await page.mouse.up();
   assert.equal(await page.evaluate(() => window.__lastInput.stickX), 128);
+  await page.select('#mouseMode','cstick');
+  await inputCanvas.scrollIntoView();
+  const aimRect = await inputCanvas.boundingBox();
+  await page.mouse.move(aimRect.x+aimRect.width*.75,aimRect.y+aimRect.height*.25);
+  assert.ok(await page.evaluate(()=>window.__lastInput.cStickX>160&&window.__lastInput.cStickY>160),'hover must aim without a held mouse button');
+  await page.mouse.click(aimRect.x+aimRect.width*.75,aimRect.y+aimRect.height*.25);
+  await page.waitForFunction(()=>(window.__lastInput.mask&1)===0);
+  assert.ok(await page.evaluate(()=>window.__lastInput.cStickX>160&&window.__lastInput.cStickY>160),'mouse-up must keep absolute aim');
+  await page.select('#mouseMode','off');
   await page.evaluate(() => {
     window.__padPollCount=0;window.__testPads=[];
     Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPollCount++;return window.__testPads;}});
@@ -138,8 +160,11 @@ try {
   await page.select('#controllerSelect','auto');
   await page.evaluate(() => window.__testPads = []);
   await page.waitForFunction(() => document.querySelector('#controllerStatus').textContent.includes('Pair'));
+  await page.select('#displayUpscaling','smooth');
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?inputPersistence=1`, {waitUntil:"networkidle0"});
   await page.waitForFunction(() => window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
+  assert.equal(await page.$eval('#displayUpscaling',el=>el.value),'smooth');
+  await page.select('#displayUpscaling','default');
   assert.match(await page.$eval('[data-binding="A"]', el => el.textContent), /KeyU/);
   await page.$eval('#resetBindings', el => el.click());
   await page.select('#librarySource','local');

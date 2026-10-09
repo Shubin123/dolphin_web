@@ -4738,7 +4738,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
   // XFB is 640x480; the visible canvas is usually larger, so nearest
   // sampling magnified every texel into a hard block — and that
   // compounded fastsw=1's already-half-res output into a very chunky
-  // image. Linear costs nothing on the GPU and smooths the upscale,
+  // image. Hardware linear filtering reuses the existing sample and pass,
   // closer to how Dolphin's other backends present. (Native res is
   // unchanged; this is purely the final present-stage filter.)
   const sampler = device.createSampler({

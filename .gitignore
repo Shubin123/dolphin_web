@@ -49,3 +49,6 @@ vendor/dolphin/
 
 # Release artifacts (GPL corresponding-source archives are built, not tracked)
 dist/
+
+# Local browser test profiles and cached data.
+/undefined/

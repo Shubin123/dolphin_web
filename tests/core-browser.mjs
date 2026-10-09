@@ -94,6 +94,12 @@ try {
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.nunchukC===0&&s.wiiHome===1;},{timeout:10000});
   await page.keyboard.up('h');
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiHome===0,{timeout:10000});
+  for (const [key, field] of [['e','nunchukZ'],['v','wiiOne'],['b','wiiTwo'],['c','wiiMinus'],['Enter','wiiPlus'],['Space','remoteShake'],['ShiftLeft','nunchukShake'],['Numpad4','tiltLeft']]) {
+    await page.keyboard.down(key);
+    await page.waitForFunction(async field=>(await window.__host.adapter.request('validationReadWebInput'))[field]===1,{timeout:10000},field);
+    await page.keyboard.up(key);
+    await page.waitForFunction(async field=>(await window.__host.adapter.request('validationReadWebInput'))[field]===0,{timeout:10000},field);
+  }
   // Real native state also covers touch, mouse axes and gamepad lifecycle.
   await page.$eval('[data-touch-button="B"]',el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:71,pointerType:'touch'})));
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiB===1,{timeout:10000});
@@ -148,7 +154,17 @@ try {
   });
   assert.equal(screenTap.wiiA,1,'screen tap must press native A');
   assert(screenTap.cStickX>180 && screenTap.cStickY>180,'screen tap must preserve its aiming position while A is latched');
-  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiA===0&&s.cStickX===128&&s.cStickY===128;},{timeout:10000});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiA===0&&s.pointerX>.55&&s.pointerY>.55;},{timeout:10000});
+  // Mouse aiming must take ownership from a retained screen tap.
+  await page.select('#mouseMode','cstick');
+  const tappedScreen=await page.$('#screen');await tappedScreen.scrollIntoView();
+  const tappedBox=await tappedScreen.boundingBox();
+  await page.mouse.move(tappedBox.x+tappedBox.width*.25,tappedBox.y+tappedBox.height*.75);
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.pointerX<-.45&&s.pointerY<-.45;},{timeout:10000});
+  await page.select('#mouseMode','off');
+  // Focus loss releases both retained taps and absolute touch aim.
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.pointerX===0&&s.pointerY===0;},{timeout:10000});
   // Sliding from a held B to A starts a new press window for A.
   await (await page.$('[data-touch-button="A"]')).scrollIntoView();
   await page.$eval('[data-touch-button="B"]',el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch',pointerId:174})));
@@ -167,21 +183,36 @@ try {
   await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).mask===0,{timeout:10000});
   await page.select('#mouseMode','cstick');
   const screen=await page.$('#screen');await screen.scrollIntoView();const box=await screen.boundingBox();
-  await page.mouse.move(box.x+box.width*0.75,box.y+box.height*0.25);await page.mouse.down();
+  await page.mouse.move(box.x+box.width*0.75,box.y+box.height*0.25);
+  await page.waitForFunction(async()=>{
+    const state=await window.__host.adapter.request('validationReadWebInput');
+    return state.wiiA===0&&Math.abs(state.pointerX-.5)<.03&&Math.abs(state.pointerY-.5)<.03;
+  },{timeout:10000});
+  await page.mouse.down();
   await page.waitForFunction(async()=>{
     const state=await window.__host.adapter.request('validationReadWebInput');return state.wiiA===1&&state.cStickX>160&&state.cStickY>160;
   },{timeout:10000});
   await page.mouse.up();
   await page.waitForFunction(async()=>{
-    const state=await window.__host.adapter.request('validationReadWebInput');return state.wiiA===0&&state.cStickX===128&&state.cStickY===128;
+    const state=await window.__host.adapter.request('validationReadWebInput');return state.wiiA===0&&Math.abs(state.pointerX-.5)<.03&&Math.abs(state.pointerY-.5)<.03;
   },{timeout:10000});
+  // Hover reaches all four corners without a circular gate or recenter on click.
+  for (const [x,y] of [[.05,.05],[.95,.05],[.05,.95],[.95,.95]]) {
+    await page.mouse.move(box.x+box.width*x,box.y+box.height*y);
+    await page.waitForFunction(async({x,y})=>{
+      const s=await window.__host.adapter.request('validationReadWebInput');
+      return Math.abs(s.pointerX-(x*2-1))<.04&&Math.abs(s.pointerY-(1-y*2))<.04;
+    },{timeout:10000},{x,y});
+  }
+  await page.select('#mouseMode','off');
   await page.evaluate(()=>{
-    window.__nativeTestPads=[{index:0,id:'Native E2E controller',mapping:'standard',connected:true,axes:[0.8,0,0,0],buttons:Array.from({length:17},(_,i)=>({pressed:i===0,value:i===0?1:0}))}];
+    window.__nativeTestPads=[{index:0,id:'Native E2E controller',mapping:'standard',connected:true,axes:[0.6,0,0.6,0],buttons:Array.from({length:17},(_,i)=>({pressed:i===0,value:i===0?1:0}))}];
     Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>window.__nativeTestPads});
     window.dispatchEvent(new Event('gamepadconnected'));
   });
   await page.waitForFunction(async()=>{
-    const state=await window.__host.adapter.request('validationReadWebInput');return state.wiiA===1&&state.stickX>180;
+    const state=await window.__host.adapter.request('validationReadWebInput');
+    return state.wiiA===1&&state.nunchukStickX>.3&&state.nunchukStickX<.7&&state.pointerX>.3&&state.pointerX<.7;
   },{timeout:10000});
   await page.select('#controllerSelect','off');
   await page.waitForFunction(async()=>{

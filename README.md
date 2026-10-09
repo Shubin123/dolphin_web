@@ -25,7 +25,8 @@ dolphin_emscripten/   C++ wrapper, locked Dolphin patches and build tooling
   vendor/dolphin/     Materialized pinned upstream source
   CMakeLists.txt     dolphin_web_bundle and dolphin_web_assets targets
 dolphin_web/         Public web distribution
-  web/               Self-contained Pages deployment, including WASM
+  app/               Owned frontend UI source
+  web/               Generated Pages deployment, including packaged WASM
   tests/             Distribution tests
 ```
 
@@ -33,19 +34,19 @@ dolphin_web/         Public web distribution
 node ../dolphin_emscripten/tools/export-web.mjs web
 ```
 
-The backend follows Azahar's explicit sibling output-directory pattern using `DOLPHIN_WEB_ASSET_DIR`. See [the source repository](https://github.com/Shubin123/dolphin_emscripten) and [build guide](web/docs/repro-build.md). The shipped WASM is an inherited prebuilt core; its original build record and source locks are retained unchanged.
+The backend follows Azahar's explicit sibling output-directory pattern using `DOLPHIN_WEB_ASSET_DIR`. See [backend development setup](https://github.com/Shubin123/dolphin_emscripten/blob/main/docs/development.md). The WASM is rebuilt from the backend source. `npm run build` builds this repository’s UI without overwriting engine assets; `npm run check` verifies both inventories. Backend sync invokes the frontend build automatically. All Pages builds import the successful runtime artifact for current backend main; configure `BACKEND_READ_TOKEN` for private backend access. Workflows must be committed and pushed to take effect.
 
 GitHub Actions deploys `web/` to Pages on `main` pushes. A same-origin service worker supplies isolation headers needed for SharedArrayBuffer; the first visit may reload once. HTTPS and service-worker support are required.
 
 ## Source and license
 
-Based on [dougchansan/wasm-dolphin](https://github.com/dougchansan/wasm-dolphin), which compiles [Dolphin](https://github.com/dolphin-emu/dolphin). GPL-2.0-or-later. Original attribution, licenses and documentation remain in [web/README.upstream.md](web/README.upstream.md). This project is independent of the Dolphin Emulator Project.
+Based on [dougchansan/wasm-dolphin](https://github.com/dougchansan/wasm-dolphin), which compiles [Dolphin](https://github.com/dolphin-emu/dolphin). GPL-2.0-or-later. Original attribution and documentation remain in [README.upstream.md](README.upstream.md); the deployed runtime includes LICENSE. This project is independent of the Dolphin Emulator Project.
 
-The public `web/` directory includes the C ABI wrapper, build scripts, locked upstream SHA, patch series and provenance so the compiled core's source remains accessible even if the sibling development repo is private. The corresponding-source release archive contains the patched upstream C++ tree and build inputs. No games or commercial save states are included.
+The backend owns C++ source and build scripts. The runtime contains artifact provenance and license information; distribute the matching corresponding-source archive alongside releases, especially if the backend is private. The corresponding-source release archive contains the patched upstream C++ tree and build inputs. No games or commercial save states are included.
 
 ## Current limits
 
-This is an experimental port. Performance and rendering vary by game/browser. Software rendering is the default; hardware WebGPU is experimental. Wii support is partial and Wii Remote input is unavailable. The archive catalog contains 110 ISO entries in the bundled snapshot and refreshes from Archive metadata. Remote files use Internet Archive’s CORS-enabled stream endpoint (`archive.org/cors/Wii_ISO/`); source links and device downloads use the requested `archive.org/download/Wii_ISO` location. Catalog metadata is cached with a bundled fallback; game images are streamed directly into browser storage. Progress includes percentage, bytes, speed and ETA, and Cancel discards incomplete files. File-size mismatches and storage failures leave no playable cache entry. Games require enough browser storage, and the app itself must be loaded to play cached images. Wii compatibility still depends on the emulator’s partial Wii support.
+This is an experimental port. Performance and rendering vary by game/browser. Software rendering is the default; hardware WebGPU is experimental. The native bridge supplies an emulated Wii Remote and Nunchuk; Wii compatibility remains partial. The archive catalog contains 110 ISO entries in the bundled snapshot and refreshes from Archive metadata. Remote files use Internet Archive’s CORS-enabled stream endpoint (`archive.org/cors/Wii_ISO/`); source links and device downloads use the requested `archive.org/download/Wii_ISO` location. Catalog metadata is cached with a bundled fallback; game images are streamed directly into browser storage. Progress includes percentage, bytes, speed and ETA, and Cancel discards incomplete files. File-size mismatches and storage failures leave no playable cache entry. Games require enough browser storage, and the app itself must be loaded to play cached images. Wii compatibility still depends on the emulator’s partial Wii support.
 
 ## Verification
 
@@ -60,10 +61,20 @@ npm run test:live   # Live Archive metadata + first 256 ISO bytes
 
 The browser test serves a Pages-style subpath without isolation headers. It checks the service worker, persistent local library, archive catalog, download/cancel/error cleanup, Save file, automatic download-and-play and cached replay, and mounts a generated metadata-only disc through the real Dolphin WASM. Unit tests also exercise streaming byte counts beyond 4 GiB without buffering the image. A live browser probe verified Archive metadata and the first 256 bytes of an ISO through the CORS endpoint; a full multi-gigabyte download and commercial gameplay were not run. A second E2E test boots an original generated 16 MiB homebrew disc, verifies the PowerPC guest program counter and advancing emulated time, and checks pause/resume. The generated guest has no graphics, so these tests do not establish commercial-game rendering, Wii Remote compatibility, or gameplay performance.
 
-[Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.3).
+[Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.1).
 
 The Pages workflow runs `npm ci`, the WASM smoke and library regression tests, and both browser E2E suites before publishing. Archive tests use generated disc fixtures; the optional live test cancels the stream after reading its header. Test programs and generators are committed under `tests/`; game images are not.
 
 ### Input controls
 
-Open **Keyboard, mouse & Bluetooth controller** in the side panel. Click a keyboard binding and press a new key; mappings persist locally and can be reset. Enable the main stick or C-stick mouse mode and hold/drag on the game screen; left/right/middle mouse buttons send A/B/Z and releasing centers the stick. Pair Bluetooth controllers in your operating system, then press a button while the page is open. USB controllers also work through the Gamepad API. Choose a detected controller or disable controller input, and adjust the stick deadzone. These controls target GameCube port 1; Wii Remote motion is not implemented.
+Open **Keyboard, mouse & Bluetooth controller** in the side panel. Click a keyboard binding and press a new key; mappings persist locally and can be reset. Enable **Wii pointer / C-stick** mouse mode to aim by moving over the screen. Aim stays in place after a click; left/right/middle buttons send A/B/− (GameCube A/B/Z). Main stick mouse mode uses hold/drag and centers on release. Screen touches also retain aim after a tap. Losing focus releases controls and aim.
+
+Wii mappings: X/Z = A/B, V/B = 1/2, Enter/C = +/−, H = Home, Q/E = Nunchuk C/Z, WASD = Nunchuk stick, IJKL = pointer. Space shakes the Remote, left Shift shakes the Nunchuk, and numpad 4/6/8/2 tilts the Remote left/right/forward/backward. Touch controls provide buttons, movement, aiming, and shake. Pair USB or Bluetooth standard controllers through your operating system; the left stick moves the Nunchuk and the right stick aims. These are emulated controls; physical Wii Remote sensor input and MotionPlus are not implemented.
+
+### Display upscaling
+
+**Display upscaling** applies immediately and remembers your choice: **Current default**, **Smooth**, or **Crisp pixels**. The default renderer, resolution and filtering remain unchanged. Scaling uses the browser's existing canvas composition, including transferred OffscreenCanvas surfaces and fullscreen; it adds no emulator framebuffer, upload, CPU pixel loop or render pass. The backend's WebGPU presenter already uses hardware linear filtering in its existing single blit. This enlarges native output; it does not increase internal rendering detail. No commercial-game FPS improvement is claimed.
+
+### iOS validation
+
+`npm run test:ios` verifies real WASM execution and persistent saves in mobile-emulated WebKit, including the Pages isolation path and native touch inputs. Physical iPhone/iPad performance remains untested; there is no iOS guarantee. See [device validation and memory limits](docs/ios.md).

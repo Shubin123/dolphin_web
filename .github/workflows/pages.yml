@@ -2,6 +2,8 @@ name: GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '17,47 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,6 +25,10 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci
+      - name: Import current backend runtime and matching source
+        run: node tools/latest-backend.mjs
+        env:
+          GH_TOKEN: ${{ secrets.BACKEND_READ_TOKEN || github.token }}
       - run: npm run build
       - name: WASM smoke and library regression tests
         run: npm run check
@@ -30,6 +36,10 @@ jobs:
         run: npm run test:e2e
         env:
           CHROME_PATH: /usr/bin/google-chrome
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Mobile WebKit emulator and touch regressions
+        run: npm run test:ios
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

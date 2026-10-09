@@ -19,7 +19,13 @@ export const BUTTONS = Object.freeze({
   C_STICK_DOWN: 1 << 17,
   C_STICK_LEFT: 1 << 18,
   C_STICK_RIGHT: 1 << 19,
-  WII_HOME: 1 << 20
+  WII_HOME: 1 << 20,
+  WII_SHAKE: 1 << 21,
+  NUNCHUK_SHAKE: 1 << 22,
+  WII_TILT_LEFT: 1 << 23,
+  WII_TILT_RIGHT: 1 << 24,
+  WII_TILT_FORWARD: 1 << 25,
+  WII_TILT_BACKWARD: 1 << 26
 });
 
 export const CONTROL_LABELS = Object.freeze([
@@ -43,7 +49,13 @@ export const CONTROL_LABELS = Object.freeze([
   "C_STICK_DOWN",
   "C_STICK_LEFT",
   "C_STICK_RIGHT",
-  "WII_HOME"
+  "WII_HOME",
+  "WII_SHAKE",
+  "NUNCHUK_SHAKE",
+  "WII_TILT_LEFT",
+  "WII_TILT_RIGHT",
+  "WII_TILT_FORWARD",
+  "WII_TILT_BACKWARD"
 ]);
 
 export const DEFAULT_KEY_BINDINGS = Object.freeze({
@@ -56,6 +68,12 @@ export const DEFAULT_KEY_BINDINGS = Object.freeze({
   KeyE: "R",
   KeyC: "Z",
   KeyH: "WII_HOME",
+  Space: "WII_SHAKE",
+  ShiftLeft: "NUNCHUK_SHAKE",
+  Numpad4: "WII_TILT_LEFT",
+  Numpad6: "WII_TILT_RIGHT",
+  Numpad8: "WII_TILT_FORWARD",
+  Numpad2: "WII_TILT_BACKWARD",
   ArrowUp: "D_UP",
   ArrowDown: "D_DOWN",
   ArrowLeft: "D_LEFT",
@@ -278,14 +296,22 @@ export function formatControlLabel(label) {
   return label.replaceAll("_", " ");
 }
 
-export function inputStateFromPressed(pressed, analogState = null) {
+export function inputStateFromPressed(pressed, analogState = null, digitalPressed = null) {
   const state = analogState ? { ...DEFAULT_PAD_STATE, ...analogState } : { ...DEFAULT_PAD_STATE };
   state.mask = buttonMaskFromPressed(pressed) | (state.mask >>> 0);
 
-  applyDigitalAxis(state, pressed, "STICK_LEFT", "STICK_RIGHT", "stickX");
-  applyDigitalAxis(state, pressed, "STICK_DOWN", "STICK_UP", "stickY");
-  applyDigitalAxis(state, pressed, "C_STICK_LEFT", "C_STICK_RIGHT", "cStickX");
-  applyDigitalAxis(state, pressed, "C_STICK_DOWN", "C_STICK_UP", "cStickY");
+  // A caller with separate sources can exclude gamepad direction indicators
+  // from the native mask, while real keyboard directions still override aim.
+  if (digitalPressed) {
+    const axisMask = 0xff << 12;
+    state.mask = (state.mask & ~axisMask) | (buttonMaskFromPressed(digitalPressed) & axisMask);
+  }
+  const directions = digitalPressed ?? pressed;
+
+  applyDigitalAxis(state, directions, "STICK_LEFT", "STICK_RIGHT", "stickX", !!digitalPressed);
+  applyDigitalAxis(state, directions, "STICK_DOWN", "STICK_UP", "stickY", !!digitalPressed);
+  applyDigitalAxis(state, directions, "C_STICK_LEFT", "C_STICK_RIGHT", "cStickX", !!digitalPressed);
+  applyDigitalAxis(state, directions, "C_STICK_DOWN", "C_STICK_UP", "cStickY", !!digitalPressed);
 
   if (pressed.has("L")) state.triggerLeft = 0xff;
   if (pressed.has("R")) state.triggerRight = 0xff;
@@ -295,7 +321,10 @@ export function inputStateFromPressed(pressed, analogState = null) {
   return state;
 }
 
-function applyDigitalAxis(state, pressed, negativeButton, positiveButton, field) {
+function applyDigitalAxis(state, pressed, negativeButton, positiveButton, field, preferDigital = false) {
+  // Gamepad direction chips are indicators; they must not quantize analog
+  // movement (especially the Wii pointer) to full scale past the threshold.
+  if (!preferDigital && state[field] !== DEFAULT_PAD_STATE[field]) return;
   const negative = pressed.has(negativeButton);
   const positive = pressed.has(positiveButton);
   if (negative === positive) {

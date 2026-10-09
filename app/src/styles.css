@@ -281,6 +281,11 @@ canvas {
   background: #050505;
 }
 
+/* Override theme filtering only when explicitly selected. Composition scales
+   the existing surface at window/fullscreen size without resizing the core. */
+[data-upscaling="smooth"] #screen { image-rendering: auto; }
+[data-upscaling="crisp"] #screen { image-rendering: pixelated; }
+
 .blank-probe-notice {
   position: absolute;
   left: 50%;

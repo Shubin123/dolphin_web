@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:b05f4b85cdebfabda37c45ec7d6f12d02f084d2f14e239afa8f7131cb24ad443",
+  "coreId": "sha256:fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
   "files": [
     {
       "path": "LICENSE",
@@ -10,23 +10,23 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
-      "size": 16682,
-      "sha256": "4668663cfbff2435dd1d61c623aa31f09e08cb7ac9b8fbf932f5db0d25c824be"
+      "size": 16893,
+      "sha256": "98f69583a6bc10423f4ae95dcc7e43ba8e0c6a6f55f39b369d16ae6813570a19"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
       "size": 270315,
-      "sha256": "2c4d466adeab1e24a08a1bb92e381366a656c5227243ba7682e299609f85f4df"
+      "sha256": "a2f9bcf89960f000a30ae73787d5bb55c68860a67b4c063aec34c796d6debdd6"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13216891,
-      "sha256": "b05f4b85cdebfabda37c45ec7d6f12d02f084d2f14e239afa8f7131cb24ad443"
+      "size": 13220073,
+      "sha256": "fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17503,
-      "sha256": "f996f053bae82b5a971ca2c98c0e6bd06ab808d4483c407ca20aa51d27b7d16c"
+      "sha256": "e90e6af6eed8c5656680ff34c9b715815df31e2c1d572f350ae4d96c283836f1"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
@@ -125,8 +125,8 @@
     },
     {
       "path": "src/input.js",
-      "size": 8556,
-      "sha256": "c8525d74cc94bff281452ba631c179e2c6ced02b03a73d1b155d6ebf6a8716e8"
+      "size": 9724,
+      "sha256": "933d29accb9933efed7a97ea690d8433f50b1a4564fa9f59f2f464b5a7f684bb"
     },
     {
       "path": "src/jit-cache-identity.js",
@@ -160,8 +160,8 @@
     },
     {
       "path": "src/upstream-discio-worker.js",
-      "size": 619497,
-      "sha256": "d462c79cd2af7fbafa034efb2bd8b0034fddea8af8b166999e4ab56b113a7c77"
+      "size": 619503,
+      "sha256": "29a555e3cfc75a2927f2d1d2cb0b629f207209fe4fb7ca8c727c8659eceda89c"
     },
     {
       "path": "src/upstream-main-thread-adapter.js",
@@ -176,7 +176,7 @@
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "f8fab03dd4222c1031ce182c0d7406eaa59c6cb21e4f9acacff380a94939fb12"
+      "sha256": "a0b1e47f6e63474ef09e494fc531ac45317684b281994fdca09c4d34aec955f9"
     },
     {
       "path": "src/wasm/demo-core.js",

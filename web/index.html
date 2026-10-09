@@ -155,10 +155,10 @@
                   <div class="touch-dpad" role="group" aria-label="D-pad">
                     <button class="touch-dpad-arm touch-dpad-up" data-touch-button="D_UP" aria-label="D-pad up"></button><button class="touch-dpad-arm touch-dpad-left" data-touch-button="D_LEFT" aria-label="D-pad left"></button><button class="touch-dpad-arm touch-dpad-right" data-touch-button="D_RIGHT" aria-label="D-pad right"></button><button class="touch-dpad-arm touch-dpad-down" data-touch-button="D_DOWN" aria-label="D-pad down"></button><span class="touch-dpad-center"></span>
                   </div>
-                  <div class="touch-system"><button class="touch-btn touch-system-btn" data-touch-button="Z" aria-label="Minus / GameCube Z">− / Z</button><button class="touch-btn touch-system-btn" data-touch-button="WII_HOME">HOME</button></div>
+                  <div class="touch-system"><button class="touch-btn touch-system-btn" data-touch-button="Z" aria-label="Minus / GameCube Z">− / Z</button><button class="touch-btn touch-system-btn" data-touch-button="WII_HOME">HOME</button><button class="touch-btn touch-system-btn" data-touch-button="NUNCHUK_SHAKE" aria-label="Shake Nunchuk">NC ↝</button></div>
                 </div>
                 <div class="touch-half touch-right">
-                  <div class="touch-shoulders"><button class="touch-btn touch-shoulder" data-touch-button="START" aria-label="Plus / Start">+ / START</button></div>
+                  <div class="touch-shoulders"><button class="touch-btn touch-shoulder" data-touch-button="START" aria-label="Plus / Start">+ / START</button><button class="touch-btn touch-shoulder" data-touch-button="WII_SHAKE" aria-label="Shake Wii Remote">SHAKE</button></div>
                   <div class="touch-stick touch-stick-cstick" data-touch-stick="pointer" role="group" aria-label="Wii pointer / C-stick"><i class="touch-stick-knob"></i></div>
                   <div class="touch-face">
                     <button class="touch-btn touch-face-btn touch-face-x" data-touch-button="X" aria-label="Wii 1 / GameCube X">1 / X</button><button class="touch-btn touch-face-btn touch-face-y" data-touch-button="Y" aria-label="Wii 2 / GameCube Y">2 / Y</button><button class="touch-btn touch-face-btn touch-face-a" data-touch-button="A">A</button><button class="touch-btn touch-face-btn touch-face-b" data-touch-button="B">B</button>
@@ -249,6 +249,16 @@
                             </label>
 
                             <label>
+                              <span>Display upscaling (applies immediately)</span>
+                              <select id="displayUpscaling">
+                                <option value="default">Current default</option>
+                                <option value="smooth">Smooth</option>
+                                <option value="crisp">Crisp pixels</option>
+                              </select>
+                            </label>
+                            <p class="muted">Enlarges the image to fit the screen. Smooth softens pixel edges; crisp keeps them sharp. Internal game resolution stays the same.</p>
+
+                            <label>
                               <span>Frame queue</span>
                               <select id="settingQueue">
                               <option value="2">2 frames</option>
@@ -321,11 +331,12 @@
                             <div id="keyboardBindings" class="control-grid"></div>
                             <button type="button" id="resetBindings">Reset keyboard bindings</button>
                             <label>Mouse / Wii pointer <select id="mouseMode"><option value="off">Disabled</option><option value="stick">Main stick</option><option value="cstick">Wii pointer / C-stick</option></select></label>
-                            <p>Hold and drag on the game screen: position controls the selected stick. Left / right / middle buttons = A / B / Z. Release to center.</p>
+                            <p>Wii pointer: move over the game screen to aim; clicking keeps the aim position. Main stick: hold and drag, release to center. Left / right / middle buttons = A / B / −.</p>
+                            <p>Simulated Wii motion: Space = Remote shake, left Shift = Nunchuk shake, numpad 4/6/8/2 = tilt left/right/forward/backward. All bindings can be changed above.</p>
                             <label>Controller <select id="controllerSelect"><option value="auto">Automatic</option><option value="off">Disabled</option></select></label>
                             <label>Stick deadzone <input id="controllerDeadzone" type="range" min="0" max="0.5" step="0.01" value="0.18"></label>
                             <p id="controllerStatus" role="status">Pair in device Bluetooth settings, then press a controller button.</p>
-                            <p>USB and Bluetooth standard controllers: face buttons A/B/X/Y, left/right sticks, D-pad, Start, shoulders L/R, triggers analog L/R, Select Z. Controller support depends on your browser and device. Wii Remote motion input is not available.</p>
+                            <p>USB and Bluetooth standard controllers: face buttons A/B/1/2, left stick = Nunchuk, right stick = Wii pointer, D-pad, Start = +, shoulders/triggers = Nunchuk C/Z, Select = −, Guide = Home. GameCube mappings also work. Physical Wii Remote sensor input requires browser support; motion is simulated with the bindings above.</p>
                             </details>
                             </section>
 <section class="debug-panel" id="debugPanel" aria-label="Diagnostics" hidden>

@@ -3,8 +3,9 @@
 export function wireMobileControls({ root = document, canvas, onChange, minimumPressMs = () => 100 }) {
   const pointers = new Map();
   const delayed = new Map();
+  let screenAim = null;
   const emit = () => {
-    const pressed = new Set(); const axes = {};
+    const pressed = new Set(); const axes = { ...screenAim };
     for (const entry of [...delayed.values(), ...pointers.values()]) {
       if (entry.control) pressed.add(entry.control);
       if (entry.axes) Object.assign(axes, entry.axes);
@@ -23,7 +24,8 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       element.style.setProperty('--stick-x', `${(owner.axes[`${prefix}X`] - 128) / 96 * travel}px`);
       element.style.setProperty('--stick-y', `${(128 - owner.axes[`${prefix}Y`]) / 96 * travel}px`);
     });
-    onChange(pressed, axes);
+    const aiming = [...pointers.values()].some(entry => entry.axes?.cStickX !== undefined);
+    onChange(pressed, axes, aiming);
   };
   const capture = (element, id) => { try { element.setPointerCapture(id); } catch {} };
   const retainBriefPress = entry => {
@@ -39,6 +41,7 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
     const entry = pointers.get(event.pointerId);
     if (!entry) return;
     event.preventDefault(); pointers.delete(event.pointerId);
+    if (entry.screen && !cancel) screenAim = entry.axes;
     entry.element.style.removeProperty('--stick-x'); entry.element.style.removeProperty('--stick-y');
     if (!cancel) retainBriefPress(entry);
     emit();
@@ -57,7 +60,7 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       if (kind === 'screen' && event.pointerType !== 'touch') return;
       if (event.button > 0) return;
       event.preventDefault(); capture(element, event.pointerId);
-      pointers.set(event.pointerId, { element, started: performance.now(), control: kind === 'button' ? element.dataset.touchButton : kind === 'screen' ? 'A' : null, axes: kind === 'button' ? null : position(event) });
+      pointers.set(event.pointerId, { element, screen: kind === 'screen', started: performance.now(), control: kind === 'button' ? element.dataset.touchButton : kind === 'screen' ? 'A' : null, axes: kind === 'button' ? null : position(event) });
       emit();
     });
     element.addEventListener('pointermove', event => {
@@ -86,7 +89,7 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
   const reset = () => {
     for (const entry of delayed.values()) clearTimeout(entry.timer);
     for (const entry of pointers.values()) { entry.element.style.removeProperty('--stick-x'); entry.element.style.removeProperty('--stick-y'); }
-    pointers.clear(); delayed.clear(); emit();
+    pointers.clear(); delayed.clear(); screenAim = null; emit();
   };
   window.addEventListener('blur', reset);
   document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
