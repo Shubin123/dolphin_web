@@ -37,8 +37,9 @@ try {
   await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.ready === 'true',{timeout:60000});
   await (await page.$('#libraryFiles')).uploadFile(file);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
-  // Reload to prove that Play boots a persisted image rather than the import.
-  await page.reload();
+  // Revisit to prove that Play boots a persisted image rather than the import.
+  // A normal navigation also runs through the Pages isolation worker.
+  await page.goto(testUrl.href);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   await page.click('#libraryReadyList button');
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
