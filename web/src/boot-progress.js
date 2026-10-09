@@ -17,6 +17,8 @@ const LABELS = {
 // its span after one constant and never reaches its ceiling by time alone.
 const TAU = { read: 0.6, core: 2.5, boot: 6 };
 const SLOW_BOOT_SECONDS = 30;
+const duration = seconds => seconds >= 3600 ? `${Math.floor(seconds / 3600)}h ${Math.ceil(seconds % 3600 / 60)}m`
+  : seconds >= 60 ? `${Math.floor(seconds / 60)}m ${Math.ceil(seconds % 60)}s` : `${Math.ceil(seconds)}s`;
 const bytes = size => size >= 1024 ** 3 ? `${(size / 1024 ** 3).toFixed(2)} GB` : `${(size / 1024 ** 2).toFixed(1)} MB`;
 
 export function createBootProgress(viewport) {
@@ -52,7 +54,8 @@ export function createBootProgress(viewport) {
     // Never move backwards, even when a later stage starts below an eased value.
     shown = Math.max(shown, from + (to - from) * Math.min(1, share));
     $('.boot-progress-fill').style.width = `${shown}%`;
-    $('.boot-progress-percent').textContent = `${Math.floor(shown)}%`;
+    // Large downloads move slowly; a decimal shows they are not stuck.
+    $('.boot-progress-percent').textContent = stage === 'download' ? `${shown.toFixed(1)}%` : `${Math.floor(shown)}%`;
     track.setAttribute('aria-valuenow', String(Math.floor(shown)));
     const total = Math.floor((performance.now() - started) / 1000);
     const slow = stage === 'boot' && elapsed > SLOW_BOOT_SECONDS
@@ -86,7 +89,7 @@ export function createBootProgress(viewport) {
     download(loaded, total, speed) {
       if (stage !== 'download') return;
       fraction = total ? loaded / total : 0;
-      detail = `${bytes(loaded)} / ${bytes(total)}${speed ? ` · ${bytes(speed)}/s · ~${Math.ceil((total - loaded) / speed)}s remaining` : ''}`;
+      detail = `${bytes(loaded)} / ${bytes(total)}${speed ? ` · ${bytes(speed)}/s · ~${duration((total - loaded) / speed)} remaining` : ''}`;
       render();
     },
     // Called for every frame summary. Only a booted core's visible output

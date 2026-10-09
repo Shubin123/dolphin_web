@@ -29,8 +29,8 @@
     },
     {
       "path": "src/boot-progress.js",
-      "size": 5305,
-      "sha256": "1423416b15495db617190e93b92e701c87cae57bb2a810722dd86b06d07230ca"
+      "size": 5644,
+      "sha256": "20e42123fca7589547f1a308bfb96c29e4f1824a52ef509e7aa9b3357170dcbe"
     },
     {
       "path": "src/bootstrap.js",
