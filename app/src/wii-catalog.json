@@ -1,0 +1,556 @@
+{
+  "identifier": "Wii_ISO",
+  "fetchedAt": "2026-10-08",
+  "files": [
+    {
+      "name": "Animal Crossing - City Folk (USA, Asia) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "d89f999354065c4b6071ac79d7ab854819dd012d"
+    },
+    {
+      "name": "Castlevania Judgment (USA).iso",
+      "size": "4699979776",
+      "sha1": "0843870e38c794a09173efd32634be17101ee3b9"
+    },
+    {
+      "name": "Cursed Mountain (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "b26fae5e9030a55aa4009925cb6d9097c60724e4"
+    },
+    {
+      "name": "Disney Epic Mickey (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "439f34445f7cd0c4e5dd2697902b75edef5fdc28"
+    },
+    {
+      "name": "Disney Epic Mickey 2 - The Power of Two (USA) (En,Fr,Es,Pt).iso",
+      "size": "4699979776",
+      "sha1": "abd5e464fbc6b28e124fade89b495dab1df123b8"
+    },
+    {
+      "name": "Donkey Kong - Barrel Blast (USA).iso",
+      "size": "4699979776",
+      "sha1": "684cb6c80ba0fe3fd665b65665bdfa167010e55c"
+    },
+    {
+      "name": "Donkey Kong Country Returns (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "bfd468160eff04622f70d845ac539b042e55e7b2"
+    },
+    {
+      "name": "Dragon Ball Z - Budokai Tenkaichi 3 (USA) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "9dcca1d9764da70cf9da455b9eb587e065db32ed"
+    },
+    {
+      "name": "Endless Ocean (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "a6cec1e1fbbaf858233bedab579d16d9302c33f8"
+    },
+    {
+      "name": "Endless Ocean - Blue World (USA).iso",
+      "size": "4699979776",
+      "sha1": "e628f0ecad4c7c8b50f500b1e89cba45626a2986"
+    },
+    {
+      "name": "Excite Truck (USA).iso",
+      "size": "4699979776",
+      "sha1": "d7598ca4e6ed2c43f92ec173c84468eec136077c"
+    },
+    {
+      "name": "ExciteBots - Trick Racing (USA).iso",
+      "size": "4699979776",
+      "sha1": "38b43e1e61326dd2bbae60df8da29c50dc880245"
+    },
+    {
+      "name": "Fire Emblem - Radiant Dawn (USA) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "1b75077919326bbd4396fb59961b17da599eea07"
+    },
+    {
+      "name": "Fishing Master (USA).iso",
+      "size": "4699979776",
+      "sha1": "e16d6bcb5c63396414c9579e335e0b53e949993d"
+    },
+    {
+      "name": "Fishing Master World Tour (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "e761e035953647722f310d06a95e853f03521653"
+    },
+    {
+      "name": "Fishing Resort (USA).iso",
+      "size": "4699979776",
+      "sha1": "01a3bffea111af382404cd88fba40c5ebfb6a9b8"
+    },
+    {
+      "name": "Fortune Street (USA).iso",
+      "size": "4699979776",
+      "sha1": "2292ecc8ed3fbae7496d2605a3656a9dc60f8fef"
+    },
+    {
+      "name": "Fragile Dreams - Farewell Ruins of the Moon (USA) (En,Ja,Fr).iso",
+      "size": "4699979776",
+      "sha1": "7e84f6d2c73aaaf6f7e3bc5067f478ff17bb5db4"
+    },
+    {
+      "name": "Go Vacation (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "f8effdaffd75110f19194c2222a3ce731a2da5c0"
+    },
+    {
+      "name": "Gold's Gym - Cardio Workout (USA).iso",
+      "size": "4699979776",
+      "sha1": "8b942daa3805b6af8273245f1d35658ec4598d19"
+    },
+    {
+      "name": "Gold's Gym - Dance Workout (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "2dc7940e9359399cb0379918cf2e49a68bec11f8"
+    },
+    {
+      "name": "House of the Dead 2 and 3 Return, The (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "95e7b687caf0a2a68d429f598b33f71736837ae4"
+    },
+    {
+      "name": "House of the Dead, The - Overkill (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "53115d592e08e4f7c177d5335c031c33b2b00d7c"
+    },
+    {
+      "name": "Just Dance 2019 (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "bd427d15c1f7121dfc2b57de1400fe7e6cb8eda5"
+    },
+    {
+      "name": "Just Dance 2020 (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "1492b6dbb5331a3ef39fe15f30875397a5ef86fc"
+    },
+    {
+      "name": "Just Dance 3 (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "ddf61823d9d74451121cbf400a7ea25e222d36c5"
+    },
+    {
+      "name": "Just Dance 4 (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "f656364f82fbdb0e75546f5eff4f6c0c38e3974f"
+    },
+    {
+      "name": "Kid Adventures - Sky Captain (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "bc82722b61e7eed4d1d66587bfcc36128d4537d3"
+    },
+    {
+      "name": "Kirby's Dream Collection - Special Edition (USA).iso",
+      "size": "4699979776",
+      "sha1": "598ec9e2a29ae82ed04a4a4c0c261fb80c3f82e5"
+    },
+    {
+      "name": "Kirby's Epic Yarn (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "934683f734412386042060f7036d5f3db20cb53f"
+    },
+    {
+      "name": "Kirby's Return to Dream Land (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "d7adcdc8e3fe7f164eb95f53094974fc31e76ccb"
+    },
+    {
+      "name": "Legend of Zelda, The - Skyward Sword (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "9abe26cb43e234fdeb23955fcb95801e617c4649"
+    },
+    {
+      "name": "Little King's Story (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "59ea4417c87c166ec04b9aedf1aedc443ef8076e"
+    },
+    {
+      "name": "Lost in Shadow (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "0b59c2917a1ef78ad4e4726a25613c1ebb6720e2"
+    },
+    {
+      "name": "MadWorld (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "5daefee01611b326ef0c3ad1c6370aa6c4837a6d"
+    },
+    {
+      "name": "Mario Kart Wii (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "9faca97115fb267c1b8a4d8a05fb22f42a904733"
+    },
+    {
+      "name": "Mario Party 8 (USA) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "2252edd39961d3de9cf8ce529b721856960b8715"
+    },
+    {
+      "name": "Mario Party 9 (USA, Asia) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "bf3048189e0195fe4e230d2989db9f7d69ffd559"
+    },
+    {
+      "name": "Mario Sports Mix (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "aa1079bc1d0eaaa4f5b0bfd8466695a98a3ee9cb"
+    },
+    {
+      "name": "Mario Strikers Charged (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "4b6789a71069f131132f5f6b4a4150f9781f5a18"
+    },
+    {
+      "name": "Mario Super Sluggers (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "265a0897dde8192016c57a4236bc9b9bf57ab06c"
+    },
+    {
+      "name": "Metroid - Other M (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "8511160320",
+      "sha1": "afca5b8f0a9d6c632c81471e04a4f96c209f91f0"
+    },
+    {
+      "name": "Metroid Prime 3 - Corruption (USA).iso",
+      "size": "4699979776",
+      "sha1": "c6c5a57b8e55104fa197d91ea8a89c34b04d3120"
+    },
+    {
+      "name": "Metroid Prime Trilogy (USA).iso",
+      "size": "8511160320",
+      "sha1": "2204e5b19039d44b2379ab2065fd548c800ba680"
+    },
+    {
+      "name": "Monster Hunter Tri (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "ea0e5098509c241b5ec1997c14deace08dd95280"
+    },
+    {
+      "name": "Munchables, The (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "5f0671f98d0c79c4f0aac6712c3953951ae62c47"
+    },
+    {
+      "name": "Muramasa - The Demon Blade (USA).iso",
+      "size": "4699979776",
+      "sha1": "b40307079aa4d4a96d0a7d751bf5608649298874"
+    },
+    {
+      "name": "Mushroom Men - The Spore Wars (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "06609d42908f8911ecc579d790f646d7ef08bd43"
+    },
+    {
+      "name": "New Play Control! Donkey Kong Jungle Beat (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "2060d010f303d37ad25ecda8c6d7ab97aaf2fd72"
+    },
+    {
+      "name": "New Play Control! Mario Power Tennis (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "b3a03ef79f942cb95c5dff8bdb00393fb355da6c"
+    },
+    {
+      "name": "New Play Control! Pikmin (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "abdef200f685aa5f38d14633a837a01ca3b9e8c1"
+    },
+    {
+      "name": "New Super Mario Bros. Wii (USA) (En,Fr,Es) (Rev 2).iso",
+      "size": "4699979776",
+      "sha1": "9ac7242a5feebe1d0a6e2775c21f482c471b2240"
+    },
+    {
+      "name": "Nights - Journey of Dreams (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "6b977534de79d3c9b14663f327d047738db1d8bb"
+    },
+    {
+      "name": "No More Heroes (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "a8a193fb32238aa64757b3439de9c8c58467bd48"
+    },
+    {
+      "name": "No More Heroes 2 - Desperate Struggle (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "6f89a7fe49ef211ca01be73fc7332b8147d8ef78"
+    },
+    {
+      "name": "Ookami (USA).iso",
+      "size": "4699979776",
+      "sha1": "b4618f9b0c088a74b688b215509cb0aa663a3610"
+    },
+    {
+      "name": "Opoona (USA).iso",
+      "size": "4699979776",
+      "sha1": "7aac668d5f8b79039aefd13f6f5bda21f4a26f29"
+    },
+    {
+      "name": "Pandora's Tower (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "66284691913ed85029b394eef194024f4a99c614"
+    },
+    {
+      "name": "Pikmin 2 (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "77c7e815fbf3e83b71c398a70369d674bf413caa"
+    },
+    {
+      "name": "Pitfall - The Big Adventure (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "4e2f635902ccb221af6b3ebde6e25f1b9ef50471"
+    },
+    {
+      "name": "Prince of Persia - Rival Swords (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "82d8d217d392b87d8e2ad5f9c456b7a96a9a9709"
+    },
+    {
+      "name": "Prince of Persia - The Forgotten Sands (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "bc7d035a71e11cc4a70bc985bf5f3b2f612bf3b2"
+    },
+    {
+      "name": "Punch-Out!! (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "8c0c30caeb6e2ee0b29f7193852cb03920140a20"
+    },
+    {
+      "name": "Rayman - Raving Rabbids (USA) (En,Fr,Es) (Rev 2).iso",
+      "size": "4699979776",
+      "sha1": "9e9bc91fa0e0fd9bd07d6145dc88599dfd392671"
+    },
+    {
+      "name": "Rayman - Raving Rabbids - TV Party (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "6cbb61b38c63e23e05bb2340ff59fbeb42071279"
+    },
+    {
+      "name": "Rayman - Raving Rabbids 2 (USA) (En,Fr,Es) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "4c1c263e41164e9a4be055763fa723f983cf890b"
+    },
+    {
+      "name": "Red Steel (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "71b0bf94847a79af9bdc2095fb7d1a3561981a11"
+    },
+    {
+      "name": "Red Steel 2 (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "8ed7f64d9e2937b2b350b76c8679dd653b8e2c33"
+    },
+    {
+      "name": "Resident Evil - The Darkside Chronicles (USA).iso",
+      "size": "4699979776",
+      "sha1": "a1474d7b9ab42397873ccf05a6523b708f76535b"
+    },
+    {
+      "name": "Resident Evil - The Umbrella Chronicles (USA).iso",
+      "size": "4699979776",
+      "sha1": "ae52bca6e1a0bf90d8e91cb62fbfba7a9ba750f7"
+    },
+    {
+      "name": "Resident Evil 4 - Wii Edition (USA).iso",
+      "size": "4699979776",
+      "sha1": "62218f84ac3ca545992fb34c537e4fd01efb9c46"
+    },
+    {
+      "name": "Resident Evil Archives - Resident Evil (USA).iso",
+      "size": "4699979776",
+      "sha1": "2f2d1c3b0215dc0e7e4612d9579ea91693ea1ef1"
+    },
+    {
+      "name": "Resident Evil Archives - Resident Evil Zero (USA).iso",
+      "size": "4699979776",
+      "sha1": "cfb7c88eaf4cead7c0dc7ebb98c020560c7864a7"
+    },
+    {
+      "name": "Rhythm Heaven Fever (USA).iso",
+      "size": "4699979776",
+      "sha1": "23ed93266a05e515277cc6b75f075783dfae9375"
+    },
+    {
+      "name": "Rodea the Sky Soldier (USA) (En,Ja,Fr,De).iso",
+      "size": "4699979776",
+      "sha1": "b5cb04d912b163f7d1fa5700a747e698439dca5f"
+    },
+    {
+      "name": "Sin & Punishment - Star Successor (USA).iso",
+      "size": "4699979776",
+      "sha1": "76de816f77798136c870bd4a57d00eccc61d6cc3"
+    },
+    {
+      "name": "Sonic & Sega All-Stars Racing (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "efb3fd932642c981be295ae9291667a19393b509"
+    },
+    {
+      "name": "Sonic Colors (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "dc9904fb2bc09e86cc840dbcb6eb62d796b306c0"
+    },
+    {
+      "name": "Sonic Riders - Zero Gravity (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "6baf5844f7433d187de2c584a349fec348d6c592"
+    },
+    {
+      "name": "Sonic Unleashed (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "e3f792b613ff82f2adde06329a0c1b179be4091d"
+    },
+    {
+      "name": "Sonic and the Black Knight (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "d3e83bc9a7350b35e46836a35aef20146bd2a969"
+    },
+    {
+      "name": "Sonic and the Secret Rings (USA) (En,Ja,Fr,De,Es,It).iso",
+      "size": "4699979776",
+      "sha1": "e2476691d315567811dd7fc9380ba41798241807"
+    },
+    {
+      "name": "Speed Racer - The Videogame (USA) (En,Fr,Es,Pt).iso",
+      "size": "4699979776",
+      "sha1": "21e8c30201c222636478b72842359e6097d00685"
+    },
+    {
+      "name": "Spider-Man - Edge of Time (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "9dc8bc8de9fb110df14d44b007c2b9e3703f9339"
+    },
+    {
+      "name": "Spider-Man - Friend or Foe (USA).iso",
+      "size": "4699979776",
+      "sha1": "dffbb54954bc92b30cd86a3f291ec68dd0fac1ba"
+    },
+    {
+      "name": "Spider-Man - Shattered Dimensions (USA).iso",
+      "size": "4699979776",
+      "sha1": "888038b5a93c11d68bf5b0e656b0f2db435f0143"
+    },
+    {
+      "name": "Spider-Man - Web of Shadows (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "45c3173a582cc71803222555cd4e90b722a216fc"
+    },
+    {
+      "name": "Spider-Man 3 (USA).iso",
+      "size": "4699979776",
+      "sha1": "5c099250561a38d766e2cebb197f7960739c9bd3"
+    },
+    {
+      "name": "Star Wars - The Clone Wars - Lightsaber Duels (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "174dee8c37c73cc2efb4a3a24038989e150c7859"
+    },
+    {
+      "name": "Star Wars - The Clone Wars - Republic Heroes (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "47759d73539f6f2049a2784b44bd40e950c3a79a"
+    },
+    {
+      "name": "Star Wars - The Force Unleashed (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "ec6b938e5dd7776cfc1174b60afce2147077f6b1"
+    },
+    {
+      "name": "Star Wars - The Force Unleashed II (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "659f6f6d3ae8941bd9ff41647e7502e1985ae75e"
+    },
+    {
+      "name": "Super Mario All-Stars (USA).iso",
+      "size": "4699979776",
+      "sha1": "404748b4f9ecec10ac3616f223f9db55d6c43a70"
+    },
+    {
+      "name": "Super Mario Galaxy (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "a36105c9fbfff6041dc5babf4318c6a216ad470a"
+    },
+    {
+      "name": "Super Mario Galaxy 2 (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "83fbe312615f65be2123d1a88c5eb532e1feec2f"
+    },
+    {
+      "name": "Super Paper Mario (USA) (Rev 2).iso",
+      "size": "4699979776",
+      "sha1": "37a3c98f3da7aede9e5c98c9bcd68091826c245b"
+    },
+    {
+      "name": "Super Smash Bros. Brawl (USA) (Rev 2).iso",
+      "size": "8511160320",
+      "sha1": "59432f150bf6b871ab378bb5b28e92005e0862f6"
+    },
+    {
+      "name": "Tatsunoko vs. Capcom - Ultimate All-Stars (USA).iso",
+      "size": "4699979776",
+      "sha1": "4cae082be6f3e8be35ba30bb342745d025190b18"
+    },
+    {
+      "name": "Victorious Boxers - Revolution (USA).iso",
+      "size": "4699979776",
+      "sha1": "97a98fdfcfc611fc2cf858ad1f523e88942a8634"
+    },
+    {
+      "name": "WWE All Stars (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "fa2a079e74ddff79ccbeb487826dc436481e96f7"
+    },
+    {
+      "name": "Wario Land - Shake It! (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "d9b06f17f7d7860ddc46cb3a1dcd6cb00b7d1017"
+    },
+    {
+      "name": "WarioWare - Smooth Moves (USA).iso",
+      "size": "4699979776",
+      "sha1": "fb20262f03b8dc72ebf79d94555630303e81c555"
+    },
+    {
+      "name": "Wii Party (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "281a556b08b90bf89d76705ca6d026e21226b8d9"
+    },
+    {
+      "name": "Wii Play (USA) (Rev 1).iso",
+      "size": "4699979776",
+      "sha1": "80c223ea5eaf35f5f7876c9fc5904472b103334e"
+    },
+    {
+      "name": "Wii Play - Motion (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "1e8589c298105d2272b3211e0137d67ff559f80a"
+    },
+    {
+      "name": "Wii Sports + Wii Sports Resort (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "978471af1873061bab7b50ac43ade4090af6f5d4"
+    },
+    {
+      "name": "Xenoblade Chronicles (USA, Asia) (En,Fr,Es).iso",
+      "size": "8511160320",
+      "sha1": "5c7a23d87af7d736226f4795ebf10b6f428f67c9"
+    },
+    {
+      "name": "Zack & Wiki - Quest for Barbaros' Treasure (USA).iso",
+      "size": "4699979776",
+      "sha1": "f588c59cd239ce5f052c63a935a07916d4a0926e"
+    },
+    {
+      "name": "de Blob (USA) (En,Fr,Es).iso",
+      "size": "4699979776",
+      "sha1": "8de864abedd70440d318b7aea8ce6f5e0c4055c8"
+    },
+    {
+      "name": "de Blob 2 (USA) (En,Fr).iso",
+      "size": "4699979776",
+      "sha1": "34ab383604c57fd8150a106ae16fb34fcace5a05"
+    }
+  ]
+}

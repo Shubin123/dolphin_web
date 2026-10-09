@@ -1,3 +1,6 @@
+import {resolve} from 'node:path';
+import {verifyPackages} from '../tools/package-contract.mjs';
+verifyPackages(resolve('web'));
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -8,5 +11,7 @@ assert.equal(`sha256:${createHash('sha256').update(bytes).digest('hex')}`, build
 const module = await WebAssembly.compile(bytes);
 const exports = WebAssembly.Module.exports(module).map(e => e.name);
 assert(WebAssembly.Module.imports(module).some(e => e.kind === 'memory'), 'Threaded core must import shared memory');
+const glue=readFileSync(new URL('../web/cores/dolphin/dolphin-core-upstream.js',import.meta.url),'utf8');
+assert(glue.includes('Module["_GetWebInputState"]'), 'Core must expose native controller verification');
 assert(exports.length > 20, 'Core must contain emulator exports');
 console.log(`Validated Dolphin core: ${bytes.length} bytes, ${exports.length} exports, ${build.coreId}`);

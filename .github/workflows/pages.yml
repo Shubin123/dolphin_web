@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci
+      - run: npm run build
       - name: WASM smoke and library regression tests
         run: npm run check
       - name: Browser library and emulator core end-to-end tests

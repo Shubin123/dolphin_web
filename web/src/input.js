@@ -18,7 +18,8 @@ export const BUTTONS = Object.freeze({
   C_STICK_UP: 1 << 16,
   C_STICK_DOWN: 1 << 17,
   C_STICK_LEFT: 1 << 18,
-  C_STICK_RIGHT: 1 << 19
+  C_STICK_RIGHT: 1 << 19,
+  WII_HOME: 1 << 20
 });
 
 export const CONTROL_LABELS = Object.freeze([
@@ -41,7 +42,8 @@ export const CONTROL_LABELS = Object.freeze([
   "C_STICK_UP",
   "C_STICK_DOWN",
   "C_STICK_LEFT",
-  "C_STICK_RIGHT"
+  "C_STICK_RIGHT",
+  "WII_HOME"
 ]);
 
 export const DEFAULT_KEY_BINDINGS = Object.freeze({
@@ -53,6 +55,7 @@ export const DEFAULT_KEY_BINDINGS = Object.freeze({
   KeyQ: "L",
   KeyE: "R",
   KeyC: "Z",
+  KeyH: "WII_HOME",
   ArrowUp: "D_UP",
   ArrowDown: "D_DOWN",
   ArrowLeft: "D_LEFT",
@@ -79,7 +82,8 @@ const STANDARD_GAMEPAD_BUTTONS = Object.freeze({
   12: "D_UP",
   13: "D_DOWN",
   14: "D_LEFT",
-  15: "D_RIGHT"
+  15: "D_RIGHT",
+  16: "WII_HOME"
 });
 
 export const DEFAULT_PAD_STATE = Object.freeze({

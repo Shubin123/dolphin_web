@@ -60,7 +60,7 @@ npm run test:live   # Live Archive metadata + first 256 ISO bytes
 
 The browser test serves a Pages-style subpath without isolation headers. It checks the service worker, persistent local library, archive catalog, download/cancel/error cleanup, Save file, automatic download-and-play and cached replay, and mounts a generated metadata-only disc through the real Dolphin WASM. Unit tests also exercise streaming byte counts beyond 4 GiB without buffering the image. A live browser probe verified Archive metadata and the first 256 bytes of an ISO through the CORS endpoint; a full multi-gigabyte download and commercial gameplay were not run. A second E2E test boots an original generated 16 MiB homebrew disc, verifies the PowerPC guest program counter and advancing emulated time, and checks pause/resume. The generated guest has no graphics, so these tests do not establish commercial-game rendering, Wii Remote compatibility, or gameplay performance.
 
-[Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.1).
+[Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.3).
 
 The Pages workflow runs `npm ci`, the WASM smoke and library regression tests, and both browser E2E suites before publishing. Archive tests use generated disc fixtures; the optional live test cancels the stream after reading its header. Test programs and generators are committed under `tests/`; game images are not.
 

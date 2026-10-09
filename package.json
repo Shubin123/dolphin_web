@@ -13,7 +13,8 @@
     "test:e2e": "node tests/browser.mjs && node tests/core-browser.mjs",
     "test:regression": "npm test",
     "test:core": "node tests/core-browser.mjs",
-    "test:live": "node tests/live-archive.mjs"
+    "test:live": "node tests/live-archive.mjs",
+    "build": "node tools/build.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "^25.13.0"

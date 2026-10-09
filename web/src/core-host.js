@@ -1,4 +1,5 @@
 import { DolphinCoreAdapter, dolphinBundleAvailable } from "./dolphin-adapter.js";
+import { SaveStateSlots } from "./save-states.js";
 import { buttonMaskFromPressed } from "./input.js";
 import { UpstreamMainThreadAdapter } from "./upstream-main-thread-adapter.js";
 import { UpstreamWorkerAdapter, upstreamBundleAvailable } from "./upstream-worker-adapter.js";
@@ -68,6 +69,7 @@ const SAFE_JIT_WARMUP_FRAMES = 5000;
 export class EmulatorHost {
   constructor({ canvas, onFrame = () => {}, onStatus = () => {}, onMode = () => {} }) {
     this.canvas = canvas;
+    this.stateSlots = new SaveStateSlots();
     this.onFrame = onFrame;
     this.onStatus = onStatus;
     this.onMode = onMode;
@@ -640,11 +642,16 @@ export class EmulatorHost {
     this.adapter.setInputState?.(inputState);
   }
 
-  saveState() {
+  async saveState() {
     if (this.mode === "dolphin") {
-      this.adapter.saveState(0);
-      this.onStatus("Save slot 0 requested");
-      return;
+      try {
+        const result = await this.stateSlots.save(this.game, this.adapter);
+        this.onStatus(`Save slot 0 written (${result.size} B)`);
+        return result;
+      } catch (error) {
+        this.onStatus(`Save failed: ${error.message}`);
+        return { saved: false, error: error.message };
+      }
     }
 
     localStorage.setItem(
@@ -658,11 +665,16 @@ export class EmulatorHost {
     this.onStatus("Demo save slot written");
   }
 
-  loadState() {
+  async loadState() {
     if (this.mode === "dolphin") {
-      this.adapter.loadState(0);
-      this.onStatus("Load slot 0 requested");
-      return;
+      try {
+        const result = await this.stateSlots.load(this.game, this.adapter);
+        this.onStatus("Save slot 0 loaded");
+        return result;
+      } catch (error) {
+        this.onStatus(`Load failed: ${error.message}`);
+        return { loaded: false, error: error.message };
+      }
     }
 
     const raw = localStorage.getItem(SAVE_KEY);

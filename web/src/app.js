@@ -1,3 +1,4 @@
+import { wireMobileControls } from "./mobile-controls.js";
 import { initLibrary } from "./library.js";
 import { lookupGameProfile, readGameId } from "./game-profiles.js";
 import { AudioController } from "./audio.js";
@@ -140,11 +141,14 @@ const controllerDeadzone = document.querySelector("#controllerDeadzone");
 let controllerSignature = "";
 
 let touchPressed = new Set();
+let touchInputState = {};
 let gamepadPressed = new Set();
 let gamepadInputState = null;
 let lastGamepadInput = null;
 let combinedPressed = new Set();
 let lastFrameInfo = null;
+let lastRuntimeUiTime = -Infinity;
+let lastRuntimeUiState = "";
 let lastCausalTelemetry = null;
 let lastCausalTelemetryCapturedAt = -1;
 let currentSettings = readSettingsFromSearch(window.location.search);
@@ -296,7 +300,12 @@ function handleFrame(info) {
   // through human-readable strings.
   window.__lastFrameInfo = info;
   window.__causalTelemetry = info.causalTelemetry || null;
-  updateScreenHud(info);
+  const now = performance.now();
+  const uiState = `${info.mode}:${info.running}:${audio.label()}`;
+  if (uiState === lastRuntimeUiState && now - lastRuntimeUiTime < 100) return;
+  lastRuntimeUiTime = now;
+  lastRuntimeUiState = uiState;
+  if (!elements.screenHud.hidden) updateScreenHud(info);
   updateRuntimeControls(info);
 
   if (!elements.debugPanel.hidden) {
@@ -385,13 +394,12 @@ function wireTransport() {
   });
 
   elements.saveButton.addEventListener("click", () => host.saveState());
-  elements.loadButton.addEventListener("click", () => {
-    host.loadState();
+  elements.loadButton.addEventListener("click", async () => {
+    await host.loadState();
     syncGameInfo(host.game);
   });
 
-  // Working save-state path (the slot Save/Load above are stubbed in
-  // the discio core): DL State captures a version-matched .sav via
+  // Portable save-state files: DL State captures a version-matched .sav via
   // SaveStateFile and downloads it; UL State loads a .sav via
   // LoadStateFile. Both go through the real State::SaveToFileSync /
   // State::LoadAs path that §24 made functional.
@@ -616,10 +624,10 @@ const GLYPH = {
 function setTransportGlyph(button, glyph, label, tip) {
   if (!button) return;
   const span = button.querySelector(".glyph");
-  if (span) span.textContent = glyph;
-  else button.textContent = glyph;
-  button.setAttribute("aria-label", label);
-  if (tip) button.setAttribute("data-tip", tip);
+  const target = span || button;
+  if (target.textContent !== glyph) target.textContent = glyph;
+  if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
+  if (tip && button.getAttribute("data-tip") !== tip) button.setAttribute("data-tip", tip);
 }
 
 // Hide the entire side panel, not just the settings block. The game identity
@@ -888,7 +896,8 @@ async function mountFile(file) {
     host.setAudioMuted(audio.muted);
     syncGameInfo(game);
     host.start();
-    // Give gameplay the keyboard after opening a disc or playing from cache.
+    // Give gameplay the keyboard after Open disc or cached Play, including
+    // when a library search field was focused before the game mounted.
     elements.screen.focus({ preventScroll: true });
     return true;
   } catch (error) {
@@ -1061,25 +1070,9 @@ function wireMouse() {
 }
 
 function wireTouchControls() {
-  const touchButtons = document.querySelectorAll("[data-touch-button]");
-  for (const button of touchButtons) {
-    const control = button.dataset.touchButton;
-    const press = (event) => {
-      event.preventDefault();
-      touchPressed = updatePressedSet(touchPressed, control, true);
-      syncInput("Touch");
-    };
-    const release = (event) => {
-      event.preventDefault();
-      touchPressed = updatePressedSet(touchPressed, control, false);
-      syncInput("Touch");
-    };
-
-    button.addEventListener("pointerdown", press);
-    button.addEventListener("pointerup", release);
-    button.addEventListener("pointercancel", release);
-    button.addEventListener("pointerleave", release);
-  }
+  wireMobileControls({ canvas: elements.screen, onChange: (pressed, axes) => {
+    touchPressed = pressed; touchInputState = axes; syncInput("Touch");
+  } });
 }
 
 function wireGamepadPolling() {
@@ -1125,7 +1118,11 @@ function wireGamepadPolling() {
   // Poll on a 2ms interval rather than rAF. The Gamepad API has no event
   // model so we must poll, but rAF caps the cadence at the display refresh
   // rate (~16.7ms), which adds a worst-case full-frame of latency to every
-  // gamepad input. setInterval at 2ms cuts that floor to ~2ms.
+  // gamepad input. Request 2ms polling while a pad is selected (browser timer
+  // clamping still applies); idle/disabled polling uses 100ms, hidden uses 250ms.
+  // Connection, selection and visibility events wake the loop immediately.
+  let pollDelay = 100;
+  let pollTimer;
   const poll = () => {
     const pads = navigator.getGamepads?.() ?? [];
     // §28ck device selection. `pads.find(Boolean)` (the old code) picked
@@ -1146,6 +1143,7 @@ function wireGamepadPolling() {
       controllerSelect.value = Array.from(controllerSelect.options).some(option => option.value === selected) ? selected : "auto";
     }
     const firstPad = document.hidden || controllerSelect.value === "off" ? null : controllerSelect.value === "auto" ? selectPreferredGamepad(devices) : devices.find(pad => String(pad.index) === controllerSelect.value);
+    pollDelay = document.hidden ? 250 : firstPad ? 8 : 100;
     const status = firstPad ? `${firstPad.id} · ${firstPad.mapping || "nonstandard mapping"}` : controllerSelect.value === "off" ? "Controller disabled" : "Pair in device Bluetooth settings, then press a controller button.";
     if (controllerStatus.textContent !== status) controllerStatus.textContent = status;
 
@@ -1199,12 +1197,18 @@ function wireGamepadPolling() {
     }
   };
 
-  setInterval(poll, 2);
+  const tick = () => { poll(); pollTimer = setTimeout(tick, pollDelay); };
+  const wake = () => { clearTimeout(pollTimer); tick(); };
+  window.addEventListener("gamepadconnected", wake);
+  window.addEventListener("gamepaddisconnected", wake);
+  controllerSelect.addEventListener("change", wake);
+  document.addEventListener("visibilitychange", wake);
+  tick();
 }
 
 function syncInput(source) {
   combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed);
-  host.setInputState(inputStateFromPressed(combinedPressed, mouseInputState ? { ...gamepadInputState, ...mouseInputState } : gamepadInputState));
+  host.setInputState(inputStateFromPressed(combinedPressed, { ...gamepadInputState, ...mouseInputState, ...touchInputState }));
   elements.inputSource.textContent = source;
 
   for (const chip of elements.controlGrid.children) {
@@ -1344,3 +1348,11 @@ function writeU32BE(bytes, offset, value) {
 }
 
 initLibrary({ mountFile }).catch(error => console.error("Library:", error));
+
+// Release runtime packages carry their complete matching source archive.
+fetch(new URL("../backend-runtime.json",import.meta.url)).then(response=>response.json()).then(manifest=>{
+ const link=document.querySelector("#sourceDownload");
+ if(link && manifest.sourceDownload && manifest.files.some(file=>file.path===manifest.sourceDownload)){
+  link.href=new URL(manifest.sourceDownload,new URL("../",import.meta.url));link.hidden=false;
+ }
+}).catch(()=>{});

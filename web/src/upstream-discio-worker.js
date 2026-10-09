@@ -1,3 +1,4 @@
+import { validateDolphinStateFile } from "./dolphin-state-file.js";
 import {
   DEFAULT_UPSTREAM_CORE_SHA256,
   DEFAULT_UPSTREAM_CORE_URL,
@@ -1109,6 +1110,12 @@ async function handleMessage(type, payload) {
         observedAtMs: performance.now(),
       };
     }
+    case "validationReadWebInput": {
+      if (!api?.getWebInputState) return { available: false, error: "core lacks GetWebInputState" };
+      // Consume the published input generation before reading native mappings.
+      pollInputStateFromSab();
+      return { available: true, ...JSON.parse(api.getWebInputState()) };
+    }
     case "validationReadJitCacheReadiness": {
       const requiredWorkers = dolphinJitPthreadRuntime
         ? [...new Set(dolphinJitPthreadRuntime.runningWorkers || [])]
@@ -1210,6 +1217,16 @@ async function handleMessage(type, payload) {
       if (!api?.loadStateFile || !moduleInstance?.FS) {
         return { loaded: false, error: "no loadStateFile/FS" };
       }
+      // Boot acceptance precedes the autonomous CPU thread becoming ready.
+      // A persisted slot can be selected immediately after a browser reload.
+      if (api.getCoreStateName) {
+        for (let attempt = 0; attempt < 150; attempt++) {
+          const state = api.getCoreStateName();
+          if (state === "Running" || state === "Paused") break;
+          if (attempt === 149) return { loaded: false, error: "core did not finish booting before state restore" };
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
       // payload.fsPath: load an existing FS file in place (e.g. the
       // one SaveStateFile just wrote) — proves a version-matched
       // round-trip with zero serving. Else write payload.bytes first.
@@ -1219,6 +1236,7 @@ async function handleMessage(type, payload) {
           const bytes = payload.bytes instanceof Uint8Array
             ? payload.bytes
             : new Uint8Array(payload.bytes);
+          validateDolphinStateFile(bytes, api.getGameId());
           moduleInstance.FS.writeFile(path, bytes);
         } catch (e) {
           return { loaded: false, error: `FS.writeFile: ${e?.message || e}` };
@@ -1262,6 +1280,9 @@ async function handleMessage(type, payload) {
       api?.setWebGpuGeometryPackEnabled?.(wgpuGeometryPackEnabled ? 1 : 0);
       api?.setWebGpuGeometryRangeEnabled?.(wgpuGeometryRangeEnabled ? 1 : 0);
       let rc = 0;
+      const checkpointBeforeLoad = readLastLoadedCheckpoint().generation;
+      const canVerifyLoad = typeof api?.getLastLoadedCheckpointGeneration === "function";
+      let loadCompleted = false;
       ppcWasmJitTimingSuspensions += 1;
       try {
         rc = api.loadStateFile(path) | 0;
@@ -1269,8 +1290,17 @@ async function handleMessage(type, payload) {
         // step the core) — wait real wall-clock time so the restore
         // actually takes effect before we sample/screenshot.
         await new Promise((r) => setTimeout(r, 1200));
+        if (rc === 1 && canVerifyLoad) {
+          for (let i = 0; i < 34 && readLastLoadedCheckpoint().generation === checkpointBeforeLoad; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+          if (readLastLoadedCheckpoint().generation === checkpointBeforeLoad) {
+            return { loaded: false, rc, error: "core did not verify checkpoint restore before timeout" };
+          }
+        }
+        loadCompleted = rc === 1;
       } finally {
-        resetPpcWasmJitTiming(rc === 1);
+        resetPpcWasmJitTiming(loadCompleted);
         ppcWasmJitTimingSuspensions -= 1;
       }
       api?.setWebGpuUploadArenaMiB?.(wgpuUploadArenaMiB, collectMetrics ? 1 : 0);
@@ -1343,6 +1373,7 @@ async function handleMessage(type, payload) {
       const path = "/savestate_out.sav";
       try { moduleInstance.FS.unlink(path); } catch (e) {}
       const rc = api.saveStateFile(path) | 0;
+      if (rc <= 0) return { saved: false, rc, error: "core rejected save request" };
       let prev = -1, stable = 0, size = 0;
       // up to ~8 s real time (40 × 200 ms); a Melee state is ~tens of
       // MB so allow generous time for DoState + zstd on the pthread.
@@ -1357,6 +1388,7 @@ async function handleMessage(type, payload) {
         } catch (e) { /* not written yet */ }
       }
       let bytes = null;
+      if (stable < 3) return { saved: false, rc, size, error: "save file did not finish writing before timeout" };
       try {
         if (size > 0) bytes = moduleInstance.FS.readFile(path); // Uint8Array
       } catch (e) {
@@ -2374,6 +2406,7 @@ function bindApi(module) {
     getPpcWasmHelperStats: optionalCwrap("GetPpcWasmHelperStats", "string", []),
     getPpcProfileStats: optionalCwrap("GetPpcProfileStats", "string", []),
     getVideoStats: optionalCwrap("GetVideoStats", "string", []),
+    getWebInputState: optionalCwrap("GetWebInputState", "string", []),
     reset: cwrap("Reset", null, []),
     setInputMask: cwrap("SetInputMask", null, ["number"]),
     setInputState:
