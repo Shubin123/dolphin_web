@@ -4,12 +4,14 @@ import {execFileSync} from 'node:child_process';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
+import {waitForBackendRuntime} from './backend-runtime-readiness.mjs';
 const repo=process.env.DOLPHIN_BACKEND_REPO || 'Shubin123/dolphin_emscripten';
 const gh=args=>execFileSync('gh',args,{encoding:'utf8'}).trim();
-const head=JSON.parse(gh(['api',`repos/${repo}/commits/main`])).sha;
-const runs=JSON.parse(gh(['api',`repos/${repo}/actions/workflows/runtime.yml/runs?branch=main&status=success&per_page=20`])).workflow_runs;
-const run=runs.find(run=>run.head_sha===head && run.event!=='pull_request');
-if(!run)throw new Error('Current backend main has no successful runtime build yet; retain deployed frontend and retry after backend CI passes.');
+const {head,run}=await waitForBackendRuntime({
+ readHead:()=>JSON.parse(gh(['api',`repos/${repo}/commits/main`])).sha,
+ readRuns:()=>JSON.parse(gh(['api',`repos/${repo}/actions/workflows/runtime.yml/runs?branch=main&per_page=20`])).workflow_runs,
+ onProgress:console.log
+});
 const dir=mkdtempSync(join(tmpdir(),'backend-runtime-'));
 try {
  gh(['run','download',String(run.id),'--repo',repo,'--name','dolphin-browser-runtime','--dir',dir]);
