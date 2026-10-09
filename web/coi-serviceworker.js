@@ -17,7 +17,16 @@ self.addEventListener('fetch', event => {
     if (requestUrl.origin !== self.location.origin) return;
 
     event.respondWith((async () => {
-        const response = await fetch(event.request);
+        // A conditional request can return an empty 304 from Pages. Wrapping
+        // that response loses the browser's cached body (including bootstrap
+        // scripts), leaving reloads stuck before controls initialize.
+        const requestHeaders = new Headers(event.request.headers);
+        requestHeaders.delete('if-none-match');
+        requestHeaders.delete('if-modified-since');
+        const response = await fetch(new Request(event.request, {
+            headers: requestHeaders,
+            cache: 'no-store'
+        }));
         if (response.type === 'opaque') return response;
 
         const headers = new Headers(response.headers);

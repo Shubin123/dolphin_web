@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "coi-serviceworker.js",
-      "size": 1385,
-      "sha256": "d32d263eee2aa0aeb17cfd31d4431065957e63a5b8a59905b758c708cddf147d"
+      "size": 1872,
+      "sha256": "5a1a957bc6be4bbd95a2c903aa25a1a247ba520f0fee45dfe814256eb72688a4"
     },
     {
       "path": "icon.png",

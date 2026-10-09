@@ -12,6 +12,15 @@ const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (!url.pathname.startsWith('/dolphin_web/')) { response.writeHead(404).end(); return; }
+    if (url.pathname === '/dolphin_web/conditional-script.js') {
+      if (request.headers['if-none-match'] || request.headers['if-modified-since']) {
+        response.writeHead(304).end();
+      } else {
+        response.writeHead(200, {'content-type':'text/javascript',etag:'"bootstrap-v1"'});
+        response.end('globalThis.__conditionalBootstrap = true;');
+      }
+      return;
+    }
     if (url.pathname === '/dolphin_web/test-download') {
       imageRequests++;
       response.writeHead(200, {'content-type':'application/octet-stream','access-control-allow-origin':'*','content-length':discBytes.length});
@@ -58,6 +67,14 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/`);
   await page.waitForFunction(() => crossOriginIsolated && window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.coreKind), 'upstream');
+  const conditionalScript = await page.evaluate(async () => {
+    const response = await fetch('./conditional-script.js', {
+      headers: {'If-None-Match':'"bootstrap-v1"', 'If-Modified-Since':'Thu, 08 Oct 2026 00:00:00 GMT'}
+    });
+    return {status:response.status, body:await response.text()};
+  });
+  assert.equal(conditionalScript.status, 200, 'isolation worker must retrieve a full response on reload');
+  assert.equal(conditionalScript.body, 'globalThis.__conditionalBootstrap = true;');
   // Exercise actual DOM events and capture the state sent to the emulator host.
   await page.evaluate(() => {
     const original = window.__host.setInputState.bind(window.__host);

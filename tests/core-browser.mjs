@@ -31,7 +31,9 @@ try {
   testUrl.searchParams.set('presenter', '2d');
   testUrl.searchParams.set('cpu', 'dual');
   await page.goto(testUrl.href);
-  await page.waitForFunction(()=>window.__host && document.querySelector('#romInput'),{timeout:60000});
+  // Pages reloads once when its isolation worker takes control. Do not import
+  // a disc into the initial document while that reload is still pending.
+  await page.waitForFunction(()=>crossOriginIsolated && window.__host && document.querySelector('#romInput'),{timeout:60000});
   await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.ready === 'true',{timeout:60000});
   await (await page.$('#libraryFiles')).uploadFile(file);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
