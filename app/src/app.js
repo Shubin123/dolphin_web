@@ -1050,7 +1050,7 @@ function wireKeyboard() {
   document.addEventListener("visibilitychange", () => { if (document.hidden) releaseAll(); });
   wireMouse();
   document.addEventListener("keydown", (event) => {
-    if (event.target.closest?.("input, select, textarea, [contenteditable=true]")) return;
+    if (event.target.closest?.("input, select, textarea, [contenteditable=true], dialog")) return;
     if (event.repeat) {
       return;
     }
@@ -1232,7 +1232,7 @@ function wireTouchControls() {
   coarse.addEventListener("change", update);
   document.addEventListener("fullscreenchange", update);
   window.addEventListener("resize", update);
-  document.addEventListener("keydown", event => { if (event.key === "Escape") { elements.dropZone.classList.remove("is-pseudo-fullscreen"); update(); } });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && !event.target.closest?.("dialog")) { elements.dropZone.classList.remove("is-pseudo-fullscreen"); update(); } });
   window.__touchControls = { setGamepadConnected(value) { if (connected !== value) { connected = value; update(); } }, update };
   update();
 }

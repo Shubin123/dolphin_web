@@ -19,13 +19,13 @@
     },
     {
       "path": "src/app.js",
-      "size": 65688,
-      "sha256": "18a95cc6924bf56b95231695c1b69bf038fc9422501dd4b2e88a38d3879f4ece"
+      "size": 65733,
+      "sha256": "c0c920ec751985935e1463f5cdf412aa7d882014b83e8cbf60d73b7e8498c445"
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 25783,
-      "sha256": "005d43746b541b42799aa105ee0f8a8e05fd4c717cfb6cfd89c0ce963dc4842b"
+      "size": 26550,
+      "sha256": "74693f5a738f02ed7be603121f3094c3fbf7bb0e6e08745305d6f690ed85e76b"
     },
     {
       "path": "src/boot-progress.js",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/save-state-panel.js",
-      "size": 6395,
-      "sha256": "dcda40d27a966c4cc3d30e679fb93bdd440df46aa8a6ca0f90962267d1d97465"
+      "size": 8689,
+      "sha256": "daea235db8c2b49fee26e5d430f2b708a55cbe161db1555e06e63b25a4cd9c8d"
     },
     {
       "path": "src/settings.js",

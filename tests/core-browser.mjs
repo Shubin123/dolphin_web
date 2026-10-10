@@ -187,9 +187,18 @@ try {
   await page.waitForFunction(()=>document.querySelectorAll('#saveStatePanel .save-slot').length===4);
   assert.equal(await page.$eval('#loadButton',el=>el.disabled),true,'an empty selected slot cannot be loaded');
   await page.$eval('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Save to slot 2"]',el=>el.click());
+  // Saving asks first; cancelling leaves the slot untouched.
+  await page.waitForSelector('dialog.save-confirm[open]');
+  await page.click('dialog.save-confirm [data-save-cancel]');
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Save cancelled.');
+  assert.match(await page.$eval('#saveStatePanel .save-slot:nth-child(2) .save-slot-meta',el=>el.textContent),/Empty/);
+  await page.$eval('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Save to slot 2"]',el=>el.click());
+  await page.waitForSelector('dialog.save-confirm[open]');
+  await page.click('dialog.save-confirm [data-save-confirm]');
   assert.equal(await page.$eval('#saveButton',el=>el.disabled),true,'other state controls must be disabled during capture');
   await page.waitForFunction(()=>!/Empty|No game/.test(document.querySelector('#saveStatePanel .save-slot:nth-child(2) .save-slot-meta').textContent),{timeout:60000});
   assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true,'saving selects the slot');
+  assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) .save-slot-game',el=>el.textContent),await page.evaluate(()=>window.__host.game.name.replace(/\.(iso|gcm|rvz|wbfs|wad|dol|elf|ciso|gcz)$/i,'')),'saved slots show the game name');
   await page.waitForFunction(()=>!document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
   const beforeSlotLoad=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   await page.click('#loadButton');

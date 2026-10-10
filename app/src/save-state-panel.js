@@ -17,6 +17,38 @@ function describe(entry) {
   return parts.join(' · ');
 }
 
+// Slots are scoped to the mounted game, so its title labels every saved slot.
+const gameTitle = game => (game?.name || game?.gameId || '')
+  .replace(/\.(iso|gcm|rvz|wbfs|wad|dol|elf|ciso|gcz)$/i, '');
+
+// Modal confirmation. A top-layer <dialog> stays visible in fullscreen.
+function createConfirmDialog() {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'save-confirm';
+  dialog.setAttribute('aria-labelledby', 'saveConfirmTitle');
+  dialog.innerHTML = `<form method="dialog">
+    <h3 id="saveConfirmTitle"></h3>
+    <p data-save-confirm-body></p>
+    <div class="save-confirm-actions">
+      <button type="submit" value="cancel" data-save-cancel>Cancel</button>
+      <button type="submit" value="save" data-save-confirm class="primary">Save</button>
+    </div>
+  </form>`;
+  document.body.append(dialog);
+  const title = dialog.querySelector('h3');
+  const body = dialog.querySelector('[data-save-confirm-body]');
+  const accept = dialog.querySelector('[data-save-confirm]');
+  return (heading, message, action) => new Promise(resolve => {
+    title.textContent = heading;
+    body.textContent = message;
+    accept.textContent = action;
+    dialog.returnValue = '';
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'save'), { once: true });
+    dialog.showModal();
+    accept.focus();
+  });
+}
+
 export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus = () => {}, onAvailability = () => {}, download, upload, pickUpload }) {
   const list = root.querySelector('[data-save-slots]');
   const status = root.querySelector('[data-save-status]');
@@ -27,6 +59,7 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
   let entriesGame;
   let refreshVersion = 0;
   const rows = [];
+  const confirm = createConfirmDialog();
   const ready = () => host.mode === 'dolphin' && Boolean(host.game?.mounted);
   const report = (message, tone = '') => {
     status.textContent = message;
@@ -44,9 +77,11 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
     radio.addEventListener('change', () => select(slot));
     const name = document.createElement('strong');
     name.textContent = `Slot ${slot + 1}`;
+    const game = document.createElement('span');
+    game.className = 'save-slot-game';
     const meta = document.createElement('span');
     meta.className = 'save-slot-meta';
-    pick.append(radio, name, meta);
+    pick.append(radio, name, game, meta);
     const save = document.createElement('button');
     save.type = 'button'; save.textContent = 'Save';
     save.setAttribute('aria-label', `Save to slot ${slot + 1}`);
@@ -57,7 +92,7 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
     load.addEventListener('click', () => loadSlot(slot));
     row.append(pick, save, load);
     list.append(row);
-    rows.push({ row, radio, meta, save, load });
+    rows.push({ row, radio, game, meta, save, load });
   }
   root.querySelector('[data-save-download]')?.addEventListener('click', () => downloadFile());
   root.querySelector('[data-save-upload]')?.addEventListener('click', () => pickUpload());
@@ -79,6 +114,9 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
     rows.forEach((entry, slot) => {
       const info = entries[slot];
       entry.meta.textContent = mounted ? describe(info) : 'No game';
+      entry.game.textContent = mounted && info?.saved ? gameTitle(host.game) : '';
+      entry.game.title = entry.game.textContent;
+      entry.game.hidden = !entry.game.textContent;
       entry.radio.disabled = busy;
       entry.save.disabled = !mounted || busy;
       entry.load.disabled = !mounted || busy || !info?.saved;
@@ -114,7 +152,7 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
     }
   }
 
-  async function guarded(message, operation, successFlag, successMessage) {
+  async function guarded(message, operation, successFlag, successMessage, approve) {
     if (busy) return null;
     if (!ready()) {
       report('Open a game before using save states.', 'error');
@@ -122,8 +160,13 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
     }
     busy = true;
     render();
-    report(message);
     try {
+      // Approval runs inside the guard so no other operation can start meanwhile.
+      if (approve && !await approve()) {
+        report('Save cancelled.');
+        return null;
+      }
+      report(message);
       const result = await operation();
       if (!result?.[successFlag]) throw new Error(result?.error || 'The emulator could not complete the operation');
       report(successMessage(result));
@@ -140,7 +183,14 @@ export function wireSaveStatePanel({ root, host, onLoaded = () => {}, onStatus =
   const saveSlot = (slot = selected) => guarded(`Saving to slot ${slot + 1}…`, async () => {
     select(slot);
     return host.saveState(slot);
-  }, 'saved', () => `Saved to slot ${slot + 1}. You can close this page and return later.`);
+  }, 'saved', () => `Saved to slot ${slot + 1}. You can close this page and return later.`, () => {
+    const info = entries[slot];
+    const title = gameTitle(host.game) || 'this game';
+    return info?.saved
+      ? confirm(`Overwrite slot ${slot + 1}?`,
+          `Slot ${slot + 1} already holds ${title} (${describe(info)}). Saving replaces it with your current progress.`, 'Overwrite')
+      : confirm(`Save to slot ${slot + 1}?`, `Save your current progress in ${title} to slot ${slot + 1}?`, 'Save');
+  });
   const loadSlot = (slot = selected) => guarded(`Loading slot ${slot + 1}…`, async () => {
     select(slot);
     const result = await host.loadState(slot);

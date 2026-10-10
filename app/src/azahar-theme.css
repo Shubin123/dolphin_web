@@ -463,7 +463,8 @@ body { padding:16px; isolation:isolate; }
 .save-slot { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; align-items:center; padding:6px 8px; border:1px solid rgba(255,255,255,.08); border-radius:8px; }
 .save-slot.is-selected { border-color:var(--accent,#e94560); }
 .save-slot-pick { display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:8px; align-items:center; min-width:0; cursor:pointer; }
-.save-slot-pick input { grid-row:1 / span 2; }
+.save-slot-pick input { grid-row:1 / span 3; }
+.save-slot-game { font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .save-slot-pick strong { white-space:nowrap; font-size:.9rem; }
 .save-slot-meta { color:var(--muted,#8a8fa8); font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .save-slot button, .save-state-files button { min-height:0; padding:4px 10px; }
@@ -475,5 +476,12 @@ body { padding:16px; isolation:isolate; }
 .save-state-files button:disabled, .crt-footer .transport button:disabled,
 .crt-footer .transport .file-button:has(input:disabled), .fullscreen-actions button:disabled { opacity:.45; cursor:default; }
 .save-state-panel.is-disabled .save-state-files button { opacity:.6; }
+.save-confirm { max-width:min(360px, calc(100vw - 32px)); padding:16px; border:1px solid rgba(255,255,255,.12); border-radius:10px; background:var(--surface,#16213e); color:var(--text,#e0e0e0); }
+.save-confirm::backdrop { background:rgba(0,0,0,.55); }
+.save-confirm h3 { margin:0 0 8px; font-size:1rem; }
+.save-confirm p { margin:0 0 14px; font-size:.85rem; color:var(--muted,#8a8fa8); overflow-wrap:anywhere; }
+.save-confirm-actions { display:flex; justify-content:flex-end; gap:8px; }
+.save-confirm-actions button { min-height:0; padding:6px 14px; }
+.save-confirm-actions .primary { background:var(--accent,#e94560); border-color:var(--accent,#e94560); color:#fff; }
 
 .screen-viewport[data-mouse-mode="cstick"], .screen-viewport[data-mouse-mode="cstick"] #screen { cursor:crosshair; }
