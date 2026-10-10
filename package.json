@@ -19,7 +19,8 @@
     "preplay": "node tools/build.mjs",
     "watch": "node tools/watch-ui.mjs",
     "import:runtime": "node tools/import-runtime.mjs",
-    "test:ios": "node tests/ios-webkit.mjs"
+    "test:ios": "node tests/ios-webkit.mjs",
+    "test:automation": "node tools/test-automation.mjs"
   },
   "devDependencies": {
     "playwright": "^1.64.0",

@@ -31,16 +31,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.BACKEND_READ_TOKEN || github.token }}
       - run: npm run build
-      - name: WASM smoke and library regression tests
-        run: npm run check
-      - name: Browser library and emulator core end-to-end tests
-        run: npm run test:e2e
-        env:
-          CHROME_PATH: /usr/bin/google-chrome
       - name: Install WebKit
         run: npx playwright install --with-deps webkit
-      - name: Mobile WebKit emulator and touch regressions
-        run: npm run test:ios
+      - name: Frontend automation suite
+        run: npm run test:automation
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          AUTOMATION_WEBKIT: '1'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-automation-report
+          path: logs/automation
+          if-no-files-found: ignore
+          retention-days: 14
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

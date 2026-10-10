@@ -1,0 +1,46 @@
+import { spawn } from 'node:child_process';
+import { createWriteStream } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { once } from 'node:events';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const logsRoot = resolve(root, 'logs');
+const reportDir = resolve(process.env.AUTOMATION_ARTIFACT_DIR || join(logsRoot, 'automation'));
+const reportRelative = relative(logsRoot, reportDir);
+if (!reportRelative || reportRelative.startsWith('..' + sep) || isAbsolute(reportRelative)) throw new Error('AUTOMATION_ARTIFACT_DIR must be inside frontend logs/');
+await mkdir(reportDir, { recursive: true });
+const report = { schemaVersion: 1, repository: 'dolphin_web', startedAt: new Date().toISOString(), stages: [] };
+const npmCli = process.env.npm_execpath;
+const npmCommand = npmCli ? process.execPath : process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const tasks = [['check', ['run', 'check']], ['browser-e2e', ['run', 'test:e2e']]];
+if (process.env.AUTOMATION_WEBKIT === '1') tasks.push(['mobile-webkit-e2e', ['run', 'test:ios']]);
+else report.skipped = [{ name: 'mobile-webkit-e2e', reason: 'Set AUTOMATION_WEBKIT=1 after installing Playwright WebKit to include mobile Safari coverage.' }];
+let activeChild;
+process.on('SIGINT', () => activeChild?.kill('SIGINT'));
+for (const [name, taskArgs] of tasks) {
+  const startedAt = new Date().toISOString();
+  const start = performance.now();
+  const logPath = join(reportDir, `${name}.log`);
+  const log = createWriteStream(logPath);
+  const args = npmCli ? [npmCli, ...taskArgs] : taskArgs;
+  console.log(`\n[automation] ${name}: npm ${taskArgs.join(' ')}`);
+  const child = spawn(npmCommand, args, { cwd: root, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+  activeChild = child;
+  child.stdout.on('data', chunk => { process.stdout.write(chunk); log.write(chunk); });
+  child.stderr.on('data', chunk => { process.stderr.write(chunk); log.write(chunk); });
+  const [code, signal] = await once(child, 'close');
+  activeChild = undefined;
+  log.end();
+  await once(log, 'finish');
+  const stage = { name, startedAt, durationMs: Math.round(performance.now() - start), exitCode: code ?? 1, signal, log: logPath };
+  report.stages.push(stage);
+  console.log(`[automation] ${name}: ${code === 0 ? 'PASS' : 'FAIL'} (${stage.durationMs} ms)`);
+}
+report.completedAt = new Date().toISOString();
+report.passed = report.stages.every(stage => stage.exitCode === 0);
+const reportPath = join(reportDir, 'report.json');
+await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n');
+console.log(`[automation] report: ${reportPath}`);
+if (!report.passed) process.exitCode = 1;
