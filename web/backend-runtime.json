@@ -26,7 +26,7 @@
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17536,
-      "sha256": "8d8a19a29957af07d60ce13d644ed350e697fa628f9857259ae8b86a7123bae8"
+      "sha256": "be77253ab9e1a2f817d7ffbd916759f22b618aec605f8b3817dd173be0ee7630"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
@@ -60,8 +60,8 @@
     },
     {
       "path": "src/core-host.js",
-      "size": 66313,
-      "sha256": "a4b3893da04e992cede26a3d1e9984879ea45ad246ee33a5a7f5ae0cfd405def"
+      "size": 66644,
+      "sha256": "ce70b3bac9da6635271b4c7db072b35aa39e1adcf44ad1ef9c72516c23405019"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -160,8 +160,8 @@
     },
     {
       "path": "src/upstream-discio-worker.js",
-      "size": 622415,
-      "sha256": "e9cc739a48f424c632d50ef6fdc9fe483560943e76b62fc5663c3b08029e3577"
+      "size": 623277,
+      "sha256": "1e34c2e84017448d5d6daf611aa9d00ef2b5cf8a1b8dd0ad7061609405e0369e"
     },
     {
       "path": "src/upstream-main-thread-adapter.js",
@@ -170,8 +170,8 @@
     },
     {
       "path": "src/upstream-worker-adapter.js",
-      "size": 44120,
-      "sha256": "3c9c638758f210b66a87204fbe7406dd175ff163d07f231d9da3d0b55bafcc67"
+      "size": 44292,
+      "sha256": "1b8af4ac089a0500a2d9a06aa40cd88ed8c4e9ffe6e5f6ddb400533a3036dbde"
     },
     {
       "path": "src/upstream-worker-protocol.js",

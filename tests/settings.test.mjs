@@ -75,3 +75,17 @@ test('automatic hardware preference is the default and explicit software survive
   saveSettings(DEFAULT_SETTINGS);
   assert.equal(restoreSettingsHref(preset.href), preset.href);
 });
+
+
+test('optimal preset restores adaptive JIT warmup while ordinary settings preserve an explicit override', () => {
+  const explicit = 'https://example.test/?jitwarmup=700&forcejit=1&oc=0.5&shortprefix=1&disable=all';
+  const ordinary = new URL(buildSettingsHref(explicit, DEFAULT_SETTINGS));
+  assert.equal(ordinary.searchParams.get('jitwarmup'), '700');
+  assert.equal(ordinary.searchParams.get('shortprefix'), '1');
+  const preset = new URL(buildPlayablePresetHref(explicit));
+  assert.equal(preset.searchParams.get('jitwarmup'), null);
+  assert.equal(preset.searchParams.get('forcejit'), null);
+  assert.equal(preset.searchParams.get('oc'), '1');
+  assert.equal(preset.searchParams.get('shortprefix'), null);
+  assert.equal(preset.searchParams.get('disable'), null);
+});

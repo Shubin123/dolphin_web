@@ -330,6 +330,7 @@ export class EmulatorHost {
             ppcWasmJitTier: this.ppcWasmJitTier,
             ppcWasmJitForce: this.ppcWasmJitForce,
             ppcWasmJitWarmupFrames: this.ppcWasmJitWarmupFrames,
+            ppcWasmJitWarmupExplicit: hasExplicitJitWarmup(),
             ppcProfile: this.ppcProfile,
             cpuOverclock: this.cpuOverclock,
             emulationSpeed: this.emulationSpeed,
@@ -376,6 +377,7 @@ export class EmulatorHost {
             ppcWasmJitTier: this.ppcWasmJitTier,
             ppcWasmJitForce: this.ppcWasmJitForce,
             ppcWasmJitWarmupFrames: this.ppcWasmJitWarmupFrames,
+            ppcWasmJitWarmupExplicit: hasExplicitJitWarmup(),
             ppcProfile: this.ppcProfile,
             cpuOverclock: this.cpuOverclock,
             emulationSpeed: this.emulationSpeed,
@@ -1523,4 +1525,9 @@ function requestedVisibleSampler() {
 
 function requestedCollectMetrics() {
   return new URLSearchParams(window.location.search).get("metrics") === "1";
+}
+
+function hasExplicitJitWarmup() {
+  const value = Number.parseInt(new URLSearchParams(window.location.search).get("jitwarmup") || "", 10);
+  return Number.isFinite(value) && value >= 0 && value <= 60000;
 }

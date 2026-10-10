@@ -65,12 +65,24 @@ try {
   // Default mouse hover must reach the native Wii pointer without a click.
   assert.equal(await page.$eval('#mouseMode',el=>el.value),'cstick');
   const hoverScreen=await page.$('#screen');await hoverScreen.scrollIntoView();
-  const hoverBox=await hoverScreen.boundingBox();
-  await page.mouse.move(hoverBox.x+hoverBox.width*.75,hoverBox.y+hoverBox.height*.25);
-  await page.waitForFunction(async()=>{
-    const s=await window.__host.adapter.request('validationReadWebInput');
-    return s.wiiA===0&&s.wiiB===0&&Math.abs(s.pointerX-.5)<.03&&Math.abs(s.pointerY-.5)<.03;
-  },{timeout:10000});
+  let hoverBox=await hoverScreen.boundingBox();
+  const moveToHoverPoint = () => page.mouse.move(hoverBox.x+hoverBox.width*.75,hoverBox.y+hoverBox.height*.25);
+  await moveToHoverPoint();
+  const hoverDeadline=Date.now()+10000;
+  let hoverInput;
+  while (Date.now()<hoverDeadline) {
+    hoverInput=await nativeInput();
+    if (hoverInput.wiiA===0&&hoverInput.wiiB===0&&Math.abs(hoverInput.pointerX-.5)<.03&&Math.abs(hoverInput.pointerY-.5)<.03) break;
+    const currentBox=await hoverScreen.boundingBox();
+    // The boot layout can move the canvas after scrollIntoView (observed 12px).
+    // Reposition only on a geometry change; retain the same native assertion.
+    if (JSON.stringify(currentBox)!==JSON.stringify(hoverBox)) {
+      hoverBox=currentBox;
+      await moveToHoverPoint();
+    }
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+  assert(hoverInput.wiiA===0&&hoverInput.wiiB===0&&Math.abs(hoverInput.pointerX-.5)<.03&&Math.abs(hoverInput.pointerY-.5)<.03, `native hover mapping: ${JSON.stringify(hoverInput)}`);
   assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).cursor),'crosshair');
   await page.mouse.move(1,1);
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.pointerX===0&&s.pointerY===0;},{timeout:10000});

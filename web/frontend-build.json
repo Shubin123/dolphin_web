@@ -14,8 +14,8 @@
     },
     {
       "path": "index.html",
-      "size": 30913,
-      "sha256": "83bf461a338225528436f236a616c239e268f1871f9e68de164c10045863a36f"
+      "size": 30977,
+      "sha256": "1007c67e120e451ea6bd0e603b21dd18db4690d1d7d4f08d03ed0aee93bee22d"
     },
     {
       "path": "src/app.js",
@@ -79,8 +79,8 @@
     },
     {
       "path": "src/settings.js",
-      "size": 7739,
-      "sha256": "3640c420bc250c54d270df7f46e77ce0c9006b3139a7ebde50e3fef883674f1c"
+      "size": 7856,
+      "sha256": "9ccfdcf75e70bc8a737c5008c0433508f7167004958699c83ba11b67a179f2e2"
     },
     {
       "path": "src/styles.css",

@@ -438,6 +438,8 @@ let ppcWasmJitFuseLastFrame = -1;
 let ppcWasmJitFuseLastTime = 0;
 let ppcWasmJitTier = "guarded";
 let ppcWasmJitWarmupFrames = 3600;
+let ppcWasmJitWarmupExplicit = false;
+let ppcWasmJitVerifiedCheckpoint = false;
 let pacedPresentationActive = false;
 let nextPacedPresentationTime = 0;
 let pacedPresentationTimer = 0;
@@ -527,13 +529,9 @@ const DEFAULT_PRESENTATION_QUEUE = 4;
 const MIN_PRESENTATION_QUEUE = 2;
 const MAX_PRESENTATION_QUEUE = 12;
 const VISUAL_HASH_SAMPLE_STRIDE_BYTES = 256;
-// §28ao: was 3600 (=60 s @60fps) → the JIT stayed OFF for the first
-// minute of a cold run, executing all PPC on the slow interpreter —
-// the dominant "not smooth / slow boot" cause (agent-confirmed). 300
-// (~5 s) front-loads the one-time compile burst to the GC IPL screen
-// (player just watching) instead of the menus. The post-activation
-// stall fuse + cooldown already guard against JIT destabilisation.
-const DEFAULT_WASM_JIT_WARMUP_XFB_FRAMES = 300;
+// Cold boot retains the tested compilation delay. A verified in-game Animal
+// Crossing restore can use the shorter gate in canSkipPpcWasmJitBootWarmup.
+const DEFAULT_WASM_JIT_WARMUP_XFB_FRAMES = 3600;
 const WASM_JIT_MIN_STABLE_PRESENTATION_FPS = 25;
 const WASM_JIT_MAX_STABLE_PRESENTATION_GAP_MS = 80;
 const WASM_JIT_MIN_ACTIVE_FRAMES_BEFORE_FUSE = 240;
@@ -928,6 +926,7 @@ async function handleMessage(type, payload) {
         ppcWasmJitForce: payload.ppcWasmJitForce,
         ppcWasmJitTier: payload.ppcWasmJitTier,
         ppcWasmJitWarmupFrames: payload.ppcWasmJitWarmupFrames,
+        ppcWasmJitWarmupExplicit: payload.ppcWasmJitWarmupExplicit,
         ppcProfile: payload.ppcProfile,
         cpuOverclock: payload.cpuOverclock,
         emulationSpeed: payload.emulationSpeed,
@@ -1313,6 +1312,7 @@ async function handleMessage(type, payload) {
           }
         }
         loadCompleted = rc === 1;
+        if (loadCompleted && canVerifyLoad) ppcWasmJitVerifiedCheckpoint = true;
       } finally {
         resetPpcWasmJitTiming(loadCompleted);
         ppcWasmJitTimingSuspensions -= 1;
@@ -1481,6 +1481,7 @@ async function loadCore({
   ppcWasmJitForce: requestedPpcWasmJitForce = false,
   ppcWasmJitTier: requestedPpcWasmJitTier = "guarded",
   ppcWasmJitWarmupFrames: requestedPpcWasmJitWarmupFrames = DEFAULT_WASM_JIT_WARMUP_XFB_FRAMES,
+  ppcWasmJitWarmupExplicit: requestedPpcWasmJitWarmupExplicit = false,
   ppcProfile = false,
   cpuOverclock = 1,
   emulationSpeed = 1,
@@ -2120,6 +2121,8 @@ async function loadCore({
   resetPpcWasmJitTiming(true);
   ppcWasmJitTier = requestedPpcWasmJitTier === "mixed" ? "mixed" : "guarded";
   ppcWasmJitWarmupFrames = normalizePpcWasmJitWarmupFrames(requestedPpcWasmJitWarmupFrames);
+  ppcWasmJitWarmupExplicit = Boolean(requestedPpcWasmJitWarmupExplicit);
+  ppcWasmJitVerifiedCheckpoint = false;
   console.log(`[s28-jittier] worker init: requested=${JSON.stringify(requestedPpcWasmJitTier)} ` +
     `→ resolved ppcWasmJitTier=${ppcWasmJitTier} (engage will call ` +
     `setPpcWasmJitEnabled(${ppcWasmJitTier === "mixed" ? 2 : 1}))`);
@@ -3597,6 +3600,14 @@ function resetPpcWasmJitTiming(invalidateBaseline = false) {
   }
 }
 
+// A native-acknowledged Animal Crossing checkpoint is already past cold boot.
+// Keep the cold-start gate and stall fuse, and respect explicit warmup choices.
+function canSkipPpcWasmJitBootWarmup() {
+  return ppcWasmJitVerifiedCheckpoint && !ppcWasmJitWarmupExplicit &&
+    rendererDiagnostics.configuredVideoBackend === "WebGPU-Real" &&
+    api?.getGameId?.() === "RUUE01";
+}
+
 function maybeEnablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
   if (ppcWasmJitCorePaused || ppcWasmJitTimingSuspensions > 0) return;
   // Keep a pre-engage core-fps estimate warm. This runs every tick while the
@@ -3612,16 +3623,18 @@ function maybeEnablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
     return;
   }
 
-  // Warm-cache fast path. When Day-9 fingerprint matched and Day-7 loaded
+  // Warm-cache / verified-checkpoint fast path. When Day-9 fingerprint matched and Day-7 loaded
   // enough cached modules to cover the initial compile burst, skip the
   // long warmup gate — there's no stability concern because the JIT
   // doesn't have to actually compile anything; it just instantiates from
   // cache. The MINIMUM_PRE_JIT_FRAMES floor is still respected so the
   // emulator gets through the first few video frames stably before we
-  // change its compilation behavior.
+  // change its compilation behavior. A verified Animal Crossing hardware
+  // restore can also skip cold boot; its compile throttle and stall fuse stay active.
   const MINIMUM_PRE_JIT_FRAMES = 30;
   const effectiveWarmup =
-    dolphinJitCachePreWarmed && coreFrame >= MINIMUM_PRE_JIT_FRAMES
+    !ppcWasmJitWarmupExplicit &&
+    (dolphinJitCachePreWarmed || canSkipPpcWasmJitBootWarmup()) && coreFrame >= MINIMUM_PRE_JIT_FRAMES
       ? MINIMUM_PRE_JIT_FRAMES
       : ppcWasmJitWarmupFrames;
   if ((coreFrame >>> 0) < effectiveWarmup) {
@@ -3660,7 +3673,9 @@ function maybeEnablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
   ppcWasmJitFuseLastFrame = -1;
   const reason = dolphinJitCachePreWarmed && effectiveWarmup === MINIMUM_PRE_JIT_FRAMES
     ? `pre-warmed cache hit, JIT engaged at frame ${coreFrame}`
-    : `JIT enabled after ${coreFrame} stable video frames`;
+    : canSkipPpcWasmJitBootWarmup()
+      ? `JIT enabled after verified Animal Crossing restore at frame ${coreFrame}`
+      : `JIT enabled after ${coreFrame} stable video frames`;
   postStatus(`Experimental WASM ${reason}`);
 }
 

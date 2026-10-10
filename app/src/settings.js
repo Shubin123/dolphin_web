@@ -12,7 +12,6 @@ export const PLAYABLE_PRESET = Object.freeze({
   wasmjit: "1",
   jittier: "guarded",
   forcejit: "0",
-  jitwarmup: "700",
   oc: "1",
   queue: "4",
   fastsw: "1",
@@ -121,8 +120,6 @@ export function buildSettingsHref(href, settings) {
   url.searchParams.delete("unsafejitwarmup");
   if (nextSettings.wasmjit === "0") {
     url.searchParams.delete("jitwarmup");
-  } else {
-    url.searchParams.set("jitwarmup", PLAYABLE_PRESET.jitwarmup);
   }
 
   return url.href;
@@ -130,7 +127,11 @@ export function buildSettingsHref(href, settings) {
 
 export function buildPlayablePresetHref(href) {
   const url = new URL(buildSettingsHref(href, PLAYABLE_PRESET));
-  url.searchParams.set("jitwarmup", PLAYABLE_PRESET.jitwarmup);
+  // Restore adaptive startup rather than pinning the boot warmup.
+  url.searchParams.delete("jitwarmup");
+  for (const key of ["disable", "redispatch", "blockmerge", "regalloc", "shortprefix", "smearcompile", "fastmemhoist", "ppcprof"]) {
+    url.searchParams.delete(key);
+  }
   url.searchParams.set("oc", PLAYABLE_PRESET.oc);
   return url.href;
 }

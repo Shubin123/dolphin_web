@@ -48,6 +48,7 @@ export class UpstreamWorkerAdapter {
     ppcWasmJitTier = "guarded",
     ppcWasmJitForce = false,
     ppcWasmJitWarmupFrames = 3600,
+    ppcWasmJitWarmupExplicit = false,
     ppcProfile = false,
     cpuOverclock = 1,
     emulationSpeed = 1,
@@ -146,6 +147,7 @@ export class UpstreamWorkerAdapter {
     this.ppcWasmJitTier = ppcWasmJitTier === "mixed" ? "mixed" : "guarded";
     this.ppcWasmJitForce = Boolean(ppcWasmJitForce);
     this.ppcWasmJitWarmupFrames = ppcWasmJitWarmupFrames;
+    this.ppcWasmJitWarmupExplicit = Boolean(ppcWasmJitWarmupExplicit);
     this.ppcProfile = Boolean(ppcProfile);
     this.cpuOverclock = cpuOverclock;
     this.emulationSpeed = emulationSpeed;
@@ -359,6 +361,7 @@ export class UpstreamWorkerAdapter {
       ppcWasmJitTier: this.ppcWasmJitTier,
       ppcWasmJitForce: this.ppcWasmJitForce,
       ppcWasmJitWarmupFrames: this.ppcWasmJitWarmupFrames,
+      ppcWasmJitWarmupExplicit: this.ppcWasmJitWarmupExplicit,
       ppcProfile: this.ppcProfile,
       cpuOverclock: this.cpuOverclock,
       emulationSpeed: this.emulationSpeed,
