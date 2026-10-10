@@ -3,6 +3,11 @@
   "coreId": "sha256:f00f662b6dd0b23b13054779d2f2c35eb24f263b105aab9264017c9db6f65c5b",
   "files": [
     {
+      "path": "app-icon.svg",
+      "size": 534,
+      "sha256": "122222e9afb6b166432f2eb62d6e01fac05c782dc0402d63d4976c6e800f2485"
+    },
+    {
       "path": "coi-serviceworker.js",
       "size": 1872,
       "sha256": "5a1a957bc6be4bbd95a2c903aa25a1a247ba520f0fee45dfe814256eb72688a4"
@@ -14,8 +19,8 @@
     },
     {
       "path": "index.html",
-      "size": 30977,
-      "sha256": "1007c67e120e451ea6bd0e603b21dd18db4690d1d7d4f08d03ed0aee93bee22d"
+      "size": 31008,
+      "sha256": "ae352a00b10ea27fd201669c196638b4abda6cf1b4942f0b3592d1ec77ca1243"
     },
     {
       "path": "src/app.js",
