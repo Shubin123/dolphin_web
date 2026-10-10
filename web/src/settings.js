@@ -2,12 +2,12 @@ import { SETTINGS_STORAGE_KEY, readPreference, writePreference } from './prefere
 
 export const PLAYABLE_PRESET = Object.freeze({
   core: "upstream",
-  video: "software",
+  video: "auto",
   cpu: "dual",
   speed: "1",
   present: "full",
   presenter: "webgpu",
-  pacing: "tick",
+  pacing: "auto",
   oglproxy: "worker",
   wasmjit: "1",
   jittier: "guarded",
@@ -21,12 +21,12 @@ export const PLAYABLE_PRESET = Object.freeze({
 
 export const DEFAULT_SETTINGS = Object.freeze({
   core: "upstream",
-  video: "software",
+  video: "auto",
   cpu: "dual",
   speed: "1",
   present: "full",
   presenter: "webgpu",
-  pacing: "tick",
+  pacing: "auto",
   oglproxy: "worker",
   wasmjit: "1",
   jittier: "guarded",
@@ -38,12 +38,12 @@ export const DEFAULT_SETTINGS = Object.freeze({
 
 const CHOICE_SETS = Object.freeze({
   core: new Set(["native", "upstream"]),
-  video: new Set(["software", "wgpu", "ogl", "null"]),
+  video: new Set(["auto", "software", "wgpu", "ogl", "null"]),
   cpu: new Set(["auto", "single", "dual"]),
   speed: new Set(["0.5", "0.75", "1", "1.25", "1.5", "unlimited"]),
   present: new Set(["full", "0.75", "half"]),
   presenter: new Set(["webgpu", "webgl", "2d"]),
-  pacing: new Set(["tick", "direct", "smooth"]),
+  pacing: new Set(["auto", "tick", "direct", "smooth"]),
   oglproxy: new Set(["proxy", "worker", "main", "readback"]),
   wasmjit: new Set(["0", "1"]),
   jittier: new Set(["guarded", "mixed"]),
@@ -79,7 +79,7 @@ export function readSettingsFromSearch(search) {
 
   return {
     core: normalizeChoice("core", params.get("core") || DEFAULT_SETTINGS.core),
-    video: normalizeChoice("video", params.get("video") || "software"),
+    video: normalizeChoice("video", params.get("video") || DEFAULT_SETTINGS.video),
     cpu: normalizeChoice("cpu", params.get("cpu") || DEFAULT_SETTINGS.cpu),
     speed: normalizeChoice("speed", normalizeSpeed(params.get("speed"))),
     present: normalizeChoice("present", normalizePresentationScale(params.get("present"))),
@@ -138,7 +138,7 @@ export function buildPlayablePresetHref(href) {
 export function describeSettings(settings) {
   const normalized = normalizeSettings(settings);
   const core = normalized.core === "upstream" ? "Upstream" : "Native";
-  const video = normalized.video === "software" ? "Software" : normalized.video.toUpperCase();
+  const video = normalized.video === "auto" ? "Automatic (WebGPU preferred)" : normalized.video === "software" ? "Software" : normalized.video.toUpperCase();
   const cpu = normalized.cpu === "auto" ? "Auto CPU" : `${normalized.cpu} CPU`;
   const jit =
     normalized.wasmjit !== "1"

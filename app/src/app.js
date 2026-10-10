@@ -177,7 +177,11 @@ const host = new EmulatorHost({
   canvas: elements.screen,
   onFrame: handleFrame,
   onStatus: setStatus,
-  onMode: setMode
+  onMode: setMode,
+  onCanvasChanged: canvas => {
+    elements.screen = canvas;
+    document.dispatchEvent(new CustomEvent("dolphin-canvas-replaced", { detail: { canvas } }));
+  }
 });
 audio.setSource((frames) => host.mixAudio(frames));
 audio.setTransportBridge((config) => host.configureAudioWorklet(config));
@@ -893,7 +897,7 @@ function updateScreenHud(info) {
 // reason to override someone who has already decided.
 async function applyGameProfile(file) {
   if (!elements.autoProfile?.checked) return;
-  if (new URLSearchParams(window.location.search).has("video")) return;
+  if (!host.automaticVideo) return;
   let gameId = null;
   try {
     gameId = await readGameId(file);
@@ -1072,10 +1076,15 @@ function wireKeyboard() {
 }
 
 function wireMouse() {
-  const canvas = elements.screen;
+  let canvas = elements.screen;
+  const canvasListeners = [];
+  const listenOnCanvas = (type, listener) => {
+    canvasListeners.push([type, listener]);
+    canvas.addEventListener(type, listener);
+  };
   const viewport = canvas.closest(".screen-viewport");
   canvas.tabIndex = 0;
-  canvas.addEventListener("pointerdown", () => canvas.focus({ preventScroll: true }));
+  listenOnCanvas("pointerdown", () => canvas.focus({ preventScroll: true }));
   canvas.style.touchAction = "none";
   const buttons = createButtonSource(pressed => { mousePressed = pressed; syncInput("Mouse"); }, minimumInputPressMs);
   const release = () => { mouseInputState = null; buttons.reset(); };
@@ -1087,8 +1096,8 @@ function wireMouse() {
   applyMode();
   window.addEventListener("blur", release);
   document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
-  canvas.addEventListener("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
-  canvas.addEventListener("pointerdown", event => {
+  listenOnCanvas("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
+  listenOnCanvas("pointerdown", event => {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
     event.preventDefault();
     canvas.setPointerCapture(event.pointerId);
@@ -1116,7 +1125,7 @@ function wireMouse() {
   viewport.addEventListener("pointerenter", move);
   viewport.addEventListener("pointermove", move);
   if ("onpointerrawupdate" in window) viewport.addEventListener("pointerrawupdate", move);
-  canvas.addEventListener("pointerup", event => {
+  listenOnCanvas("pointerup", event => {
     if (event.pointerType !== "mouse") return;
     if (!event.buttons && mouseMode.value === "stick") mouseInputState = null;
     buttons.up(event.button);
@@ -1124,11 +1133,16 @@ function wireMouse() {
   viewport.addEventListener("pointerleave", event => {
     if (event.pointerType === "mouse" && !event.buttons) release();
   });
-  canvas.addEventListener("pointercancel", event => { if (event.pointerType === "mouse") release(); });
-  canvas.addEventListener("lostpointercapture", event => {
+  listenOnCanvas("pointercancel", event => { if (event.pointerType === "mouse") release(); });
+  listenOnCanvas("lostpointercapture", event => {
     // Normal mouse-up ends capture, but absolute Wii aim stays at the click.
     if (event.pointerType === "mouse" && !event.buttons && mouseMode.value === "cstick") return;
     if (event.pointerType === "mouse") release();
+  });
+  document.addEventListener("dolphin-canvas-replaced", event => {
+    release();
+    canvas = event.detail.canvas;
+    for (const [type, listener] of canvasListeners) canvas.addEventListener(type, listener);
   });
 }
 
@@ -1183,6 +1197,7 @@ function wireTouchControls() {
     if (aiming) pointerSource = "touch";
     touchPressed = pressed; touchInputState = axes; syncInput("Touch");
   } });
+  document.addEventListener("dolphin-canvas-replaced", event => controls.setCanvas(event.detail.canvas));
   const mode = document.querySelector("#touchMode");
   const size = document.querySelector("#touchSize");
   const opacity = document.querySelector("#touchOpacity");

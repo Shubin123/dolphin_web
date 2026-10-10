@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "abiVersion": 1,
-  "coreId": "sha256:f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d",
+  "coreId": "sha256:f00f662b6dd0b23b13054779d2f2c35eb24f263b105aab9264017c9db6f65c5b",
   "upstreamCommit": "e22551eae1c84a7e4d0b6a5c519ef4ed4ef69df1",
   "artifacts": [
     {
@@ -12,8 +12,8 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13220661,
-      "sha256": "f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d"
+      "size": 13220817,
+      "sha256": "f00f662b6dd0b23b13054779d2f2c35eb24f263b105aab9264017c9db6f65c5b"
     }
   ],
   "contractSources": [
@@ -44,8 +44,8 @@
     {
       "path": "src/app.js",
       "hashMode": "lf-normalized",
-      "size": 55648,
-      "sha256": "d261882df316291e1db88e32840805690aeb3586ab8279ac28e964a23e5e99a7"
+      "size": 56095,
+      "sha256": "fbe9a540c7ebb33cb21759f35dc6662349db5c3746f8b5e0cfdbcce811600eaf"
     },
     {
       "path": "src/audio.js",
@@ -80,8 +80,8 @@
     {
       "path": "src/core-host.js",
       "hashMode": "lf-normalized",
-      "size": 66334,
-      "sha256": "430cdf9c99a0f9aef11c3500864ef3b203ba8c1d5f22462aae51205e03ee8062"
+      "size": 66313,
+      "sha256": "a4b3893da04e992cede26a3d1e9984879ea45ad246ee33a5a7f5ae0cfd405def"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -134,8 +134,8 @@
     {
       "path": "src/upstream-discio-worker.js",
       "hashMode": "lf-normalized",
-      "size": 620122,
-      "sha256": "12a44f8daa79d00e5e9a9e4d9331d364b3e7207e34c2a72c217ae1612669d770"
+      "size": 622415,
+      "sha256": "e9cc739a48f424c632d50ef6fdc9fe483560943e76b62fc5663c3b08029e3577"
     },
     {
       "path": "src/wgpu-renderer-worker-probe.js",
@@ -158,14 +158,14 @@
     {
       "path": "src/upstream-worker-adapter.js",
       "hashMode": "lf-normalized",
-      "size": 42361,
-      "sha256": "2655738d57a139375d2e86501cc70db737c9120145a653bbe6dc857ceff3bb97"
+      "size": 44120,
+      "sha256": "3c9c638758f210b66a87204fbe7406dd175ff163d07f231d9da3d0b55bafcc67"
     },
     {
       "path": "src/upstream-worker-protocol.js",
       "hashMode": "lf-normalized",
       "size": 5096,
-      "sha256": "a97ee40ff4d8decde5a617a39f0846888443659415291a053cf806b024e95e9b"
+      "sha256": "604fdab620b2bc10ae322ff8341299d340cf600bfe4f9475d6afe7abe59a2621"
     },
     {
       "path": "src/wgpu-pass-state-cache.js",
@@ -536,6 +536,7 @@
       "loadStateFile",
       "mixAudio",
       "mountFile",
+      "prepareHardwareRenderer",
       "rendererDiagnostics",
       "reset",
       "runFrame",

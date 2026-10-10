@@ -1,3 +1,4 @@
+import { WGPU_INIT_FAILURE } from "./video-backend.js";
 import { validateDolphinStateFile } from "./dolphin-state-file.js";
 import {
   DEFAULT_UPSTREAM_CORE_SHA256,
@@ -175,6 +176,7 @@ let wgpuBackbufferSized = false;
 let renderContext = null;
 let renderImageData = null;
 let renderGpu = null;
+let preparedHardwarePresenter = null;
 let renderGl = null;
 let renderGlState = null;
 let renderUploadBuffer = null;
@@ -809,6 +811,18 @@ self.addEventListener("message", async (event) => {
 
 async function handleMessage(type, payload) {
   switch (type) {
+    case "prepareHardwareRenderer": {
+      // Validate GPU creation before the DOM canvas is transferred. Reuse this
+      // device for the real surface, so successful startup creates one device.
+      wgpuPowerPreference = payload.powerPreference === "low-power" ? "low-power" : "high-performance";
+      try {
+        const state = await createWebGpuPresenter(new OffscreenCanvas(1, 1), true);
+        preparedHardwarePresenter = { state, adapter: rendererDiagnostics.adapter, device: rendererDiagnostics.device };
+        return { ready: true };
+      } catch (error) {
+        throw new Error(WGPU_INIT_FAILURE + String(error?.message || error));
+      }
+    }
     case "load":
       if (!moduleInstance) {
         cancelWgpuMappedDrainTimer();
@@ -1847,10 +1861,10 @@ async function loadCore({
     postStatus(`WGPU ${wgpuRendererWorkerProbe} probe active (blank output)`);
   } else if (canvas && (videoBackend !== "OGL" || readbackOgl)) {
     preferredPresenterBackend = normalizePresenterBackend(presenterBackend);
-    await setupSoftwarePresenter(canvas, preferredPresenterBackend);
+    await setupSoftwarePresenter(canvas, videoBackend === "WebGPU-Real" ? "webgpu" : preferredPresenterBackend, videoBackend === "WebGPU-Real");
   } else if (detachedWgpuCanvas) {
     preferredPresenterBackend = "webgpu";
-    await setupSoftwarePresenter(detachedWgpuCanvas, preferredPresenterBackend);
+    await setupSoftwarePresenter(detachedWgpuCanvas, preferredPresenterBackend, true);
   }
 
   // §28cf boot-phase timing instrumentation. Attributes the ~1s page-load
@@ -4589,7 +4603,7 @@ function formatProfileWindow(elapsedMs) {
   );
 }
 
-async function setupSoftwarePresenter(canvas, presenterBackend) {
+async function setupSoftwarePresenter(canvas, presenterBackend, hardwareRequired = false) {
   rendererDiagnostics.requestedPresenterBackend = presenterBackend;
   renderCanvas = canvas;
   renderContext = null;
@@ -4602,13 +4616,28 @@ async function setupSoftwarePresenter(canvas, presenterBackend) {
 
   if (presenterBackend === "webgpu") {
     try {
-      renderGpu = await createWebGpuPresenter(renderCanvas);
+      if (hardwareRequired && preparedHardwarePresenter) {
+        const prepared = preparedHardwarePresenter;
+        preparedHardwarePresenter = null;
+        renderGpu = prepared.state;
+        rendererDiagnostics.adapter = prepared.adapter;
+        rendererDiagnostics.device = prepared.device;
+        renderGpu.context.unconfigure();
+        renderGpu.context = configureWebGpuCanvas(renderCanvas, renderGpu.device, renderGpu.format);
+        if (wgpuVisualCadenceEnabled) {
+          ensureWgpuVisualCadenceResources(renderGpu);
+          visualSampleSource = wgpuVisualCadenceTelemetry.source;
+        }
+      } else {
+        renderGpu = await createWebGpuPresenter(renderCanvas, hardwareRequired);
+      }
       renderBackend = "webgpu";
       rendererDiagnostics.activePresenterBackend = renderBackend;
       postStatus("WebGPU presenter active");
       return;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      if (hardwareRequired) throw new Error(WGPU_INIT_FAILURE + message);
       rendererDiagnostics.fallback = { from: "webgpu", reason: message };
       recordRendererError("backend-fallback", message);
       postStatus(`WebGPU presenter unavailable: ${message}; falling back to WebGL`);
@@ -4654,7 +4683,7 @@ function normalizeOglProxyMode(value) {
   return normalized === "worker" || normalized === "offscreen" ? "worker" : "proxy";
 }
 
-async function createWebGpuPresenter(canvas) {
+async function createWebGpuPresenter(canvas, hardwareRequired = false) {
   const gpu = self.navigator?.gpu;
   const textureUsage = self.GPUTextureUsage;
   const shaderStage = self.GPUShaderStage;
@@ -4671,8 +4700,12 @@ async function createWebGpuPresenter(canvas) {
   if (!adapterInfo && typeof adapter.requestAdapterInfo === "function") {
     try { adapterInfo = await adapter.requestAdapterInfo(); } catch {}
   }
+  if (hardwareRequired && (adapterInfo?.isFallbackAdapter || adapter.isFallbackAdapter)) {
+    throw new Error("The browser only offers a software WebGPU adapter");
+  }
   rendererDiagnostics.adapter = {
     selected: true,
+    isFallbackAdapter: Boolean(adapterInfo?.isFallbackAdapter || adapter.isFallbackAdapter),
     vendor: adapterInfo?.vendor || null,
     architecture: adapterInfo?.architecture || null,
     device: adapterInfo?.device || null,
@@ -4789,30 +4822,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
       topology: "triangle-list"
     }
   });
-  const context = canvas.getContext("webgpu");
-  if (!context) {
-    throw new Error("OffscreenCanvas could not create a WebGPU context");
-  }
-  // Day-33 Phase C: configure the context up-front. Pre-cutover only
-  // drawFrameBytesToWebGpu configured it (on the first XFB frame);
-  // post-cutover that legacy path is dead, so the cmd-ring executor's
-  // backbuffer pass (renderGpu.context.getCurrentTexture()) would
-  // throw "context not configured" — silently swallowed, leaving the
-  // visible canvas unpainted (the green). Idempotent re-configure
-  // elsewhere is fine.
-  try {
-    context.configure({
-      device,
-      format,
-      alphaMode: "opaque",
-      usage: textureUsage.RENDER_ATTACHMENT |
-        ((wgpuReplayClassifier || inputReadbackDiagnostics) ? textureUsage.COPY_SRC : 0) |
-        (wgpuVisualCadenceEnabled ? textureUsage.TEXTURE_BINDING : 0)
-    });
-  } catch (e) {
-    recordRendererError("validation", `context.configure: ${e?.message || e}`);
-    postStatus(`WebGPU context.configure failed: ${e?.message || e}`);
-  }
+  const context = configureWebGpuCanvas(canvas, device, format);
   const state = {
     bindGroup: null,
     bindGroupLayout,
@@ -4857,6 +4867,37 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
   });
 
   return state;
+}
+
+function configureWebGpuCanvas(canvas, device, format) {
+  const textureUsage = self.GPUTextureUsage;
+  const context = canvas.getContext("webgpu");
+  if (!context) {
+    throw new Error("OffscreenCanvas could not create a WebGPU context");
+  }
+  // Day-33 Phase C: configure the context up-front. Pre-cutover only
+  // drawFrameBytesToWebGpu configured it (on the first XFB frame);
+  // post-cutover that legacy path is dead, so the cmd-ring executor's
+  // backbuffer pass (renderGpu.context.getCurrentTexture()) would
+  // throw "context not configured" — silently swallowed, leaving the
+  // visible canvas unpainted (the green). Idempotent re-configure
+  // elsewhere is fine.
+  try {
+    context.configure({
+      device,
+      format,
+      alphaMode: "opaque",
+      usage: textureUsage.RENDER_ATTACHMENT |
+        ((wgpuReplayClassifier || inputReadbackDiagnostics) ? textureUsage.COPY_SRC : 0) |
+        (wgpuVisualCadenceEnabled ? textureUsage.TEXTURE_BINDING : 0)
+    });
+  } catch (e) {
+    recordRendererError("validation", `context.configure: ${e?.message || e}`);
+    postStatus(`WebGPU context.configure failed: ${e?.message || e}`);
+    device.destroy();
+    throw e;
+  }
+  return context;
 }
 
 function ensureWgpuVisualCadenceResources(gpu = renderGpu) {
@@ -10173,7 +10214,7 @@ function drainWebGpuCmdRing(source = "presentation") {
   let pd = { pipeOk: 0, pipeMiss: 0, bgOk: 0, bgMiss: 0, draw: 0, drawIdx: 0 };
   self._wgPassDiag = self._wgPassDiag || {};
   const flushPassDiag = () => {
-    if (passFbId < 0) return;
+    if (!wgpuDeepReplayDiagnostics || passFbId < 0) return;
     const key = passFbId === 0 ? "fb0" : "fb" + passFbId;
     const n = (self._wgPassDiag[key] = (self._wgPassDiag[key] || 0) + 1);
     // [webgpu-DIAG-cpypass] EFB-copy target passes (the 640x480
@@ -11774,7 +11815,7 @@ function drainWebGpuCmdRing(source = "presentation") {
               WGPU_DYN_OFF_SCRATCH[k] = u32[recWord + 4 + k];
               if (bgSlot === 0) vpDiagNoteVsOffset(u32[recWord + 4 + k]);
             }
-            dtLastBg[bgSlot] = { bg, off: nOff ? Array.from(WGPU_DYN_OFF_SCRATCH.subarray(0, nOff)) : null };
+            if (DIAG_DEPTH_TRACE) dtLastBg[bgSlot] = { bg, off: nOff ? Array.from(WGPU_DYN_OFF_SCRATCH.subarray(0, nOff)) : null };
             const needsApply = !wgpuConsumerStateCacheEnabled ||
               wgpuPassStateCache.bindGroupNeedsApply(
                 bgSlot,
@@ -11825,7 +11866,7 @@ function drainWebGpuCmdRing(source = "presentation") {
           if (!b) wgpuReplayClassifier?.recordMissingResource({ kind: "vertex-buffer", id: bufferId });
           if (pass && b) {
             const offset = u32[recWord + 3];
-            dtLastVb = { slot, b, offset };
+            if (DIAG_DEPTH_TRACE) dtLastVb = { slot, b, offset };
             const needsApply = !wgpuConsumerStateCacheEnabled ||
               wgpuPassStateCache.vertexBufferNeedsApply(slot, b, offset);
             try {
@@ -11857,7 +11898,7 @@ function drainWebGpuCmdRing(source = "presentation") {
           if (pass && b) {
             const format = u32[recWord + 2] === 1 ? "uint32" : "uint16";
             const offset = u32[recWord + 3];
-            dtLastIb = { b, format, offset };
+            if (DIAG_DEPTH_TRACE) dtLastIb = { b, format, offset };
             const needsApply = !wgpuConsumerStateCacheEnabled ||
               wgpuPassStateCache.indexBufferNeedsApply(b, format, offset);
             try {
@@ -11883,7 +11924,7 @@ function drainWebGpuCmdRing(source = "presentation") {
           // the presented entry all verify correct, so the remaining suspect is
           // how this pass samples that entry. Record the raw requested viewport
           // for fb#0 against the pass size.
-          if (passFbId === 0) {
+          if (DIAG_EFB_TO_CANVAS && passFbId === 0) {
             self._wgLastVp = `${f32[recWord + 1].toFixed(0)},${f32[recWord + 2].toFixed(0)}` +
               `+${f32[recWord + 3].toFixed(0)}x${f32[recWord + 4].toFixed(0)}`;
           }
@@ -12067,7 +12108,7 @@ function drainWebGpuCmdRing(source = "presentation") {
           break;
         }
         case WGPU_CMD_OP_SET_SCISSOR:
-          if (passFbId === 0) {
+          if (DIAG_EFB_TO_CANVAS && passFbId === 0) {
             self._wgLastSc = `${u32[recWord + 1]},${u32[recWord + 2]}` +
               `+${u32[recWord + 3]}x${u32[recWord + 4]}`;
           }
@@ -12121,7 +12162,7 @@ function drainWebGpuCmdRing(source = "presentation") {
               self._wgVpSkipN = (self._wgVpSkipN || 0) + 1;
               break;
             }
-            frameCapPush(`  DRAW     fb#${passFbId}`);
+            if (frameCapActive()) frameCapPush(`  DRAW     fb#${passFbId}`);
             if (!vpDiagDone) vpDiagVerts += u32[recWord + 1] * Math.max(1, u32[recWord + 2]);
             pass.draw(u32[recWord + 1], u32[recWord + 2], u32[recWord + 3], 0);
             dtraceAfterDraw();
@@ -12167,7 +12208,7 @@ function drainWebGpuCmdRing(source = "presentation") {
               self._wgVpSkipN = (self._wgVpSkipN || 0) + 1;
               break;
             }
-            frameCapPush(`  DRAW     fb#${passFbId}`);
+            if (frameCapActive()) frameCapPush(`  DRAW     fb#${passFbId}`);
             if (!vpDiagDone) {
               vpDiagIdx += u32[recWord + 1] * Math.max(1, u32[recWord + 2]);
               vpDiagNoteIndexedDraw(u32[recWord + 1], u32[recWord + 3], u32[recWord + 4]);

@@ -1,3 +1,4 @@
+import { automaticVideoRequested, requestedVideoBackend } from "./video-backend.js";
 import { DolphinCoreAdapter, dolphinBundleAvailable } from "./dolphin-adapter.js";
 import { SaveStateSlots } from "./save-states.js";
 import { buttonMaskFromPressed } from "./input.js";
@@ -67,7 +68,7 @@ const VISIBLE_SAMPLE_INTERVAL_MS = 250;
 const SAFE_JIT_WARMUP_FRAMES = 5000;
 
 export class EmulatorHost {
-  constructor({ canvas, onFrame = () => {}, onStatus = () => {}, onMode = () => {} }) {
+  constructor({ canvas, onFrame = () => {}, onStatus = () => {}, onMode = () => {}, onCanvasChanged = () => {} }) {
     this.canvas = canvas;
     this.stateSlots = new SaveStateSlots();
     this.onFrame = onFrame;
@@ -82,7 +83,8 @@ export class EmulatorHost {
       onStatus(`Invalid candidate core selector; using pinned baseline: ${error.message}`);
       this.upstreamCoreBuild = requestedUpstreamCoreBuild("");
     }
-    this.videoBackend = requestedVideoBackend();
+    this.automaticVideo = automaticVideoRequested(window.location.search);
+    this.videoBackend = requestedVideoBackend(window.location.search);
     this.cpuThread = requestedCpuThread(this.videoBackend);
     this.cpuCore = requestedCpuCore();
     this.ppcWasmJit = requestedPpcWasmJit(this.videoBackend);
@@ -294,7 +296,7 @@ export class EmulatorHost {
           // Replace the DOM canvas with a freshly-created one. The new
           // element has no captureStream history, no extension hooks, no
           // compositor binding. Copy across the relevant attributes.
-          const replacement = document.createElement("canvas");
+          const replacement = canvas.cloneNode(false);
           replacement.id = canvas.id;
           replacement.width = canvas.width;
           replacement.height = canvas.height;
@@ -304,6 +306,7 @@ export class EmulatorHost {
           // Re-point the host's reference and the elements registry.
           canvas = replacement;
           this.canvas = replacement;
+          onCanvasChanged(replacement);
           const off = replacement.transferControlToOffscreen();
           off.id = "canvas";
           return off;
@@ -379,6 +382,8 @@ export class EmulatorHost {
             presentationScale: this.presentationScale,
             presentationQueueSize: this.presentationQueueSize,
             presenterBackend: this.presenterBackend,
+            automaticVideo: this.automaticVideo,
+            softwareFallbackPacing: requestedPresentationPacing("Software Renderer"),
             presentationPacing: this.presentationPacing,
             legacyTickQueue: this.legacyTickQueue,
             oglProxyMode: this.oglProxyMode,
@@ -532,6 +537,8 @@ export class EmulatorHost {
       this.adapter.ppcWasmJitWarmupFrames = this.ppcWasmJitWarmupFrames;
       this.adapter.presentationPacing = this.presentationPacing;
       this.adapter.wgpuVisualCadence = this.wgpuVisualCadence;
+      this.wgpuReplayPump = requestedWgpuReplayPump(window.location.search, backend === "WebGPU-Real");
+      this.adapter.wgpuReplayPump = this.wgpuReplayPump;
     }
     return true;
   }
@@ -546,6 +553,10 @@ export class EmulatorHost {
     if (await this.adapterAvailable()) {
       try {
         const mounted = await this.adapter.mountGame(file);
+        this.videoBackend = this.adapter.videoBackend || this.videoBackend;
+        this.presentationPacing = this.adapter.presentationPacing || this.presentationPacing;
+        this.wgpuVisualCadence = this.adapter.wgpuVisualCadence ?? this.wgpuVisualCadence;
+        this.wgpuReplayPump = this.adapter.wgpuReplayPump ?? this.wgpuReplayPump;
         this.mode = "dolphin";
         this.game.name = mounted.title || file.name;
         this.game.gameId = mounted.gameId;
@@ -1142,30 +1153,6 @@ function requestedCoreKind() {
   return new URLSearchParams(window.location.search).get("core") === "native" ? "native" : "upstream";
 }
 
-function requestedVideoBackend() {
-  const requested = new URLSearchParams(window.location.search).get("video");
-  if (requested === "ogl") {
-    return "OGL";
-  }
-  if (requested === "null") {
-    return "Null";
-  }
-  // Day-16: `?video=webgpu` keeps the Software→WebGPU-presenter hybrid
-  // (real game pixels reach the canvas through a wgpuRenderPass blit,
-  // CPU does the rasterisation). Stable, plays Melee.
-  //
-  // Day-17+: `?video=wgpu` selects the real WebGPU video backend that's
-  // under construction — no Software bridge, the C++ side owns the
-  // render pipeline. Early phases will only show clear-colour or
-  // partial content; this is the path to 60fps GPU rendering.
-  if (requested === "webgpu") {
-    return "WebGPU";
-  }
-  if (requested === "wgpu" || requested === "webgpu-real" || requested === "webgpu2") {
-    return "WebGPU-Real";
-  }
-  return "Software Renderer";
-}
 
 function requestedCpuThread(videoBackend) {
   const requested = new URLSearchParams(window.location.search).get("cpu");

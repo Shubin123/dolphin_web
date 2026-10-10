@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DEFAULT_SETTINGS, readSettingsFromSearch, restoreSettingsHref, saveSettings } from '../app/src/settings.js';
+import { DEFAULT_SETTINGS, buildPlayablePresetHref, buildSettingsHref, readSettingsFromSearch, restoreSettingsHref, saveSettings } from '../app/src/settings.js';
 import { resetPreferences } from '../app/src/preferences.js';
 
 function storage() {
@@ -59,4 +59,19 @@ test('settings and full resets remove only owned preferences and optionally layo
   assert(!values.has('dolphin-mouse-mode'));
   resetPreferences({ layout: true });
   assert.deepEqual([...values], [['unrelated-data', 'keep']]);
+});
+
+test('automatic hardware preference is the default and explicit software survives restarts', () => {
+  storage();
+  assert.equal(readSettingsFromSearch('').video, 'auto');
+  assert.equal(readSettingsFromSearch('').pacing, 'auto');
+  const preset = new URL(buildPlayablePresetHref('https://example.test/?video=software&pacing=tick'));
+  assert.equal(readSettingsFromSearch(preset.search).video, 'auto');
+  assert.equal(readSettingsFromSearch(preset.search).pacing, 'auto');
+  const software = new URL(buildSettingsHref(preset.href, { ...DEFAULT_SETTINGS, video: 'software' }));
+  assert.equal(software.searchParams.get('video'), 'software');
+  saveSettings({ ...DEFAULT_SETTINGS, video: 'software' });
+  assert.equal(readSettingsFromSearch(new URL(restoreSettingsHref(preset.href)).search).video, 'software');
+  saveSettings(DEFAULT_SETTINGS);
+  assert.equal(restoreSettingsHref(preset.href), preset.href);
 });

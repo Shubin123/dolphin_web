@@ -207,7 +207,8 @@
                             <label>
                               <span>Renderer</span>
                               <select id="settingVideo">
-                              <option value="software">Software</option>
+                              <option value="auto">Automatic (WebGPU preferred)</option>
+                              <option value="software">Software fallback</option>
                               <option value="wgpu">WebGPU hardware (experimental)</option>
                               <option value="ogl">OpenGL GPU</option>
                               <option value="null">Null video</option>
@@ -286,6 +287,7 @@
                             <label>
                               <span>Pacing</span>
                               <select id="settingPacing">
+                              <option value="auto">Automatic</option>
                               <option value="tick">Tick</option>
                               <option value="smooth">Smooth</option>
                               <option value="direct">Direct</option>
@@ -331,7 +333,7 @@
 
                             <div class="settings-actions">
                             <button id="settingsApplyButton" type="submit">Apply restart</button>
-                            <button id="settingsPresetButton" type="button">Melee preset</button>
+                            <button id="settingsPresetButton" type="button">Smooth performance preset</button>
                             <button id="settingsResetButton" type="button">Reset settings</button>
                             </div>
                             <p class="muted" id="settingsSaveStatus" role="status">Settings save in this browser. Use Apply restart to activate emulator changes. Display, input and layout changes apply immediately.</p>

@@ -1,3 +1,4 @@
+import { softwareFallbackAllowed } from "./video-backend.js";
 import {
   DEFAULT_UPSTREAM_CORE_SHA256,
   DEFAULT_UPSTREAM_CORE_URL,
@@ -39,6 +40,8 @@ export class UpstreamWorkerAdapter {
     transferCanvas = null,
     visibleCanvas = null,
     videoBackend = "Software Renderer",
+    automaticVideo = false,
+    softwareFallbackPacing = "tick",
     cpuThread = false,
     cpuCore = "cached",
     ppcWasmJit = false,
@@ -134,6 +137,9 @@ export class UpstreamWorkerAdapter {
     this.detachedGpuDrawLastMs = 0;
     this.detachedGpuDrawMaxMs = 0;
     this.videoBackend = videoBackend;
+    this.automaticVideo = Boolean(automaticVideo);
+    this.softwareFallbackPacing = softwareFallbackPacing;
+    this.rendererFallbackReason = null;
     this.cpuThread = cpuThread;
     this.cpuCore = cpuCore;
     this.ppcWasmJit = ppcWasmJit;
@@ -332,6 +338,14 @@ export class UpstreamWorkerAdapter {
       this.worker.addEventListener("message", (event) => this.handleMessage(event.data));
       this.worker.addEventListener("error", (event) => this.rejectAll(event.message || "Upstream worker failed"));
     }
+    if (this.videoBackend === "WebGPU-Real") {
+      try {
+        await this.request("prepareHardwareRenderer", { powerPreference: this.wgpuPowerPreference });
+      } catch (error) {
+        if (!softwareFallbackAllowed({ automatic: this.automaticVideo, videoBackend: this.videoBackend, error })) throw error;
+        this.useSoftwareFallback(error);
+      }
+    }
     const _t_load = performance.now();
     console.log(`[boot-phase] main-thread postMessage(load) at perf.now=${_t_load.toFixed(1)}ms`);
 
@@ -350,7 +364,9 @@ export class UpstreamWorkerAdapter {
       emulationSpeed: this.emulationSpeed,
       presentationScale: this.presentationScale,
       presentationQueueSize: this.presentationQueueSize,
-      presenterBackend: this.presenterBackend,
+      // Hardware replay needs the WebGPU device even if an older saved
+      // preference selected a software-only presenter.
+      presenterBackend: this.videoBackend === "WebGPU-Real" ? "webgpu" : this.presenterBackend,
       presentationPacing: this.presentationPacing,
       legacyTickQueue: this.legacyTickQueue,
       oglProxyMode: this.oglProxyMode,
@@ -429,13 +445,25 @@ export class UpstreamWorkerAdapter {
       loadPayload.canvas = canvasForLoad;
       transfer.push(canvasForLoad);
       this.canvas = null;
-      this.transferCanvasFn = null;
     }
 
     let response;
     try {
       response = await this.request("load", loadPayload, transfer);
     } catch (err) {
+      if (softwareFallbackAllowed({
+        automatic: this.automaticVideo,
+        videoBackend: this.videoBackend,
+        error: err
+      }) && this.transferCanvasFn) {
+        // Initialization failed before native CoreInit or disc mount. Start
+        // software on a fresh worker/canvas; a WebGPU canvas cannot become a
+        // WebGL or 2D canvas after its context has been acquired.
+        this.worker.terminate();
+        this.worker = null;
+        this.useSoftwareFallback(err);
+        return this.load();
+      }
       const msg = String(err?.message || err);
       // Some Chrome environments reject the OffscreenCanvas postMessage
       // transfer with "Cannot transfer OffscreenCanvas bound to element
@@ -457,6 +485,17 @@ export class UpstreamWorkerAdapter {
     }
     this.applyMetadata(response);
     this.loaded = true;
+    this.transferCanvasFn = null;
+  }
+
+  useSoftwareFallback(error) {
+    this.rendererFallbackReason = String(error.message || error);
+    this.videoBackend = "Software Renderer";
+    this.presenterBackend = "webgl";
+    this.presentationPacing = this.softwareFallbackPacing;
+    this.wgpuReplayPump = false;
+    this.wgpuVisualCadence = false;
+    this.onStatus(`Hardware WebGPU unavailable; using software: ${this.rendererFallbackReason}`);
   }
 
   async mountGame(file) {

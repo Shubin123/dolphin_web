@@ -3,7 +3,7 @@
 // Both video paths are correct for most titles but differ enormously in unique
 // visual frames, and a handful of games are actively broken on one of them. The
 // right default is therefore per-game, not global -- but only where there is
-// evidence. Anything absent from this table keeps the shipping default.
+// evidence. Anything absent from this table uses the automatic hardware preference.
 //
 // Measurement basis: full 45-disc sweeps of both paths on the same machine and
 // harness, comparing steady-state unique visual FPS, plus screenshot checks.
@@ -17,7 +17,7 @@
 //   software — the hardware path is broken for this title, or measurably worse.
 //
 // Titles with a big FPS win but no verified screenshot are deliberately left
-// out. Being absent costs a little speed; being wrong ships a broken picture.
+// out. Automatic hardware startup handles missing GPU support separately.
 
 /** @type {Record<string, {renderer: "hardware"|"software", why: string}>} */
 export const GAME_PROFILES = {

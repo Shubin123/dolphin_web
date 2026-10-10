@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d",
+  "coreId": "sha256:f00f662b6dd0b23b13054779d2f2c35eb24f263b105aab9264017c9db6f65c5b",
   "files": [
     {
       "path": "LICENSE",
@@ -10,8 +10,8 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
-      "size": 10862,
-      "sha256": "904361f2cc4eac4c7ac48a6d9b4f9d176c678d57b5dd0071aa4056096ec45d64"
+      "size": 10686,
+      "sha256": "22a9e9c356a5680ad58a779586a25d1c9379b26d371f6417e115704add32bb65"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
@@ -20,13 +20,13 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13220661,
-      "sha256": "f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d"
+      "size": 13220817,
+      "sha256": "f00f662b6dd0b23b13054779d2f2c35eb24f263b105aab9264017c9db6f65c5b"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
-      "size": 17503,
-      "sha256": "2d47d39c14934872206021f395308b75570abe4484551dde4206a773a6972059"
+      "size": 17536,
+      "sha256": "8d8a19a29957af07d60ce13d644ed350e697fa628f9857259ae8b86a7123bae8"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
@@ -60,8 +60,8 @@
     },
     {
       "path": "src/core-host.js",
-      "size": 66334,
-      "sha256": "430cdf9c99a0f9aef11c3500864ef3b203ba8c1d5f22462aae51205e03ee8062"
+      "size": 66313,
+      "sha256": "a4b3893da04e992cede26a3d1e9984879ea45ad246ee33a5a7f5ae0cfd405def"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -95,8 +95,8 @@
     },
     {
       "path": "src/game-profiles.js",
-      "size": 5836,
-      "sha256": "b200a29945dab833f04039f30bfa2a12262bd8fa01e646ce8bca206e3cdf415a"
+      "size": 5844,
+      "sha256": "b010ba97e4a49855fe430829ac4a93b2b7816a3b1c095b6889f3e0a594755499"
     },
     {
       "path": "src/gpu-completion-telemetry.js",
@@ -160,8 +160,8 @@
     },
     {
       "path": "src/upstream-discio-worker.js",
-      "size": 620122,
-      "sha256": "12a44f8daa79d00e5e9a9e4d9331d364b3e7207e34c2a72c217ae1612669d770"
+      "size": 622415,
+      "sha256": "e9cc739a48f424c632d50ef6fdc9fe483560943e76b62fc5663c3b08029e3577"
     },
     {
       "path": "src/upstream-main-thread-adapter.js",
@@ -170,13 +170,18 @@
     },
     {
       "path": "src/upstream-worker-adapter.js",
-      "size": 42361,
-      "sha256": "2655738d57a139375d2e86501cc70db737c9120145a653bbe6dc857ceff3bb97"
+      "size": 44120,
+      "sha256": "3c9c638758f210b66a87204fbe7406dd175ff163d07f231d9da3d0b55bafcc67"
     },
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "a97ee40ff4d8decde5a617a39f0846888443659415291a053cf806b024e95e9b"
+      "sha256": "604fdab620b2bc10ae322ff8341299d340cf600bfe4f9475d6afe7abe59a2621"
+    },
+    {
+      "path": "src/video-backend.js",
+      "size": 958,
+      "sha256": "9fd135054d32de6d0827f3cea9dedb8daf8ed4398bfff361ce34ba345ae97bb3"
     },
     {
       "path": "src/wasm/demo-core.js",

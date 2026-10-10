@@ -102,5 +102,12 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
   };
   window.addEventListener('blur', reset);
   document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
-  return { reset };
+  return {
+    reset,
+    setCanvas(nextCanvas) {
+      reset();
+      if (nextCanvas && nextCanvas !== canvas) bind(nextCanvas, 'screen');
+      canvas = nextCanvas;
+    }
+  };
 }
