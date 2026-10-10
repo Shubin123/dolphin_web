@@ -3,6 +3,7 @@
 export async function waitForBackendRuntime({
   readHead,
   readRuns,
+  readBuildStatus = async () => '',
   onProgress = () => {},
   now = Date.now,
   sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
@@ -32,7 +33,9 @@ export async function waitForBackendRuntime({
     }
     const remaining = timeoutMs - (now() - started);
     if (remaining <= 0) throw new Error(`Timed out waiting for backend ${head} runtime build. The deployed site has been retained.`);
-    onProgress(`Waiting for backend ${head.slice(0, 12)} runtime build (${active?.status || 'not yet listed'})${active?.html_url ? `: ${active.html_url}` : ''}`);
+    const detail = active ? await readBuildStatus(active) : '';
+    const elapsedSeconds = Math.floor((now() - started) / 1000);
+    onProgress(`Waiting for backend ${head.slice(0, 12)} runtime build (${active?.status || 'not yet listed'}; ${elapsedSeconds}s elapsed)${detail ? ` — ${detail}` : ''}${active?.html_url ? `: ${active.html_url}` : ''}`);
     await sleep(Math.min(pollMs, remaining));
   }
 }

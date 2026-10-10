@@ -25,12 +25,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
       - run: npm ci
       - name: Import current backend runtime and matching source
         run: node tools/latest-backend.mjs
         env:
           GH_TOKEN: ${{ secrets.BACKEND_READ_TOKEN || github.token }}
       - run: npm run build
+      - name: Restore WebKit browser cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ runner.arch }}-webkit-${{ hashFiles('package-lock.json') }}
       - name: Install WebKit
         run: npx playwright install --with-deps webkit
       - name: Frontend automation suite

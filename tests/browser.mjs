@@ -199,6 +199,8 @@ try {
   await page.waitForFunction(() => window.__host?.game?.gameId === 'TSTE01', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.mode), 'dolphin');
   assert.equal(await page.evaluate(() => window.__host.game.bootDolOffset), 0x1000);
+  // Library actions stay disabled until the mount settles; CI runners can take well over 30s.
+  await page.waitForFunction(() => document.querySelector('#libraryRows button:last-child')?.disabled === false, {timeout:120000});
   await page.locator('#libraryRows button:last-child').click();
   await page.waitForFunction(() => document.querySelector('#libraryCount').textContent === '(0)');
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?visit=3`);

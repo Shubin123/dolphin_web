@@ -31,6 +31,21 @@ test('Pages tolerates delayed workflow discovery and excludes pull-request artif
   assert.equal(result.run.event, 'push');
 });
 
+test('waiting reports the active backend build step and elapsed time', async () => {
+  const messages = [];
+  const result = await waitForBackendRuntime({
+    ...fixture({runs: poll => [run('current', poll ? 'completed' : 'in_progress')]}),
+    readBuildStatus: async active => {
+      assert.equal(active.id, 42);
+      return 'build: Compile and link Dolphin WASM';
+    },
+    onProgress: message => messages.push(message)
+  });
+  assert.equal(result.head, 'current');
+  assert.equal(messages.length, 1);
+  assert.match(messages[0], /0s elapsed.*Compile and link Dolphin WASM/);
+});
+
 test('a newer backend main must finish its own build before Pages proceeds', async () => {
   let polls = 0;
   let reads = 0;
