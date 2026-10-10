@@ -470,4 +470,10 @@ body { padding:16px; isolation:isolate; }
 .save-slot button:disabled { opacity:.45; }
 .save-state-files { display:flex; gap:6px; flex-wrap:wrap; }
 .save-state-note { font-size:.75rem; margin:8px 0 0; }
+.save-state-status { font-size:.85rem; margin:0 0 8px; }
+.save-state-status.error { color:var(--accent,#e94560); }
+.save-state-files button:disabled, .crt-footer .transport button:disabled,
+.crt-footer .transport .file-button:has(input:disabled), .fullscreen-actions button:disabled { opacity:.45; cursor:default; }
 .save-state-panel.is-disabled .save-state-files button { opacity:.6; }
+
+.screen-viewport[data-mouse-mode="cstick"], .screen-viewport[data-mouse-mode="cstick"] #screen { cursor:crosshair; }

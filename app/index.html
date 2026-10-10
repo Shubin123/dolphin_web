@@ -119,18 +119,20 @@
                   <span class="glyph" aria-hidden="true">&#x1F507;</span>
                 </button>
                 <span class="transport-sep" aria-hidden="true"></span>
-                <button id="saveButton" class="tip" type="button" data-tip="Save state to a slot" aria-label="Save state">
+                <button id="saveButton" class="tip" type="button" data-tip="Save state to the selected slot" aria-label="Save state" disabled>
                   <span class="glyph" aria-hidden="true">&#x1F4BE;</span>
+                  <span class="btn-text">Save state</span>
                 </button>
-                <button id="loadButton" class="tip" type="button" data-tip="Load state from a slot" aria-label="Load state">
+                <button id="loadButton" class="tip" type="button" data-tip="Load state from the selected slot" aria-label="Load state" disabled>
                   <span class="glyph" aria-hidden="true">&#x21BA;</span>
+                  <span class="btn-text">Load state</span>
                 </button>
-                <button id="dlStateButton" class="tip" type="button" data-tip="Download the current save state" aria-label="Download state">
+                <button id="dlStateButton" class="tip" type="button" data-tip="Download the current save state" aria-label="Download state" disabled>
                   <span class="glyph" aria-hidden="true">&#x2B07;</span>
                 </button>
                 <label class="file-button tip" data-tip="Upload a save state file" aria-label="Upload state">
                   <span class="glyph" aria-hidden="true">&#x2B06;</span>
-                  <input id="ulStateInput" type="file" accept=".sav">
+                  <input id="ulStateInput" type="file" accept=".sav" disabled>
                 </label>
               </div>
                             <label class="aspect-select tip" data-tip="Screen aspect ratio">
@@ -178,12 +180,13 @@
 
                             <section class="panel-block card save-state-panel" data-widget="savestates" id="saveStatePanel">
                             <h2>Save states</h2>
+                            <p class="save-state-status muted" data-save-status role="status" aria-live="polite">Open a game, then save your progress to a slot.</p>
                             <ol class="save-slot-list" data-save-slots aria-label="Save slots"></ol>
                             <div class="save-state-files">
-                            <button type="button" data-save-download>Download .sav</button>
-                            <button type="button" data-save-upload>Upload .sav</button>
+                            <button type="button" data-save-download disabled>Download .sav</button>
+                            <button type="button" data-save-upload disabled>Upload .sav</button>
                             </div>
-                            <p class="muted save-state-note">Slots are stored in this browser per game and core build. The selected slot is used by the 💾 / ↺ buttons and in fullscreen.</p>
+                            <p class="muted save-state-note">Save stores your current progress; saving again replaces that slot. To continue later, open the same game and choose Load. Slots stay in this browser for the same emulator build. Download .sav for a backup. The Save state / Load state buttons use the selected slot, including in fullscreen.</p>
                             </section>
 
                             <form class="settings-panel card" data-widget="settings" data-default-span="2" id="settingsForm">
@@ -342,8 +345,8 @@
                             <p>GameCube port 1 and Wii Remote + Nunchuk. Wii: X = A, Z = B, V/B = 1/2, Enter = +, C = −, Q/E = Nunchuk C/Z, H = Home. Keyboard: WASD main stick, IJKL C-stick, arrows D-pad, X/Z/V/B face buttons, Enter Start, Q/E triggers, C Z.</p>
                             <div id="keyboardBindings" class="control-grid"></div>
                             <button type="button" id="resetBindings">Reset keyboard bindings</button>
-                            <label>Mouse / Wii pointer <select id="mouseMode"><option value="off">Disabled</option><option value="stick">Main stick</option><option value="cstick">Wii pointer / C-stick</option></select></label>
-                            <p>Wii pointer: move over the game screen to aim; clicking keeps the aim position. Main stick: hold and drag, release to center. Left / right / middle buttons = A / B / −.</p>
+                            <label>Mouse / Wii pointer <select id="mouseMode"><option value="cstick" selected>Wii pointer / C-stick</option><option value="stick">Main stick</option><option value="off">Disabled</option></select></label>
+                            <p>Mouse hover tracks the Wii pointer over the play area by default, including fullscreen. No click is needed to aim. Main stick: hold and drag, release to center. Left / right / middle buttons = A / B / −.</p>
                             <p>Simulated Wii motion: Space = Remote shake, left Shift = Nunchuk shake, numpad 4/6/8/2 = tilt left/right/forward/backward. All bindings can be changed above.</p>
                             <label>Controller <select id="controllerSelect"><option value="auto">Automatic</option><option value="off">Disabled</option></select></label>
                             <label>Stick deadzone <input id="controllerDeadzone" type="range" min="0" max="0.5" step="0.01" value="0.18"></label>

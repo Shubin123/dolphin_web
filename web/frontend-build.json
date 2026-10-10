@@ -14,18 +14,18 @@
     },
     {
       "path": "index.html",
-      "size": 29406,
-      "sha256": "3d1667ed8c7f499d22a01a348579987ed66642f99f6724c65722da35e23b93d3"
+      "size": 29971,
+      "sha256": "df63cacde3b03cb9404a944d53979b3560e3a5928241e89042c3c0b4613e36fb"
     },
     {
       "path": "src/app.js",
-      "size": 63456,
-      "sha256": "7f6a5957d677e3764d8c8f2ececd5497a0fe7035ce46ecae5b4f5dc8574e3cec"
+      "size": 63833,
+      "sha256": "5dd64942289909e86577b75127ad3e5d65855238ab420130e923b2de16fc114a"
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 25349,
-      "sha256": "66b70cf19e979e65f7f44100a40414f3bc82aa18fcce107ca92eca8843b0e9ad"
+      "size": 25783,
+      "sha256": "005d43746b541b42799aa105ee0f8a8e05fd4c717cfb6cfd89c0ce963dc4842b"
     },
     {
       "path": "src/boot-progress.js",
@@ -69,8 +69,8 @@
     },
     {
       "path": "src/save-state-panel.js",
-      "size": 3795,
-      "sha256": "df7292223c9d38f0ad7893ef7853d93dc0a5288b863ba1e622befa7d21bd5b9c"
+      "size": 6395,
+      "sha256": "dcda40d27a966c4cc3d30e679fb93bdd440df46aa8a6ca0f90962267d1d97465"
     },
     {
       "path": "src/settings.js",

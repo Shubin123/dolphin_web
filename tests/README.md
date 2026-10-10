@@ -33,3 +33,5 @@ Input E2E checks cover keyboard press/release, search-field typing isolation, pe
 Short keyboard taps are retained for native polling at the reported game speed. The core browser suite also sends trusted simultaneous touch events to the visible movement stick and B button in fullscreen, checks native Wii/GC values and release, and verifies the on-screen Exit button. The Azahar widget layout has collapse/reset coverage; commercial captures stay under ignored local logs.
 
 Native touch regressions also verify screen-tap aim retention, a brief slide from a held button onto another button, and stick input/knob ownership when one of two fingers releases. Held fingers take precedence over retained taps for analog axes.
+
+Save-state E2E checks capture and restore a chosen slot through the UI, verify native checkpoint restoration and unchanged saved bytes after reopening the cached game, reject a truncated file with visible feedback, and download/upload a real native `.sav` backup. All generated homebrew images and states stay in a temporary directory that is removed after the test.

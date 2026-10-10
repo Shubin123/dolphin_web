@@ -16,6 +16,10 @@ Open the printed localhost URL in desktop Chrome. The library opens on [Internet
 
 Use **Open disc** for immediate local play or **Add games** to copy your images into the persistent browser library. Select **My cached games** to browse only local images. Search, region filters, sorting, pagination, Play and Remove operate on your library. Use the transport for pause/reset, mute, fullscreen and state import/export; the settings panel provides renderer and speed controls. Keyboard and gamepad input mappings are displayed in the panel.
 
+To save game progress, use **Save state** or choose **Save** beside one of the four slots in **Save states**. Saving again replaces that slot. Slots persist in this browser per game and emulator build: reopen the same game, then choose **Load** to resume. The transport and fullscreen Save/Load buttons use the selected slot. **Download .sav** creates a backup; **Upload .sav** restores a compatible file while the matching game is open. Clearing browser storage removes local slots, and a different core build may require a new save.
+
+Mouse hover over the game picture moves the Wii pointer by default, including fullscreen. Left/right/middle clicks send A/B/−. Leaving the picture or switching away releases mouse input. Choose **Main stick** or **Disabled** under **Keyboard, mouse & Bluetooth controller** to change this behavior.
+
 Persistent game images use disk-backed Origin Private File System storage, streamed without first loading the whole image into JavaScript memory. Browser storage needs space for each imported image. Storage can be cleared by the browser. When persistent storage is unavailable, the library retains files for the current session.
 
 ## Sibling source repository

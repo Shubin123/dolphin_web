@@ -232,12 +232,15 @@ window.__downloadSaveState = async (name) => {
     if (!a || typeof a.saveStateFile !== "function")
       return { saved: false, error: "adapter has no saveStateFile" };
     const r = await a.saveStateFile();
-    if (!r || !r.bytes) return { saved: false, error: r?.error || "no bytes" };
+    if (!r?.saved || !r.bytes?.byteLength) return { saved: false, error: r?.error || "Save-state capture failed" };
     const blob = new Blob([r.bytes], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = name || "battle-state.sav";
+    const gameName = (host.game?.name || host.game?.gameId || "game")
+      .replace(/\.(iso|gcm|rvz|wbfs|wad|dol|elf)$/i, "").replace(/[^a-zA-Z0-9 _-]/g, "_").slice(0, 80);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    link.download = name || `${gameName}-${timestamp}.sav`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -273,8 +276,24 @@ const saveStates = wireSaveStatePanel({
   root: document.querySelector("#saveStatePanel"),
   host,
   onLoaded: () => syncGameInfo(host.game),
-  download: () => elements.dlStateButton.click(),
-  upload: () => elements.ulStateInput.click()
+  onStatus: setStatus,
+  onAvailability: ({ canSave, canLoad }) => {
+    elements.saveButton.disabled = !canSave;
+    elements.loadButton.disabled = !canLoad;
+    elements.dlStateButton.disabled = !canSave;
+    elements.ulStateInput.disabled = !canSave;
+    document.querySelectorAll('[data-state-action]').forEach(button => {
+      button.disabled = button.dataset.stateAction === "load" ? !canLoad : !canSave;
+    });
+  },
+  download: () => window.__downloadSaveState(),
+  pickUpload: () => elements.ulStateInput.click(),
+  upload: async file => {
+    if (typeof host.adapter?.loadStateFile !== "function") {
+      return { loaded: false, error: "This emulator does not support state files" };
+    }
+    return host.adapter.loadStateFile(new Uint8Array(await file.arrayBuffer()));
+  }
 });
 wireTransport();
 wireKeyboard();
@@ -409,53 +428,14 @@ function wireTransport() {
   elements.saveButton.addEventListener("click", () => saveStates.save());
   elements.loadButton.addEventListener("click", () => saveStates.load());
 
-  // Portable save-state files: DL State captures a version-matched .sav via
-  // SaveStateFile and downloads it; UL State loads a .sav via
-  // LoadStateFile. Both go through the real State::SaveToFileSync /
-  // State::LoadAs path that §24 made functional.
-  elements.dlStateButton.addEventListener("click", async () => {
-    const btn = elements.dlStateButton;
-    const old = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "Saving…";
-    setStatus("Capturing save state… (a few seconds)");
-    try {
-      const r = await window.__downloadSaveState("battle-state.sav");
-      setStatus(
-        r && r.saved
-          ? `Save state downloaded (${r.size} B) — battle-state.sav`
-          : `Save state failed: ${r?.error || "unknown"}`,
-        r && r.saved ? undefined : "error");
-    } catch (e) {
-      setStatus(`Save state failed: ${e?.message || e}`, "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = old;
-    }
-  });
+  // File transfers and browser slots share one operation guard.
+  elements.dlStateButton.addEventListener("click", () => saveStates.download());
 
   elements.ulStateInput.addEventListener("change", async (event) => {
     const file = event.target.files && event.target.files[0];
     event.target.value = "";
     if (!file) return;
-    setStatus(`Loading save state ${file.name}…`);
-    try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const a = host.adapter;
-      if (!a || typeof a.loadStateFile !== "function") {
-        setStatus("Upload state: adapter has no loadStateFile", "error");
-        return;
-      }
-      const r = await a.loadStateFile(bytes);
-      setStatus(
-        r && r.loaded
-          ? `Save state loaded (${r.afterState || "running"})`
-          : `Save state load failed (rc=${r?.rc ?? "?"}${
-              r?.error ? " " + r.error : ""})`,
-        r && r.loaded ? undefined : "error");
-    } catch (e) {
-      setStatus(`Upload state failed: ${e?.message || e}`, "error");
-    }
+    await saveStates.upload(file);
   });
 
   elements.muteButton.addEventListener("click", async () => {
@@ -1067,12 +1047,18 @@ function wireKeyboard() {
 
 function wireMouse() {
   const canvas = elements.screen;
+  const viewport = canvas.closest(".screen-viewport");
   canvas.tabIndex = 0;
   canvas.addEventListener("pointerdown", () => canvas.focus({ preventScroll: true }));
   canvas.style.touchAction = "none";
   const buttons = createButtonSource(pressed => { mousePressed = pressed; syncInput("Mouse"); }, minimumInputPressMs);
   const release = () => { mouseInputState = null; buttons.reset(); };
-  mouseMode.addEventListener("change", release);
+  const applyMode = () => {
+    viewport.dataset.mouseMode = mouseMode.value;
+    release();
+  };
+  mouseMode.addEventListener("change", applyMode);
+  applyMode();
   window.addEventListener("blur", release);
   document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
   canvas.addEventListener("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
@@ -1088,23 +1074,31 @@ function wireMouse() {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
     if (mouseMode.value === "stick" && !canvas.hasPointerCapture(event.pointerId)) return;
     const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
     const axis = (position, start, size) => Math.round(128 + Math.max(-1, Math.min(1, (position - start) / size * 2 - 1)) * 96);
     const x = axis(event.clientX, rect.left, rect.width);
     const y = 256 - axis(event.clientY, rect.top, rect.height);
-    mouseInputState = mouseMode.value === "stick" ? { stickX: x, stickY: y } : { cStickX: x, cStickY: y };
+    const next = mouseMode.value === "stick" ? { stickX: x, stickY: y } : { cStickX: x, cStickY: y };
+    if ((mouseMode.value === "stick" || pointerSource === "mouse") &&
+        Object.keys(next).every(key => mouseInputState?.[key] === next[key])) return;
+    mouseInputState = next;
     if (mouseMode.value === "cstick") pointerSource = "mouse";
     syncInput("Mouse");
   }
-  canvas.addEventListener("pointermove", move);
+  // Listen on the picture container so HUD overlays cannot interrupt hover.
+  // Normalize against the displayed canvas in either windowed or fullscreen.
+  viewport.addEventListener("pointerenter", move);
+  viewport.addEventListener("pointermove", move);
+  if ("onpointerrawupdate" in window) viewport.addEventListener("pointerrawupdate", move);
   canvas.addEventListener("pointerup", event => {
     if (event.pointerType !== "mouse") return;
     if (!event.buttons && mouseMode.value === "stick") mouseInputState = null;
     buttons.up(event.button);
   });
-  canvas.addEventListener("pointerleave", event => {
+  viewport.addEventListener("pointerleave", event => {
     if (event.pointerType === "mouse" && !event.buttons) release();
   });
-  canvas.addEventListener("pointercancel", release);
+  canvas.addEventListener("pointercancel", event => { if (event.pointerType === "mouse") release(); });
   canvas.addEventListener("lostpointercapture", event => {
     // Normal mouse-up ends capture, but absolute Wii aim stays at the click.
     if (event.pointerType === "mouse" && !event.buttons && mouseMode.value === "cstick") return;
@@ -1144,15 +1138,19 @@ function wireTouchControls() {
   // Fullscreen hides the footer, so keep save/load for the selected slot here.
   const actions = document.createElement("div");
   actions.className = "fullscreen-actions";
-  const action = (label, title, run, className = "") => {
+  const action = (label, title, run, className = "", stateAction = "") => {
     const button = document.createElement("button");
     button.type = "button"; button.textContent = label; button.title = title;
     if (className) button.className = className;
+    if (stateAction) {
+      button.dataset.stateAction = stateAction;
+      button.disabled = true;
+    }
     button.addEventListener("click", run);
     actions.append(button);
   };
-  action("💾 Save", "Save to the selected slot", () => saveStates.save());
-  action("↺ Load", "Load the selected slot", () => saveStates.load());
+  action("💾 Save", "Save to the selected slot", () => saveStates.save(), "", "save");
+  action("↺ Load", "Load the selected slot", () => saveStates.load(), "", "load");
   action("✕ Exit", "Exit fullscreen", () => elements.fullscreenButton.click(), "fullscreen-exit");
   elements.dropZone.querySelector(".screen-viewport").append(actions);
   const controls = wireMobileControls({ canvas: elements.screen, minimumPressMs: minimumInputPressMs, onChange: (pressed, axes, aiming) => {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, readdir, mkdtemp, rm } from 'node:fs/promises';
 import { resolve, join, extname, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import puppeteer from 'puppeteer-core';
@@ -22,6 +22,7 @@ const temp = await mkdtemp(join(tmpdir(),'dolphin-core-'));
 let browser;
 try {
   const file = join(temp,'Dolphin CPU homebrew.iso'); await writeFile(file,makeHomebrewDisc());
+  const invalidState = join(temp,'invalid.sav'); await writeFile(invalidState, new Uint8Array(8));
   browser = await puppeteer.launch({executablePath:process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--enable-unsafe-webgpu', ...(process.env.CI ? ['--no-sandbox'] : [])]});
   const page = await browser.newPage(); const errors=[];
   page.on('pageerror',error=>{errors.push(error.message);console.log('PAGE ERROR',error.message)});
@@ -61,6 +62,18 @@ try {
   // DOM -> SharedArrayBuffer -> native GameCube mapping and emulated Wii Remote.
   // Focus after clicking transport buttons previously swallowed all keyboard input.
   const nativeInput = () => page.evaluate(()=>window.__host.adapter.request('validationReadWebInput'));
+  // Default mouse hover must reach the native Wii pointer without a click.
+  assert.equal(await page.$eval('#mouseMode',el=>el.value),'cstick');
+  const hoverScreen=await page.$('#screen');await hoverScreen.scrollIntoView();
+  const hoverBox=await hoverScreen.boundingBox();
+  await page.mouse.move(hoverBox.x+hoverBox.width*.75,hoverBox.y+hoverBox.height*.25);
+  await page.waitForFunction(async()=>{
+    const s=await window.__host.adapter.request('validationReadWebInput');
+    return s.wiiA===0&&s.wiiB===0&&Math.abs(s.pointerX-.5)<.03&&Math.abs(s.pointerY-.5)<.03;
+  },{timeout:10000});
+  assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).cursor),'crosshair');
+  await page.mouse.move(1,1);
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.pointerX===0&&s.pointerY===0;},{timeout:10000});
   await page.focus('#saveButton');
   await page.keyboard.down('x');
   console.log('Pressed input diagnostic',await nativeInput());
@@ -130,6 +143,13 @@ try {
   const touchStick=await (await page.$('[data-touch-stick="main"]')).boundingBox();
   const touchAim=await (await page.$('[data-touch-stick="pointer"]')).boundingBox();
   const client=await page.createCDPSession();
+  // Fullscreen uses the displayed picture bounds, even after resizing.
+  const fullscreenScreen=await (await page.$('#screen')).boundingBox();
+  await page.mouse.move(fullscreenScreen.x+fullscreenScreen.width*.25,fullscreenScreen.y+fullscreenScreen.height*.75);
+  await page.waitForFunction(async()=>{
+    const s=await window.__host.adapter.request('validationReadWebInput');
+    return s.wiiA===0&&Math.abs(s.pointerX+.5)<.03&&Math.abs(s.pointerY+.5)<.03;
+  },{timeout:10000});
   await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[
     {id:1,x:touchB.x+touchB.width/2,y:touchB.y+touchB.height/2},
     {id:2,x:touchStick.x+touchStick.width*.8,y:touchStick.y+touchStick.height/2},
@@ -151,14 +171,28 @@ try {
   await page.click('.fullscreen-exit');
   await page.waitForFunction(()=>!document.fullscreenElement);
   await page.setViewport({width:1280,height:900});
-  // The Save states widget writes and restores a chosen slot.
+  // The Save states widget writes and restores a chosen slot in the native core.
   await page.waitForFunction(()=>document.querySelectorAll('#saveStatePanel .save-slot').length===4);
+  assert.equal(await page.$eval('#loadButton',el=>el.disabled),true,'an empty selected slot cannot be loaded');
   await page.$eval('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Save to slot 2"]',el=>el.click());
+  assert.equal(await page.$eval('#saveButton',el=>el.disabled),true,'other state controls must be disabled during capture');
   await page.waitForFunction(()=>!/Empty|No game/.test(document.querySelector('#saveStatePanel .save-slot:nth-child(2) .save-slot-meta').textContent),{timeout:60000});
   assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true,'saving selects the slot');
   await page.waitForFunction(()=>!document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
-  const loadedSlot=await page.evaluate(()=>window.__host.loadState(1));
-  assert.equal(loadedSlot.loaded,true,loadedSlot.error);
+  const beforeSlotLoad=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  await page.click('#loadButton');
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
+  const loadedSlot=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  assert(loadedSlot.loadedCheckpointGeneration>beforeSlotLoad.loadedCheckpointGeneration,'Load must restore a native checkpoint');
+  assert(loadedSlot.loadedCheckpointTicks<=beforeSlotLoad.coreTicks,'Load must restore earlier guest execution');
+  const savedTicks=loadedSlot.loadedCheckpointTicks;
+  const storedSlotDigest=()=>page.evaluate(async()=>{
+    const { stateSlotKey }=await import('./src/save-states.js');
+    const host=window.__host;
+    const state=await host.stateSlots.store.get(stateSlotKey(host.game,host.adapter,1));
+    return [...new Uint8Array(await crypto.subtle.digest('SHA-256',state.bytes))];
+  });
+  const savedDigest=await storedSlotDigest();
   // A fast screen tap must retain its aim together with A until native polling.
   const screenTap = await page.$eval('#screen', async el => {
     const rect = el.getBoundingClientRect();
@@ -248,8 +282,49 @@ try {
   const resume=await page.evaluate(()=>window.__host.adapter.request('validationSetCorePaused',{paused:false}));
   assert.equal(resume.paused,false);
   await page.waitForFunction(async ticks=>(await window.__host.adapter.request('validationReadCoreProgress')).coreTicks>ticks,{timeout:10000},paused2.coreTicks);
+
+  // Slot metadata and selection survive a new document; loading restores the
+  // same native checkpoint after booting the cached game again.
+  await page.goto(testUrl.href);
+  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  assert.equal(await page.$eval('#saveButton',el=>el.disabled),true,'saving requires a mounted game');
+  await page.click('#libraryReadyList button');
+  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#loadButton').disabled,{timeout:60000});
+  assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true);
+  await page.click('#loadButton');
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
+  const persistedSlot=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  assert.deepEqual(await storedSlotDigest(),savedDigest,'reopening must preserve the exact saved bytes');
+  assert(persistedSlot.loadedCheckpointGeneration>0,'reopening must restore a native checkpoint');
+  // Native host jobs can advance ticks while the load settles. The restored
+  // checkpoint must stay within one guest frame of the earlier load.
+  assert(Math.abs(persistedSlot.loadedCheckpointTicks-savedTicks)<persistedSlot.coreTicksPerSecond/60,'reopening must restore the persisted guest timeline');
+
+  // Invalid files report a visible failure and release the operation guard.
+  await (await page.$('#ulStateInput')).uploadFile(invalidState);
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').classList.contains('error') && !document.querySelector('#saveButton').disabled,{timeout:60000});
+  assert.match(await page.$eval('[data-save-status]',el=>el.textContent),/truncated save-state header/);
+
+  // Download a real state, then restore its bytes through the upload control.
+  const downloadClient=await page.createCDPSession();
+  await downloadClient.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:temp});
+  await page.click('[data-save-download]');
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent.startsWith('Downloaded ') && !document.querySelector('#saveButton').disabled,{timeout:60000});
+  const downloadName=await page.$eval('[data-save-status]',el=>el.textContent.slice('Downloaded '.length,-1));
+  assert.match(downloadName,/^Dolphin browser CPU test-\d{4}-\d{2}-\d{2}T.*\.sav$/,'backup names identify the game and capture time');
+  for (let attempt=0;attempt<100;attempt++) {
+    if ((await readdir(temp)).includes(downloadName)) break;
+    await new Promise(done=>setTimeout(done,100));
+  }
+  const backup=await readFile(join(temp,downloadName));
+  assert(backup.byteLength>32,'backup must contain a native state payload');
+  const beforeUpload=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  await (await page.$('#ulStateInput')).uploadFile(join(temp,downloadName));
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent.startsWith('Loaded ') && document.querySelector('[data-save-status]').textContent.includes('.sav'),{timeout:60000});
+  const afterUpload=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  assert(afterUpload.loadedCheckpointGeneration>beforeUpload.loadedCheckpointGeneration,'uploaded bytes must restore a native checkpoint');
   assert.deepEqual(errors,[]);
-  console.log('PASS: real Dolphin boots homebrew, executes PowerPC code, pauses/resumes, and consumes keyboard taps, touch, mouse and gamepad input through native GameCube and Wii Remote mappings, including simultaneous fullscreen touch. No graphics/gameplay benchmark.');
+  console.log('PASS: real Dolphin executes homebrew, consumes native keyboard/touch/mouse/gamepad input, saves and restores persistent slots across reopening, and downloads/uploads native state files. No graphics/gameplay benchmark.');
 } finally {
   await browser?.close(); await new Promise(done=>server.close(done)); await rm(temp,{recursive:true,force:true});
 }
