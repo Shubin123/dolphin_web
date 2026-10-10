@@ -42,7 +42,7 @@ try {
   // A normal navigation also runs through the Pages isolation worker.
   await page.goto(testUrl.href);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
-  await page.click('#libraryReadyList button');
+  await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
   // The generated guest draws nothing, so the loading bar stays in its boot
   // stage instead of finishing on a first visible frame.
@@ -300,8 +300,18 @@ try {
   await page.goto(testUrl.href);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   assert.equal(await page.$eval('#saveButton',el=>el.disabled),true,'saving requires a mounted game');
-  await page.click('#libraryReadyList button');
-  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#loadButton').disabled,{timeout:60000});
+  await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
+  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#loadButton').disabled,{timeout:60000}).catch(async error=>{
+    console.log('Reopened boot state',await page.evaluate(async()=>({
+      mode:window.__host?.mode,game:window.__host?.game,
+      slots:await window.__host?.listStateSlots?.().catch(e=>String(e)),
+      selected:document.querySelector('#saveStatePanel input:checked')?.value,
+      loadDisabled:document.querySelector('#loadButton')?.disabled,
+      saveStatus:document.querySelector('[data-save-status]')?.textContent,
+      status:document.querySelector('#hudStatus')?.textContent,adapterStatus:document.querySelector('#adapterStatus')?.textContent
+    })));
+    throw error;
+  });
   assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true);
   await page.click('#loadButton');
   await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
@@ -342,13 +352,13 @@ try {
   assert.equal(await page.evaluate(()=>window.__audio.muted),true);
   await page.goto(testUrl.href);
   await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('#libraryReadyList button')?.disabled===false,{timeout:60000});
-  await page.click('#libraryReadyList button');
+  await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
   assert.equal(await page.evaluate(()=>window.__audio.muted),true,'saved mute must survive booting a game');
   await page.click('#btn-layout-menu');
   await Promise.all([page.waitForNavigation(),page.click('#resetAllButton')]);
   await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('#libraryReadyList button')?.disabled===false,{timeout:60000});
-  await page.click('#libraryReadyList button');
+  await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
   assert.deepEqual(await storedSlotDigest(),savedDigest,'reset must keep native save-state bytes');
   assert.equal(await page.evaluate(()=>window.__audio.muted),false,'reset restores automatic audio on game boot');
