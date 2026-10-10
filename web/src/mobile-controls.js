@@ -10,6 +10,9 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       if (entry.control) pressed.add(entry.control);
       if (entry.axes) Object.assign(axes, entry.axes);
     }
+    // Publish input before touching the DOM so the emulator sees it first.
+    const aiming = [...pointers.values()].some(entry => entry.axes?.cStickX !== undefined);
+    onChange(pressed, axes, aiming);
     root.querySelectorAll('[data-touch-button]').forEach(element => element.classList.toggle('is-pressed', pressed.has(element.dataset.touchButton)));
     root.querySelectorAll('[data-touch-stick]').forEach(element => {
       const owner = [...pointers.values()].findLast(entry => entry.element === element);
@@ -24,8 +27,6 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       element.style.setProperty('--stick-x', `${(owner.axes[`${prefix}X`] - 128) / 96 * travel}px`);
       element.style.setProperty('--stick-y', `${(128 - owner.axes[`${prefix}Y`]) / 96 * travel}px`);
     });
-    const aiming = [...pointers.values()].some(entry => entry.axes?.cStickX !== undefined);
-    onChange(pressed, axes, aiming);
   };
   const capture = (element, id) => { try { element.setPointerCapture(id); } catch {} };
   const retainBriefPress = entry => {
@@ -63,11 +64,12 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
       pointers.set(event.pointerId, { element, screen: kind === 'screen', started: performance.now(), control: kind === 'button' ? element.dataset.touchButton : kind === 'screen' ? 'A' : null, axes: kind === 'button' ? null : position(event) });
       emit();
     });
-    element.addEventListener('pointermove', event => {
+    const move = event => {
       const entry = pointers.get(event.pointerId);
       if (!entry) return;
-      event.preventDefault();
+      if (event.cancelable) event.preventDefault();
       if (kind === 'button') {
+        if (event.type === 'pointerrawupdate') return;
         // Like Azahar, a finger can slide from one button to another.
         const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-touch-button]');
         const control = target && root.contains?.(target) ? target.dataset.touchButton : null;
@@ -76,9 +78,16 @@ export function wireMobileControls({ root = document, canvas, onChange, minimumP
           entry.control = control;
           entry.started = performance.now();
         }
-      } else entry.axes = position(event);
+      } else {
+        const axes = position(event);
+        if (entry.axes && Object.keys(axes).every(key => axes[key] === entry.axes[key])) return;
+        entry.axes = axes;
+      }
       emit();
-    });
+    };
+    element.addEventListener('pointermove', move);
+    // pointermove is frame-aligned; raw updates move sticks without that wait.
+    if (kind !== 'button' && 'onpointerrawupdate' in window) element.addEventListener('pointerrawupdate', move);
     element.addEventListener('pointerup', event => finish(event));
     element.addEventListener('pointercancel', event => finish(event, true));
     element.addEventListener('lostpointercapture', event => finish(event, true));

@@ -1,5 +1,6 @@
 import { createButtonSource } from "./button-source.js";
 import { wireMobileControls } from "./mobile-controls.js";
+import { wireSaveStatePanel } from "./save-state-panel.js";
 import { initLibrary } from "./library.js";
 import { createBootProgress } from "./boot-progress.js";
 import { lookupGameProfile, readGameId } from "./game-profiles.js";
@@ -268,6 +269,13 @@ wireAspectSelect();
 wireUpscaling();
 wireScreenFit();
 wireFileMounting();
+const saveStates = wireSaveStatePanel({
+  root: document.querySelector("#saveStatePanel"),
+  host,
+  onLoaded: () => syncGameInfo(host.game),
+  download: () => elements.dlStateButton.click(),
+  upload: () => elements.ulStateInput.click()
+});
 wireTransport();
 wireKeyboard();
 wireTouchControls();
@@ -398,11 +406,8 @@ function wireTransport() {
     setStatus("Reset");
   });
 
-  elements.saveButton.addEventListener("click", () => host.saveState());
-  elements.loadButton.addEventListener("click", async () => {
-    await host.loadState();
-    syncGameInfo(host.game);
-  });
+  elements.saveButton.addEventListener("click", () => saveStates.save());
+  elements.loadButton.addEventListener("click", () => saveStates.load());
 
   // Portable save-state files: DL State captures a version-matched .sav via
   // SaveStateFile and downloads it; UL State loads a .sav via
@@ -941,6 +946,7 @@ function syncGameInfo(game) {
       ? `${game.core || "Dolphin core"} active${coreDetail ? `: ${coreDetail}` : ""}`
       : "Demo WASM core active";
   syncBootInfo(game);
+  saveStates.refresh();
 }
 
 function syncBootInfo(game) {
@@ -1135,15 +1141,44 @@ function minimumInputPressMs() {
 function wireTouchControls() {
   const deck = document.querySelector("#touch-controls");
   elements.dropZone.append(deck);
-  const exit = document.createElement("button");
-  exit.className = "fullscreen-exit"; exit.type = "button"; exit.textContent = "✕ Exit";
-  exit.addEventListener("click", () => elements.fullscreenButton.click());
-  elements.dropZone.append(exit);
+  // Fullscreen hides the footer, so keep save/load for the selected slot here.
+  const actions = document.createElement("div");
+  actions.className = "fullscreen-actions";
+  const action = (label, title, run, className = "") => {
+    const button = document.createElement("button");
+    button.type = "button"; button.textContent = label; button.title = title;
+    if (className) button.className = className;
+    button.addEventListener("click", run);
+    actions.append(button);
+  };
+  action("💾 Save", "Save to the selected slot", () => saveStates.save());
+  action("↺ Load", "Load the selected slot", () => saveStates.load());
+  action("✕ Exit", "Exit fullscreen", () => elements.fullscreenButton.click(), "fullscreen-exit");
+  elements.dropZone.querySelector(".screen-viewport").append(actions);
   const controls = wireMobileControls({ canvas: elements.screen, minimumPressMs: minimumInputPressMs, onChange: (pressed, axes, aiming) => {
     if (aiming) pointerSource = "touch";
     touchPressed = pressed; touchInputState = axes; syncInput("Touch");
   } });
   const mode = document.querySelector("#touchMode");
+  const size = document.querySelector("#touchSize");
+  const opacity = document.querySelector("#touchOpacity");
+  const applyLook = () => {
+    elements.dropZone.style.setProperty("--tc-scale", String(Number(size.value) / 100));
+    elements.dropZone.style.setProperty("--tc-opacity", String(Number(opacity.value) / 100));
+  };
+  try {
+    const look = JSON.parse(localStorage.getItem("dolphin-touch-look") || "{}");
+    if (Number(look.size) >= 70 && Number(look.size) <= 150) size.value = String(look.size);
+    if (Number(look.opacity) >= 20 && Number(look.opacity) <= 100) opacity.value = String(look.opacity);
+  } catch {}
+  for (const input of [size, opacity]) input.addEventListener("input", () => {
+    applyLook();
+    try { localStorage.setItem("dolphin-touch-look", JSON.stringify({ size: size.value, opacity: opacity.value })); } catch {}
+    update();
+  });
+  applyLook();
+  // Long-press menus and callouts cancel held buttons on phones.
+  deck.addEventListener("contextmenu", event => event.preventDefault());
   const coarse = matchMedia("(pointer: coarse)");
   let connected = false;
   try { const saved = localStorage.getItem("dolphin-touch-controls"); if (["auto", "on", "off"].includes(saved)) mode.value = saved; } catch {}

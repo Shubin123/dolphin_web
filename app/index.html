@@ -176,6 +176,16 @@
                             <p class="muted" id="mountNote">Dolphin WASM core</p>
                             </section>
 
+                            <section class="panel-block card save-state-panel" data-widget="savestates" id="saveStatePanel">
+                            <h2>Save states</h2>
+                            <ol class="save-slot-list" data-save-slots aria-label="Save slots"></ol>
+                            <div class="save-state-files">
+                            <button type="button" data-save-download>Download .sav</button>
+                            <button type="button" data-save-upload>Upload .sav</button>
+                            </div>
+                            <p class="muted save-state-note">Slots are stored in this browser per game and core build. The selected slot is used by the 💾 / ↺ buttons and in fullscreen.</p>
+                            </section>
+
                             <form class="settings-panel card" data-widget="settings" data-default-span="2" id="settingsForm">
                             <h2>Settings</h2>
 <span id="settingsSummary">Startup</span>
@@ -325,6 +335,8 @@
 <span id="inputSource">Keyboard</span>
                             <div class="control-grid" id="controlGrid"></div>
                             <label class="touch-mode-label">On-screen controls <select id="touchMode"><option value="auto">Automatic</option><option value="on">Always show</option><option value="off">Hidden</option></select></label>
+                            <label class="touch-look-label">Touch size <input id="touchSize" type="range" min="70" max="150" step="5" value="100" aria-label="On-screen control size"></label>
+                            <label class="touch-look-label">Touch opacity <input id="touchOpacity" type="range" min="20" max="100" step="5" value="100" aria-label="On-screen control opacity"></label>
                             <p class="keyboard-hint">X = A · Z = B · Enter = Start / + · WASD = move · IJKL = aim</p>
                             <details class="input-settings"><summary>Keyboard, mouse &amp; Bluetooth controller</summary>
                             <p>GameCube port 1 and Wii Remote + Nunchuk. Wii: X = A, Z = B, V/B = 1/2, Enter = +, C = −, Q/E = Nunchuk C/Z, H = Home. Keyboard: WASD main stick, IJKL C-stick, arrows D-pad, X/Z/V/B face buttons, Enter Start, Q/E triggers, C Z.</p>

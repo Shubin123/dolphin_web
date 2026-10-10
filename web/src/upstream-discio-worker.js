@@ -2177,6 +2177,7 @@ async function loadCore({
   const _t_coreinit = performance.now();
   api.coreInit?.();
   console.log(`[boot-phase] api.coreInit() took ${(performance.now() - _t_coreinit).toFixed(1)}ms`);
+  publishInputMailbox();
   startPresentationLoop();
 
   if (!resolveWorkerFs(moduleInstance)) {
@@ -3430,6 +3431,17 @@ function applyInputStateSnapshot(state, sentAtEpochMs, source) {
     causalInputStats.workerPostApplyCount += 1;
   }
   return true;
+}
+
+// Hands the page the native input mailbox inside shared wasm memory. Pad
+// polls on the CPU thread read it directly, so input no longer waits for this
+// worker's event loop; the SAB/postMessage relay remains for telemetry and as
+// the fallback for cores without the mailbox.
+function publishInputMailbox() {
+  const pointer = Number(moduleInstance?.dolphinInputMailboxPtr) >>> 0;
+  const buffer = moduleInstance?.HEAPU8?.buffer;
+  if (!pointer || (pointer & 3) || !(buffer instanceof SharedArrayBuffer)) return;
+  self.postMessage({ type: "inputMailbox", buffer, byteOffset: pointer });
 }
 
 function pollInputStateFromSab() {

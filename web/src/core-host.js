@@ -642,11 +642,11 @@ export class EmulatorHost {
     this.adapter.setInputState?.(inputState);
   }
 
-  async saveState() {
+  async saveState(slot = 0) {
     if (this.mode === "dolphin") {
       try {
-        const result = await this.stateSlots.save(this.game, this.adapter);
-        this.onStatus(`Save slot 0 written (${result.size} B)`);
+        const result = await this.stateSlots.save(this.game, this.adapter, slot);
+        this.onStatus(`Save slot ${slot + 1} written (${result.size} B)`);
         return result;
       } catch (error) {
         this.onStatus(`Save failed: ${error.message}`);
@@ -665,11 +665,11 @@ export class EmulatorHost {
     this.onStatus("Demo save slot written");
   }
 
-  async loadState() {
+  async loadState(slot = 0) {
     if (this.mode === "dolphin") {
       try {
-        const result = await this.stateSlots.load(this.game, this.adapter);
-        this.onStatus("Save slot 0 loaded");
+        const result = await this.stateSlots.load(this.game, this.adapter, slot);
+        this.onStatus(`Save slot ${slot + 1} loaded`);
         return result;
       } catch (error) {
         this.onStatus(`Load failed: ${error.message}`);
@@ -689,6 +689,15 @@ export class EmulatorHost {
     this.renderDemo();
     this.publishFrame();
     this.onStatus("Demo save slot loaded");
+  }
+
+  async listStateSlots() {
+    if (this.mode !== "dolphin") return [];
+    try {
+      return await this.stateSlots.list(this.game, this.adapter);
+    } catch {
+      return [];
+    }
   }
 
   mixAudio(frames = 1024) {

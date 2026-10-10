@@ -269,6 +269,10 @@ export class UpstreamWorkerAdapter {
     this.frameProfileStats = "-";
     this.frameData = null;
     this.lastInputStateSignature = "";
+    // Native input mailbox in shared wasm memory, announced by the worker
+    // after CoreInit. Writing it lets pad polls skip the worker hop.
+    this.inputMailboxView = null;
+    this.lastInputSnapshot = null;
     this.workerCausalTelemetry = null;
     this.causalTelemetry = null;
     this.trafficStats = {
@@ -537,20 +541,25 @@ export class UpstreamWorkerAdapter {
     if (inputGeneration === 0) inputGeneration = 1;
     this.inputTelemetry.mainGeneration = inputGeneration;
 
+    const snapshot = {
+      mask,
+      stickX,
+      stickY,
+      cStickX,
+      cStickY,
+      triggerLeft,
+      triggerRight,
+      analogA,
+      analogB,
+      inputGeneration,
+      sentAtEpochMs: inputSentAtEpochMs
+    };
+    this.lastInputSnapshot = snapshot;
+    if (this.inputMailboxView) {
+      writeInputStateSnapshot(this.inputMailboxView, snapshot);
+    }
     if (this.inputStateView) {
-      writeInputStateSnapshot(this.inputStateView, {
-        mask,
-        stickX,
-        stickY,
-        cStickX,
-        cStickY,
-        triggerLeft,
-        triggerRight,
-        analogA,
-        analogB,
-        inputGeneration,
-        sentAtEpochMs: inputSentAtEpochMs
-      });
+      writeInputStateSnapshot(this.inputStateView, snapshot);
       this.inputTelemetry.mainSabGeneration = inputGeneration;
       this.inputTelemetry.mainSabWriteCount += 1;
     }
@@ -898,6 +907,14 @@ export class UpstreamWorkerAdapter {
       // handed us the result as an ImageBitmap. Draw onto the visible
       // canvas via 2D context. Lazily create the context on first frame.
       this.drawDetachedOglBitmap(message.bitmap, message.width, message.height);
+      return;
+    }
+
+    if (message?.type === "inputMailbox" && message.buffer instanceof SharedArrayBuffer) {
+      this.inputMailboxView = new Int32Array(message.buffer, message.byteOffset, INPUT_STATE_SLOT_COUNT);
+      if (this.lastInputSnapshot) {
+        writeInputStateSnapshot(this.inputMailboxView, this.lastInputSnapshot);
+      }
       return;
     }
 

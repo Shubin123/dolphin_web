@@ -142,8 +142,23 @@ try {
   for (const {base,knob} of mobileKnobs) assert(knob.left>=base.left-1&&knob.top>=base.top-1&&knob.right<=base.right+1&&knob.bottom<=base.bottom+1,'mobile stick knobs must fit inside their bases while held');
   await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiB===0&&s.stickX===128;},{timeout:10000});
+  const fullscreenActions=await page.$$eval('.fullscreen-actions button',buttons=>buttons.map(button=>{
+    const box=button.getBoundingClientRect();
+    return {text:button.textContent,visible:box.width>0&&box.height>0&&box.right<=innerWidth&&box.bottom<=innerHeight};
+  }));
+  assert.deepEqual(fullscreenActions.map(action=>action.text),['💾 Save','↺ Load','✕ Exit']);
+  assert(fullscreenActions.every(action=>action.visible),'fullscreen save, load and exit must stay on screen');
   await page.click('.fullscreen-exit');
   await page.waitForFunction(()=>!document.fullscreenElement);
+  await page.setViewport({width:1280,height:900});
+  // The Save states widget writes and restores a chosen slot.
+  await page.waitForFunction(()=>document.querySelectorAll('#saveStatePanel .save-slot').length===4);
+  await page.$eval('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Save to slot 2"]',el=>el.click());
+  await page.waitForFunction(()=>!/Empty|No game/.test(document.querySelector('#saveStatePanel .save-slot:nth-child(2) .save-slot-meta').textContent),{timeout:60000});
+  assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true,'saving selects the slot');
+  await page.waitForFunction(()=>!document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
+  const loadedSlot=await page.evaluate(()=>window.__host.loadState(1));
+  assert.equal(loadedSlot.loaded,true,loadedSlot.error);
   // A fast screen tap must retain its aim together with A until native polling.
   const screenTap = await page.$eval('#screen', async el => {
     const rect = el.getBoundingClientRect();

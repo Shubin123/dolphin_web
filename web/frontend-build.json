@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "coreId": "sha256:fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
+  "coreId": "sha256:f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d",
   "files": [
     {
       "path": "coi-serviceworker.js",
@@ -14,18 +14,18 @@
     },
     {
       "path": "index.html",
-      "size": 28232,
-      "sha256": "60efc57959c01782b4dbdc63e0daa5ca85e4904d07ccb92555f2fdd93d5a1bda"
+      "size": 29406,
+      "sha256": "3d1667ed8c7f499d22a01a348579987ed66642f99f6724c65722da35e23b93d3"
     },
     {
       "path": "src/app.js",
-      "size": 61595,
-      "sha256": "b185557d796c198e61472cdebe1537277aef4a080b60687d3706bb53bf790ef7"
+      "size": 63456,
+      "sha256": "7f6a5957d677e3764d8c8f2ececd5497a0fe7035ce46ecae5b4f5dc8574e3cec"
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 23798,
-      "sha256": "ffd64693b8a75f680ca531132c9bf4292c937014ed9354a6c91caf26c95c7833"
+      "size": 25349,
+      "sha256": "66b70cf19e979e65f7f44100a40414f3bc82aa18fcce107ca92eca8843b0e9ad"
     },
     {
       "path": "src/boot-progress.js",
@@ -54,8 +54,8 @@
     },
     {
       "path": "src/mobile-controls.js",
-      "size": 5427,
-      "sha256": "507c6328aa959890e242d4e43221971f4b5500e1a6cc2e340a9684c3b19b0b7d"
+      "size": 5938,
+      "sha256": "ec3f6a040956b5c17bd1a17ebd447eb65f013deb51e24eb1588b4bf19a6bbd95"
     },
     {
       "path": "src/opfs-writer-worker.js",
@@ -66,6 +66,11 @@
       "path": "src/opfs-writer.js",
       "size": 1852,
       "sha256": "333b80bbbb97dced4162ee2f63a0d4f4a1304e150160f76779cd810bfa7b787e"
+    },
+    {
+      "path": "src/save-state-panel.js",
+      "size": 3795,
+      "sha256": "df7292223c9d38f0ad7893ef7853d93dc0a5288b863ba1e622befa7d21bd5b9c"
     },
     {
       "path": "src/settings.js",

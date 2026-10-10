@@ -1,95 +1,11 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-09T22:18:19.599Z",
-  "coreId": "sha256:fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
+  "createdAt": "2026-10-10T00:52:37.538Z",
+  "coreId": "sha256:f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d",
   "repository": {
-    "commit": "eaedd18828f8c9759c2a4ce0bf3a19077a596b54",
-    "status": "M .gitignore\n M CMakeLists.txt\n M README.md\n M core/upstream/dolphin_web_core.cpp\n M cores/dolphin/dolphin-core-upstream.build.json\n M cores/dolphin/dolphin-core-upstream.js\n M cores/dolphin/dolphin-core-upstream.wasm\n M docs/testing/city-folk-regression.md\n M index.html\n M package.json\n M provenance/dolphin-core-abi-v1.json\n M provenance/dolphin-source.lock.json\n M provenance/dolphin-vendor-snapshot-v1.json\n M src/app.js\n M src/input.js\n M src/upstream-discio-worker.js\n M src/upstream-worker-protocol.js\n M tests/input.test.mjs\n M tools/build-corresponding-source.mjs\n M tools/build-native-core.mjs\n M tools/build-upstream-target.mjs\n M tools/configure-upstream-wasm.mjs\n M tools/core-build-info.mjs\n M tools/dolphin-provenance.mjs\n M tools/export-web.mjs\n M tools/gameplay-regression.mjs\n M tools/update-core-abi.mjs\n M tools/wasm-toolchain.mjs\n?? .github/workflows/runtime.yml\n?? AGENTS.md\n?? core/upstream/dolphin_web_controller.h\n?? docs/development.md\n?? docs/runtime-sync.md\n?? patches/dolphin-wasm/snapshot/0068-local-webgpu-port.patch\n?? provenance/portable-toolchain.json\n?? tests/runtime-package.test.mjs\n?? tests/source-bundle.test.mjs\n?? tools/core-inputs.mjs\n?? tools/record-local-toolchain.mjs\n?? tools/refresh-runtime.mjs\n?? tools/runtime-package.mjs\n?? tools/setup.mjs\n?? tools/source-bundle.mjs\n?? tools/test-fresh-checkout.mjs\n?? tools/watch-runtime.mjs\n?? vendor/source/emdawnwebgpu.zip\n?? vendor/source/manifest.json\n?? vendor/source/repo-00-00.packpart\n?? vendor/source/repo-01-00.packpart\n?? vendor/source/repo-02-00.packpart\n?? vendor/source/repo-03-00.packpart\n?? vendor/source/repo-04-00.packpart\n?? vendor/source/repo-05-00.packpart\n?? vendor/source/repo-06-00.packpart\n?? vendor/source/repo-07-00.packpart\n?? vendor/source/repo-08-00.packpart\n?? vendor/source/repo-09-00.packpart\n?? vendor/source/repo-10-00.packpart\n?? vendor/source/repo-11-00.packpart\n?? vendor/source/repo-12-00.packpart\n?? vendor/source/repo-13-00.packpart\n?? vendor/source/repo-14-00.packpart\n?? vendor/source/repo-15-00.packpart\n?? vendor/source/repo-16-00.packpart\n?? vendor/source/repo-17-00.packpart\n?? vendor/source/repo-18-00.packpart\n?? vendor/source/repo-19-00.packpart\n?? vendor/source/repo-20-00.packpart\n?? vendor/source/repo-21-00.packpart\n?? vendor/source/repo-22-00.packpart\n?? vendor/source/repo-23-00.packpart\n?? vendor/source/repo-24-00.packpart\n?? vendor/source/repo-25-00.packpart\n?? vendor/source/repo-26-00.packpart\n?? vendor/source/repo-27-00.packpart\n?? vendor/source/repo-28-00.packpart\n?? vendor/source/repo-29-00.packpart\n?? vendor/source/repo-30-00.packpart\n?? vendor/source/repo-31-00.packpart\n?? vendor/source/repo-32-00.packpart\n?? vendor/source/repo-33-00.packpart\n?? vendor/source/repo-34-00.packpart\n?? vendor/source/repo-35-00.packpart\n?? vendor/source/repo-36-00.packpart\n?? vendor/source/repo-37-00.packpart\n?? vendor/source/rust-crates.tar.gz",
-    "cleanTree": false,
-    "dirtyBuildOverride": [
-      ".gitignore",
-      "CMakeLists.txt",
-      "README.md",
-      "core/upstream/dolphin_web_core.cpp",
-      "docs/testing/city-folk-regression.md",
-      "index.html",
-      "package.json",
-      "provenance/dolphin-source.lock.json",
-      "provenance/dolphin-vendor-snapshot-v1.json",
-      "src/app.js",
-      "src/input.js",
-      "src/upstream-discio-worker.js",
-      "src/upstream-worker-protocol.js",
-      "tests/input.test.mjs",
-      "tools/build-corresponding-source.mjs",
-      "tools/build-native-core.mjs",
-      "tools/build-upstream-target.mjs",
-      "tools/configure-upstream-wasm.mjs",
-      "tools/core-build-info.mjs",
-      "tools/dolphin-provenance.mjs",
-      "tools/export-web.mjs",
-      "tools/gameplay-regression.mjs",
-      "tools/update-core-abi.mjs",
-      "tools/wasm-toolchain.mjs",
-      ".github/workflows/runtime.yml",
-      "AGENTS.md",
-      "core/upstream/dolphin_web_controller.h",
-      "docs/development.md",
-      "docs/runtime-sync.md",
-      "patches/dolphin-wasm/snapshot/0068-local-webgpu-port.patch",
-      "provenance/portable-toolchain.json",
-      "tests/runtime-package.test.mjs",
-      "tests/source-bundle.test.mjs",
-      "tools/core-inputs.mjs",
-      "tools/record-local-toolchain.mjs",
-      "tools/refresh-runtime.mjs",
-      "tools/runtime-package.mjs",
-      "tools/setup.mjs",
-      "tools/source-bundle.mjs",
-      "tools/test-fresh-checkout.mjs",
-      "tools/watch-runtime.mjs",
-      "vendor/source/emdawnwebgpu.zip",
-      "vendor/source/manifest.json",
-      "vendor/source/repo-00-00.packpart",
-      "vendor/source/repo-01-00.packpart",
-      "vendor/source/repo-02-00.packpart",
-      "vendor/source/repo-03-00.packpart",
-      "vendor/source/repo-04-00.packpart",
-      "vendor/source/repo-05-00.packpart",
-      "vendor/source/repo-06-00.packpart",
-      "vendor/source/repo-07-00.packpart",
-      "vendor/source/repo-08-00.packpart",
-      "vendor/source/repo-09-00.packpart",
-      "vendor/source/repo-10-00.packpart",
-      "vendor/source/repo-11-00.packpart",
-      "vendor/source/repo-12-00.packpart",
-      "vendor/source/repo-13-00.packpart",
-      "vendor/source/repo-14-00.packpart",
-      "vendor/source/repo-15-00.packpart",
-      "vendor/source/repo-16-00.packpart",
-      "vendor/source/repo-17-00.packpart",
-      "vendor/source/repo-18-00.packpart",
-      "vendor/source/repo-19-00.packpart",
-      "vendor/source/repo-20-00.packpart",
-      "vendor/source/repo-21-00.packpart",
-      "vendor/source/repo-22-00.packpart",
-      "vendor/source/repo-23-00.packpart",
-      "vendor/source/repo-24-00.packpart",
-      "vendor/source/repo-25-00.packpart",
-      "vendor/source/repo-26-00.packpart",
-      "vendor/source/repo-27-00.packpart",
-      "vendor/source/repo-28-00.packpart",
-      "vendor/source/repo-29-00.packpart",
-      "vendor/source/repo-30-00.packpart",
-      "vendor/source/repo-31-00.packpart",
-      "vendor/source/repo-32-00.packpart",
-      "vendor/source/repo-33-00.packpart",
-      "vendor/source/repo-34-00.packpart",
-      "vendor/source/repo-35-00.packpart",
-      "vendor/source/repo-36-00.packpart",
-      "vendor/source/repo-37-00.packpart",
-      "vendor/source/rust-crates.tar.gz"
-    ]
+    "commit": "0ca0d7203051f1ed1f48644e7200f528a820bf6e",
+    "status": "M cores/dolphin/dolphin-core-upstream.build.json\n M cores/dolphin/dolphin-core-upstream.js\n M cores/dolphin/dolphin-core-upstream.wasm\n M provenance/dolphin-core-abi-v1.json",
+    "cleanTree": true
   },
   "source": {
     "upstreamCommit": "e22551eae1c84a7e4d0b6a5c519ef4ed4ef69df1",
@@ -97,24 +13,24 @@
     "vendorResultTree": "d5ac2a1c3a375a636f8bf4411e01d2fd17b5f4aa",
     "sourceLockSha256": "de6b53be971e1322e3b686e2bcad9a1e89ab1ac4921c3d24b1b063c4ea828790",
     "vendorSnapshotSha256": "2b82bcc0f774d3a5ce57e59d52baa1c0d158abdf45b9436c34334935f4f09e67",
-    "localInputsSha256": "817212a7b65735d3ac14497d32150b51b3eccce3d60adbbc34e389dc3a3668a7",
+    "localInputsSha256": "ed1af74573bb33a887525a0164316f330839ad1bd7595b956fe44be32b7acbde",
     "localInputs": [
       {
         "path": "core/upstream/dolphin_web_core.cpp",
-        "size": 49203,
-        "sha256": "0a5557381a3e092d0ee33f86e666caae1298b08182060cc227fcd27fbf37e3d6",
+        "size": 49359,
+        "sha256": "7dda3929a1ac0769563f5af417ead2f6dab1281307d802c04253fd765017a11b",
         "hashMode": "lf-normalized"
       },
       {
         "path": "core/upstream/dolphin_web_controller.h",
-        "size": 3981,
-        "sha256": "020ee50971d2db47ee323152f48b3f151fcbec704f1e8c45cf2e7399bd03acd2",
+        "size": 4007,
+        "sha256": "cf330bcd811a711168821e29873c9c5d6fbcab9623cc1ee4d7f9ac99506dae0f",
         "hashMode": "lf-normalized"
       },
       {
         "path": "core/upstream/dolphin_web_discio.cpp",
-        "size": 45448,
-        "sha256": "2815c46b414ff4b67a58cd55d714e1b41f9b38984023e5a0dca29a71d2a4206b",
+        "size": 47728,
+        "sha256": "56b21ea5aa768798a8769e6bf871aa2b73838d19495f6733000d07957dc6bab6",
         "hashMode": "lf-normalized"
       },
       {
@@ -277,14 +193,14 @@
   "artifacts": {
     "js": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.js",
-      "size": 270315,
-      "sha256": "a2f9bcf89960f000a30ae73787d5bb55c68860a67b4c063aec34c796d6debdd6",
+      "size": 270364,
+      "sha256": "f90ec2de676cc52a8f03bcc2da437db45430b1363cf93b651f71896d542ad281",
       "hashMode": "lf-normalized"
     },
     "wasm": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13220073,
-      "sha256": "fdeee4f95e82e0e5f5c5c3f4d7ef19e2fd573e99a19b4def8efa1c7880d25673",
+      "size": 13220661,
+      "sha256": "f7ba41dcf2e48ccd7b493914fa82a2830484034ccaf0c5e67235eea80f3fd62d",
       "hashMode": "raw"
     },
     "wasmSections": [
@@ -300,8 +216,8 @@
       },
       {
         "id": 3,
-        "size": 12958,
-        "sha256": "f7cb0ea7b8e73a7cac87c0026889e5cc588b14837b6516be4c4f3ef81fdc6596"
+        "size": 12959,
+        "sha256": "f0965e430b7fea284668fd91631d230f72fb958aa30a0635c3fc821c9ee74ae2"
       },
       {
         "id": 4,
@@ -311,37 +227,37 @@
       {
         "id": 6,
         "size": 49,
-        "sha256": "636e1e422c7a26f46ee3f8761debb80ccf389f6db6c291c5df84185db2fc1eed"
+        "sha256": "c43ef72373d08a18f29aa595ef17f84c5b7894cce1eddaf694398af421aba472"
       },
       {
         "id": 7,
         "size": 1081,
-        "sha256": "cd0e01acce437bbc9bf15e8418b78d07d6c140bc981397a43cc025e39593f142"
+        "sha256": "f20b7cf47333745822c45b1a1b496ed99ac79db3a7d9c0348c01fa51b4214f89"
       },
       {
         "id": 8,
         "size": 2,
-        "sha256": "9c280d755b3b6bc2d809bf073f90fc036f2aa4b3a324859bc3950cb7a3c7d684"
+        "sha256": "1069712fd7e2e6fed2c411dc5e50419d19ac6ba0dd765dd338ba20fe40410af1"
       },
       {
         "id": 9,
         "size": 24124,
-        "sha256": "4da99b5ed813f6730968c08ed15a16ceab9f690fb29b902cb31d26249145863e"
+        "sha256": "d4683dde3bb8653aacf3d1e14969eb80259d87ef054530f4e2dc20a3f346b244"
       },
       {
         "id": 12,
         "size": 2,
-        "sha256": "cb45a7efca6c595368c73f9f8b78f37d3915731a85c565dc0ecc2ab0fc3e22c2"
+        "sha256": "1b68169674fd57706bf3577857e5ad3a9930baa282585ee069d9d3a32e55ffc9"
       },
       {
         "id": 10,
-        "size": 10685718,
-        "sha256": "02d40ab4bdb8ba2b7ec30bf853c84b6ffd4ca403ec611523c635146c1bfa352e"
+        "size": 10686281,
+        "sha256": "537bfb764be175db67ed24a76041fefa6147e60ec1c0198bbd1fca3a2ac600c6"
       },
       {
         "id": 11,
-        "size": 2491655,
-        "sha256": "4a978616730c17cf8234976f0cb683da2901db60511416ac694baf451132888a"
+        "size": 2491679,
+        "sha256": "f9d05d179a8b4e89221eaae725de30ce7a3b515f6fbf47d7a61f49447df7d9df"
       }
     ]
   }
