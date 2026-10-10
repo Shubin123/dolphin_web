@@ -3,6 +3,7 @@ import { wireMobileControls } from "./mobile-controls.js";
 import { wireSaveStatePanel } from "./save-state-panel.js";
 import { initLibrary } from "./library.js";
 import { createBootProgress } from "./boot-progress.js";
+import { readPreference, writePreference, resetPreferences, wirePreferences } from "./preferences.js";
 import { lookupGameProfile, readGameId } from "./game-profiles.js";
 import { AudioController } from "./audio.js";
 import { EmulatorHost } from "./core-host.js";
@@ -23,7 +24,8 @@ import {
   buildPlayablePresetHref,
   buildSettingsHref,
   describeSettings,
-  readSettingsFromSearch
+  readSettingsFromSearch,
+  saveSettings
 } from "./settings.js";
 import {
   requestedWgpuRendererWorkerProbe,
@@ -130,6 +132,8 @@ const elements = {
 
 const DEBUG_PREF_KEY = "wasm-dolphin.debug-open";
 const OSD_PREF_KEY = "wasm-dolphin.osd-visible";
+
+wirePreferences();
 
 const keyboardPressed = new Set();
 let keyboardBindings = { ...DEFAULT_KEY_BINDINGS };
@@ -442,6 +446,7 @@ function wireTransport() {
     const muted = !audio.muted;
     host.setAudioMuted(muted);
     await audio.setMuted(muted);
+    writePreference('dolphin-muted', muted);
     setTransportGlyph(elements.muteButton,
                       /unmut/i.test(audio.label()) ? GLYPH.sound : GLYPH.muted,
                       audio.label(), "Mute or unmute audio");
@@ -468,25 +473,44 @@ function wireSettings() {
   populateSettingsForm(currentSettings);
   updateSettingsSummary();
 
-  elements.settingsForm.addEventListener("change", () => {
+  const settingsNote = document.querySelector('#settingsSaveStatus');
+  elements.settingsForm.addEventListener("change", event => {
     currentSettings = collectSettingsForm();
     updateSettingsSummary();
+    if (event.target.id.startsWith('setting') && event.target !== elements.autoProfile) {
+      settingsNote.textContent = saveSettings(currentSettings)
+        ? 'Saved in this browser. Use Apply restart to activate emulator changes.'
+        : 'Browser storage is unavailable. Settings apply for this visit only.';
+    }
   });
 
   elements.settingsForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const nextHref = buildSettingsHref(window.location.href, collectSettingsForm());
+    const settings = collectSettingsForm();
+    saveSettings(settings);
+    const nextHref = buildSettingsHref(window.location.href, settings);
     window.location.assign(nextHref);
   });
 
   elements.settingsPresetButton.addEventListener("click", () => {
-    window.location.assign(buildPlayablePresetHref(window.location.href));
+    const href = buildPlayablePresetHref(window.location.href);
+    saveSettings(readSettingsFromSearch(new URL(href).search));
+    window.location.assign(href);
   });
+  const reset = layout => {
+    resetPreferences({ layout });
+    if (layout) window.DolphinLayout?.reset();
+    const url = new URL(window.location.href);
+    url.search = '';
+    window.location.assign(url.href);
+  };
+  document.querySelector('#settingsResetButton').addEventListener('click', () => reset(false));
+  document.querySelector('#resetAllButton').addEventListener('click', () => reset(true));
 }
 
 function wireDiagnostics() {
-  const debugOpen = localStorage.getItem(DEBUG_PREF_KEY) === "1";
-  const osdVisible = localStorage.getItem(OSD_PREF_KEY) !== "0";
+  const debugOpen = readPreference(DEBUG_PREF_KEY) === "1";
+  const osdVisible = readPreference(OSD_PREF_KEY) !== "0";
 
   setDebugOpen(debugOpen);
   setOverlayVisible(osdVisible);
@@ -545,7 +569,7 @@ function setDebugOpen(open) {
   elements.debugToggle.setAttribute("aria-expanded", String(open));
   elements.debugToggle.classList.toggle("active", open);
   elements.debugToggle.textContent = open ? "DBG on" : "DBG";
-  localStorage.setItem(DEBUG_PREF_KEY, open ? "1" : "0");
+  writePreference(DEBUG_PREF_KEY, open ? "1" : "0");
   if (open && lastFrameInfo) {
     updateDebugMetrics(lastFrameInfo);
   }
@@ -605,7 +629,7 @@ function setOverlayVisible(visible) {
   elements.overlayToggle.setAttribute("aria-pressed", String(visible));
   elements.overlayToggle.classList.toggle("active", visible);
   elements.overlayToggle.textContent = visible ? "FPS on" : "FPS";
-  localStorage.setItem(OSD_PREF_KEY, visible ? "1" : "0");
+  writePreference(OSD_PREF_KEY, visible ? "1" : "0");
 }
 
 
@@ -669,8 +693,13 @@ function wireVolumeDial() {
     if (face) face.style.setProperty("--angle", `${-135 + pct * 270}deg`);
     dial.parentElement?.setAttribute("data-tip", `Volume ${dial.value}%`);
   };
+  // Restore the level before a user gesture. setVolume also unmutes, so leave
+  // that behavior for live dial changes and unlock audio when opening a game.
+  audio.volume = Number(dial.value) / 100;
   dial.addEventListener("input", () => {
     audio.setVolume(Number(dial.value) / 100);
+    writePreference('dolphin-muted', audio.muted);
+    host.setAudioMuted(audio.muted);
     apply();
     setTransportGlyph(elements.muteButton,
                       /unmut/i.test(audio.label()) ? GLYPH.sound : GLYPH.muted,
@@ -889,11 +918,8 @@ async function mountFile(file, { progress = true } = {}) {
     // A failed adapter falls back to the demo core instead of throwing.
     if (host.mode === "dolphin") bootProgress.stage("boot");
     else bootProgress.fail(elements.statusPill.textContent || "The Dolphin core could not start.");
-    // Auto-unmute on disc boot. AudioController defaults to muted because
-    // the AudioContext can only be created after a user gesture; the disc
-    // mount click is the user gesture, so unmute here so audio actually
-    // plays. Users can still mute via the button.
-    if (audio.muted) {
+    // Unlock audio on the game-opening gesture, while respecting saved mute.
+    if (audio.muted && readPreference('dolphin-muted') !== 'true') {
       await audio.setMuted(false);
       setTransportGlyph(elements.muteButton,
                         /unmut/i.test(audio.label()) ? GLYPH.sound : GLYPH.muted,
@@ -1259,7 +1285,7 @@ function wireGamepadPolling() {
     const signature = devices.map(pad => `${pad.index}:${pad.id}`).join("|");
     if (signature !== controllerSignature) {
       controllerSignature = signature;
-      const selected = controllerSelect.value;
+      const selected = readPreference('dolphin-controller-mode') || controllerSelect.value;
       controllerSelect.replaceChildren(new Option("Automatic", "auto"), new Option("Disabled", "off"), ...devices.map(pad => new Option(pad.id, String(pad.index))));
       controllerSelect.value = Array.from(controllerSelect.options).some(option => option.value === selected) ? selected : "auto";
     }

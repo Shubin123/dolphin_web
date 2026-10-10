@@ -1,5 +1,6 @@
 // GPL-2.0-or-later. Azahar-style archive catalog and persistent playable library.
 import { readGameId } from './game-profiles.js';
+import { wireStoredControl } from './preferences.js';
 import { ARCHIVE_SOURCE, DISC_EXTENSION, downloadToStore, loadArchiveCatalog, storeStream } from './library-download.js';
 
 export function filterGames(games, query, region, sort) {
@@ -33,6 +34,11 @@ export async function initLibrary({ mountFile, bootProgress = noProgress }) {
     <div id="libraryReady" class="library-ready"><h3>Ready to play <span id="libraryReadyCount">(0)</span></h3><p class="library-note">Images stored in this browser. Removing one frees its cache space.</p><ul id="libraryReadyList"></ul></div>`;
   document.querySelector('#widget-grid').append(section);
   const el = id => section.querySelector(`#${id}`);
+  for (const [id, key] of [
+    ['librarySource', 'dolphin-library-source'], ['librarySearch', 'dolphin-library-search'],
+    ['libraryRegion', 'dolphin-library-region'], ['librarySort', 'dolphin-library-sort'],
+    ['libraryPageSize', 'dolphin-library-page-size']
+  ]) wireStoredControl(el(id), key, 'input');
   const status = message => { el('libraryStatus').textContent = message; };
   let directory;
   let games = [];

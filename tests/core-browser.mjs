@@ -323,6 +323,28 @@ try {
   await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent.startsWith('Loaded ') && document.querySelector('[data-save-status]').textContent.includes('.sav'),{timeout:60000});
   const afterUpload=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   assert(afterUpload.loadedCheckpointGeneration>beforeUpload.loadedCheckpointGeneration,'uploaded bytes must restore a native checkpoint');
+
+  // Muting persists when reopening a game; a full preference reset keeps both
+  // the cached disc and the exact saved bytes, which still restore natively.
+  await page.click('#muteButton');
+  assert.equal(await page.evaluate(()=>window.__audio.muted),true);
+  await page.goto(testUrl.href);
+  await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('#libraryReadyList button')?.disabled===false,{timeout:60000});
+  await page.click('#libraryReadyList button');
+  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
+  assert.equal(await page.evaluate(()=>window.__audio.muted),true,'saved mute must survive booting a game');
+  await page.click('#btn-layout-menu');
+  await Promise.all([page.waitForNavigation(),page.click('#resetAllButton')]);
+  await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('#libraryReadyList button')?.disabled===false,{timeout:60000});
+  await page.click('#libraryReadyList button');
+  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
+  assert.deepEqual(await storedSlotDigest(),savedDigest,'reset must keep native save-state bytes');
+  assert.equal(await page.evaluate(()=>window.__audio.muted),false,'reset restores automatic audio on game boot');
+  await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',control=>control.click());
+  await page.click('#loadButton');
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
+  const resetLoaded=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
+  assert(resetLoaded.loadedCheckpointGeneration>0,'save states must still load after resetting all preferences');
   assert.deepEqual(errors,[]);
   console.log('PASS: real Dolphin executes homebrew, consumes native keyboard/touch/mouse/gamepad input, saves and restores persistent slots across reopening, and downloads/uploads native state files. No graphics/gameplay benchmark.');
 } finally {

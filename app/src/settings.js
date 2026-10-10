@@ -1,3 +1,5 @@
+import { SETTINGS_STORAGE_KEY, readPreference, writePreference } from './preferences.js';
+
 export const PLAYABLE_PRESET = Object.freeze({
   core: "upstream",
   video: "software",
@@ -17,7 +19,7 @@ export const PLAYABLE_PRESET = Object.freeze({
   metrics: "0"
 });
 
-const DEFAULT_SETTINGS = Object.freeze({
+export const DEFAULT_SETTINGS = Object.freeze({
   core: "upstream",
   video: "software",
   cpu: "dual",
@@ -52,6 +54,25 @@ const CHOICE_SETS = Object.freeze({
 });
 
 const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
+
+export function saveSettings(settings) {
+  return writePreference(SETTINGS_STORAGE_KEY, JSON.stringify(normalizeSettings(settings)));
+}
+
+// Explicit URL choices take precedence. Restore missing choices before the
+// backend is imported so the controls and emulator use the same settings.
+export function restoreSettingsHref(href) {
+  const url = new URL(href);
+  let stored;
+  try { stored = JSON.parse(readPreference(SETTINGS_STORAGE_KEY) || 'null'); } catch {}
+  if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return url.href;
+  for (const key of SETTING_KEYS) {
+    if (url.searchParams.has(key) || (key === 'jittier' && url.searchParams.get('wasmjit') === '2')) continue;
+    const value = normalizeChoice(key, stored[key]);
+    if (value !== DEFAULT_SETTINGS[key]) url.searchParams.set(key, value);
+  }
+  return url.href;
+}
 
 export function readSettingsFromSearch(search) {
   const params = new URLSearchParams(search);

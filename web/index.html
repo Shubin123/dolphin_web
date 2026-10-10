@@ -56,6 +56,8 @@
         <ul class="layout-widget-list" id="layout-widget-list"></ul>
         <div class="mode-help">Drag a widget by its title to move it, drag its corner to resize it, or use the buttons here. Double-click a corner to reset that widget's size.</div>
         <button type="button" class="btn btn-primary" id="btn-layout-reset" style="margin-top:10px;">↺ Reset to default layout</button>
+        <button type="button" class="btn btn-secondary" id="resetAllButton" style="margin-top:10px;">Reset all settings &amp; layout</button>
+        <p class="mode-help">Resetting settings restarts the emulator. Cached games and save states are kept.</p>
     </aside>
     <div class="layout-menu-backdrop" id="layout-menu-backdrop" hidden></div>
 
@@ -330,7 +332,10 @@
                             <div class="settings-actions">
                             <button id="settingsApplyButton" type="submit">Apply restart</button>
                             <button id="settingsPresetButton" type="button">Melee preset</button>
+                            <button id="settingsResetButton" type="button">Reset settings</button>
                             </div>
+                            <p class="muted" id="settingsSaveStatus" role="status">Settings save in this browser. Use Apply restart to activate emulator changes. Display, input and layout changes apply immediately.</p>
+                            <p class="muted">Reset settings restores preferences and restarts the emulator. Cached games and save states are kept. Reset the layout from the ☰ menu.</p>
                             </form>
 
                             <section class="panel-block card" data-widget="input">

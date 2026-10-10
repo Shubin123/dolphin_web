@@ -1,3 +1,4 @@
+import { restoreSettingsHref } from './settings.js';
 import {
   readWebGpuSyntheticRequest,
   runWebGpuSyntheticPage
@@ -15,5 +16,7 @@ if (request) {
   globalThis.__wgpuSyntheticDiagnosticsPromise = promise;
   await promise;
 } else {
+  const href = restoreSettingsHref(window.location.href);
+  if (href !== window.location.href) history.replaceState(history.state, '', href);
   await import("./app.js");
 }

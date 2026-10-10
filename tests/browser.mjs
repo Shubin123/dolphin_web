@@ -67,6 +67,14 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/`);
   await page.waitForFunction(() => crossOriginIsolated && window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.coreKind), 'upstream');
+  const preferenceIds = ['settingSpeed','settingPresenter','settingWasmJit','settingAutoProfile','displayUpscaling','aspectSelect','volumeDial','mouseMode','controllerSelect','controllerDeadzone','touchMode','touchSize','touchOpacity','librarySource','librarySearch','libraryRegion','librarySort','libraryPageSize'];
+  const preferences = () => page.evaluate(ids => Object.fromEntries(ids.map(id => {
+    const control=document.getElementById(id);
+    return [id,control.type==='checkbox'?control.checked:control.value];
+  })), preferenceIds);
+  const defaultPreferences=await preferences();
+  await page.waitForFunction(()=>window.DolphinLayout);
+  const defaultLayout=await page.evaluate(()=>window.DolphinLayout.getState());
   // Display scaling uses composition; selecting it must preserve the existing
   // frame dimensions, core settings and default filtering across a reload.
   const displayBefore = await page.$eval('#screen', el => ({width:el.width,height:el.height,filter:getComputedStyle(el).imageRendering}));
@@ -250,6 +258,46 @@ try {
   await page.locator(`${remoteRow} button`).click();
   await page.waitForFunction(() => document.querySelector('#libraryStatus').textContent.includes('from the local cache') && document.querySelector('#libraryReadyCount').textContent === '(1)', {timeout:60000});
   assert.equal(imageRequests,4,'Play on an uncached archive row must download, cache and mount it');
+
+  // All preferences restore on a new visit before constructing the core.
+  for (const [id,value] of [['settingSpeed','0.75'],['settingPresenter','2d'],['displayUpscaling','smooth'],['aspectSelect','16:9'],['mouseMode','off'],['controllerSelect','off'],['touchMode','on'],['librarySource','local'],['libraryRegion','USA'],['librarySort','size'],['libraryPageSize','50']]) await page.select(`#${id}`,value);
+  for (const id of ['settingWasmJit','settingAutoProfile']) await page.$eval(`#${id}`,control=>control.click());
+  for (const [id,value] of [['volumeDial','37'],['controllerDeadzone','0.32'],['touchSize','125'],['touchOpacity','65'],['librarySearch','Remote']]) await page.$eval(`#${id}`,(control,value)=>{control.value=value;control.dispatchEvent(new Event('input',{bubbles:true}));},value);
+  await page.click('#overlayToggle');
+  await page.$eval('[data-widget="game"] .widget-tool-collapse',button=>button.click());
+  await page.$eval('[data-widget="savestates"] .widget-tool-hide',button=>button.click());
+  await page.click('#btn-layout-menu');
+  for (const [id,value] of [['layout-widget-width','360'],['layout-gap','20']]) await page.$eval(`#${id}`,(control,value)=>{control.value=value;control.dispatchEvent(new Event('input'));},value);
+  await page.click('#layout-beside-screen');
+  await page.select('[data-widget-id="input"] select','2');
+  await page.$eval('[data-widget-id="library"] button',button=>button.click());
+  await page.click('#btn-layout-menu-close');
+  const savedPreferences=await preferences();
+  const savedLayout=await page.evaluate(()=>window.DolphinLayout.getState());
+  await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?preferences=1`);
+  await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('.library-section')?.dataset.ready==='true',{timeout:60000});
+  assert.deepEqual(await preferences(),savedPreferences,'all control values must restore on a new visit');
+  assert.deepEqual(await page.evaluate(()=>window.DolphinLayout.getState()),savedLayout,'layout order, sizing, visibility and spacing must restore');
+  assert.equal(await page.evaluate(()=>window.__host.presenterBackend),'2d');
+  assert.equal(await page.evaluate(()=>window.__host.ppcWasmJit),false,'cached settings must configure the emulator, not only its controls');
+  assert.equal(await page.$eval('#screenHud',node=>node.hidden),true);
+  assert.equal(await page.evaluate(()=>window.__audio.volume),.37);
+
+  // Settings-only reset keeps the layout; full reset also restores every card.
+  await Promise.all([page.waitForNavigation(),page.$eval('#settingsResetButton',button=>button.click())]);
+  await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('.library-section')?.dataset.ready==='true',{timeout:60000});
+  assert.deepEqual(await preferences(),defaultPreferences);
+  assert.deepEqual(await page.evaluate(()=>window.DolphinLayout.getState()),savedLayout,'settings reset must keep layout');
+  assert.equal(await page.evaluate(()=>window.__host.ppcWasmJit),true);
+  assert.equal(await page.$eval('#libraryReadyCount',node=>node.textContent),'(1)','reset must keep cached game files');
+  assert.equal(new URL(page.url()).search,'','reset must also remove URL overrides');
+  await page.select('#mouseMode','off');
+  await page.click('#btn-layout-menu');
+  await Promise.all([page.waitForNavigation(),page.click('#resetAllButton')]);
+  await page.waitForFunction(()=>window.DolphinLayout && document.querySelector('.library-section')?.dataset.ready==='true',{timeout:60000});
+  assert.deepEqual(await preferences(),defaultPreferences);
+  assert.deepEqual(await page.evaluate(()=>window.DolphinLayout.getState()),defaultLayout);
+  assert.equal(await page.$eval('#libraryReadyCount',node=>node.textContent),'(1)');
   await page.$eval('#libraryReadyList button:last-child', button => button.click());
   await page.waitForFunction(() => document.querySelector('#libraryReadyCount').textContent === '(0)');
   assert(metadataRequests >= 1);

@@ -35,3 +35,5 @@ Short keyboard taps are retained for native polling at the reported game speed. 
 Native touch regressions also verify screen-tap aim retention, a brief slide from a held button onto another button, and stick input/knob ownership when one of two fingers releases. Held fingers take precedence over retained taps for analog axes.
 
 Save-state E2E checks capture and restore a chosen slot through the UI, verify native checkpoint restoration and unchanged saved bytes after reopening the cached game, reject a truncated file with visible feedback, and download/upload a real native `.sav` backup. All generated homebrew images and states stay in a temporary directory that is removed after the test.
+
+Preference checks cover emulator configuration before core initialization, URL override precedence, corrupt/blocked storage, persisted display/input/audio/library choices and widget layout, and settings-only/full resets. Native E2E also verifies persisted mute on game boot and that a full reset preserves cached discs and loadable save-state bytes.

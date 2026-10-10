@@ -14,13 +14,13 @@
     },
     {
       "path": "index.html",
-      "size": 29971,
-      "sha256": "df63cacde3b03cb9404a944d53979b3560e3a5928241e89042c3c0b4613e36fb"
+      "size": 30732,
+      "sha256": "e28ea2277bda35f10691989eb3c61dcef14000fcce89ada4579792aff89270a2"
     },
     {
       "path": "src/app.js",
-      "size": 63833,
-      "sha256": "5dd64942289909e86577b75127ad3e5d65855238ab420130e923b2de16fc114a"
+      "size": 65127,
+      "sha256": "2b43ab16a686d36ce18fb6171b2f8cc3631ea604c7a3eb8cfb2a92860c7e7a62"
     },
     {
       "path": "src/azahar-theme.css",
@@ -34,8 +34,8 @@
     },
     {
       "path": "src/bootstrap.js",
-      "size": 501,
-      "sha256": "29e7b611b70383194a94b64e78bd0bef383db3c31fd0360818223023726acf58"
+      "size": 696,
+      "sha256": "b72f7f6d65805ff4c720f2faa388b59db858dc816af4737e10524395d4425e24"
     },
     {
       "path": "src/button-source.js",
@@ -49,8 +49,8 @@
     },
     {
       "path": "src/library.js",
-      "size": 15213,
-      "sha256": "af4ba420186db301f328bd45d3702fb52b45abc4d3d8749d1dda6938394d0e9f"
+      "size": 15578,
+      "sha256": "1b258fd763dc4e2004df6d8201cb21b28fcb59e7e0053692fc04a526d1b8769e"
     },
     {
       "path": "src/mobile-controls.js",
@@ -68,14 +68,19 @@
       "sha256": "333b80bbbb97dced4162ee2f63a0d4f4a1304e150160f76779cd810bfa7b787e"
     },
     {
+      "path": "src/preferences.js",
+      "size": 2350,
+      "sha256": "6350afa85838873ef0e5e6799e0dab553300cb0ff5472c228c93ef5311a8b8f6"
+    },
+    {
       "path": "src/save-state-panel.js",
       "size": 6395,
       "sha256": "dcda40d27a966c4cc3d30e679fb93bdd440df46aa8a6ca0f90962267d1d97465"
     },
     {
       "path": "src/settings.js",
-      "size": 6707,
-      "sha256": "8153e8406c88e3a350390bc76272425b0b7c371ab4dc645fe4800e68ac541090"
+      "size": 7656,
+      "sha256": "98e0eac32a153ec1ccbeb7085c10dc9d8a698ef6a8f57727b258e363ab50c429"
     },
     {
       "path": "src/styles.css",

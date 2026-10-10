@@ -20,6 +20,8 @@ To save game progress, use **Save state** or choose **Save** beside one of the f
 
 Mouse hover over the game picture moves the Wii pointer by default, including fullscreen. Left/right/middle clicks send A/B/−. Leaving the picture or switching away releases mouse input. Choose **Main stick** or **Disabled** under **Keyboard, mouse & Bluetooth controller** to change this behavior.
 
+Settings and widget layouts are saved automatically in this browser. Use **Apply restart** to activate emulator setting changes; later visits restore your saved choices, with explicit URL settings taking precedence. Display, volume/mute, mouse/controller, keyboard, touch, automatic game profiles, library filters and widget layout preferences persist too. **Reset settings** restores preferences and restarts the emulator while keeping the layout. The ☰ menu provides **Reset to default layout** and **Reset all settings & layout**. Resets keep cached games and save states.
+
 Persistent game images use disk-backed Origin Private File System storage, streamed without first loading the whole image into JavaScript memory. Browser storage needs space for each imported image. Storage can be cleared by the browser. When persistent storage is unavailable, the library retains files for the current session.
 
 ## Sibling source repository
