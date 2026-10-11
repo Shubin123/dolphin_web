@@ -76,7 +76,6 @@ const elements = {
   gameTitle: document.querySelector("#gameTitle"),
   hudFps: document.querySelector("#hudFps"),
   hudJit: document.querySelector("#hudJit"),
-  hudLatency: document.querySelector("#hudLatency"),
   hudResolution: document.querySelector("#hudResolution"),
   hudSpeed: document.querySelector("#hudSpeed"),
   hudVisualFps: document.querySelector("#hudVisualFps"),
@@ -814,7 +813,6 @@ function updateScreenHud(info) {
   elements.hudVisualFps.textContent =
     info.visualChangeFps == null ? "n/a" : formatMetricNumber(info.visualChangeFps);
   elements.hudSpeed.textContent = `${Math.max(0, Number(info.gameSpeed) || 0)}%`;
-  elements.hudLatency.textContent = formatPresentationLag(info);
   elements.hudJit.textContent = parseJitState(info);
   elements.hudResolution.textContent = parsePresentationResolution(info);
 
@@ -1432,11 +1430,6 @@ function formatMetricNumber(value) {
   }
 
   return numeric >= 10 ? String(Math.round(numeric)) : numeric.toFixed(1);
-}
-
-function formatPresentationLag(info) {
-  const frameLag = Math.max(0, Number(info.presentationFrameLag) || 0);
-  return `${frameLag.toFixed(0)}f`;
 }
 
 function parseJitState(info) {

@@ -26,7 +26,7 @@
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17536,
-      "sha256": "fb2e48222bfc4187151b5f215983dab915fa652c3c5ba2cf0b8b8f1d4f031088"
+      "sha256": "032def6e780e27dfdb5f691847da17758875042035ed73fecc12ee3b95b17749"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
