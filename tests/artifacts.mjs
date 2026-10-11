@@ -1,6 +1,7 @@
 import {resolve} from 'node:path';
-import {verifyPackages} from '../tools/package-contract.mjs';
+import {verifyFrontendSource,verifyPackages} from '../tools/package-contract.mjs';
 verifyPackages(resolve('web'));
+verifyFrontendSource(resolve('app'),resolve('web'));
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';

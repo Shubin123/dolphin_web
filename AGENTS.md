@@ -7,6 +7,8 @@ or copy Dolphin/native source into this repository. `backend-runtime.json` and
 
 Run `npm run check` and `npm run test:e2e`. The latter verifies actual native
 input consumption and guest execution, not only UI callbacks. `CHROME_PATH`
-selects Chrome. Pages CI rebuilds UI and verifies packages before deployment.
+selects Chrome. `web/` is committed and published
+as-is; rebuild and commit it with every `app/` or backend runtime change. Pages
+only verifies inventories (`tests/artifacts.mjs`) and never builds.
 Keep commercial images, states, caches and framebuffer captures local and
 ignored. Do not push or deploy without user authorization.

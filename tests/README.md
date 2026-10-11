@@ -10,9 +10,9 @@ npm run test:e2e
 npm run test:live
 ```
 
-Set `CHROME_PATH` for a Chrome executable outside the default macOS location. The Pages workflow uses `/usr/bin/google-chrome` and runs smoke, regression, and both E2E suites before deployment.
+Set `CHROME_PATH` for a Chrome executable outside the default macOS location. Run these locally before committing `web/`; the Pages workflow runs only `artifacts.mjs`.
 
-- `artifacts.mjs`: validates the real WASM and its recorded SHA-256/build identity.
+- `artifacts.mjs`: validates the real WASM and its recorded SHA-256/build identity, and that committed `web/` UI matches `app/`.
 - `library*.test.mjs`: catalog normalization, region filtering, CORS stream selection, bounded streaming with byte counts beyond 4 GiB, quota failures, cancellation, truncated transfers and catalog-cache fallback.
 - `browser.mjs`: serves a Pages-style subpath without isolation headers; verifies the service worker, local import/persistence/search, remote catalog, download progress/cancellation, incomplete-transfer cleanup, disk-backed caching, Save file bytes, automatic download-and-play and cache replay without another image request. Archive data and discs are generated fixtures.
 - `core-browser.mjs` and `helpers/homebrew-disc.mjs`: boot the actual Dolphin core with an original generated 16 MiB GameCube disc. Verify the executing PowerPC program counter, advancing emulated time, and pause/resume. The generated guest contains no Nintendo or commercial game code and draws no graphics.

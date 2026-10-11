@@ -40,9 +40,9 @@ dolphin_web/         Public web distribution
 node ../dolphin_emscripten/tools/export-web.mjs web
 ```
 
-The backend follows Azahar's explicit sibling output-directory pattern using `DOLPHIN_WEB_ASSET_DIR`. See [backend development setup](https://github.com/Shubin123/dolphin_emscripten/blob/main/docs/development.md). The WASM is rebuilt from the backend source. `npm run build` builds this repository’s UI without overwriting engine assets; `npm run check` verifies both inventories. Backend sync invokes the frontend build automatically. All Pages builds import the successful runtime artifact for current backend main; configure `BACKEND_READ_TOKEN` for private backend access. Workflows must be committed and pushed to take effect.
+The backend follows Azahar's explicit sibling output-directory pattern using `DOLPHIN_WEB_ASSET_DIR`. See [backend development setup](https://github.com/Shubin123/dolphin_emscripten/blob/main/docs/development.md). The WASM is rebuilt from the backend source. `npm run build` builds this repository’s UI without overwriting engine assets; `npm run check` verifies both inventories. Backend sync invokes the frontend build automatically. `web/` is committed static output: after a native change, run backend `npm run build:wasm` locally, then commit `web/` here. No CI builds or fetches the backend.
 
-GitHub Actions deploys `web/` to Pages on `main` pushes. A same-origin service worker supplies isolation headers needed for SharedArrayBuffer; the first visit may reload once. HTTPS and service-worker support are required.
+Pushing a `web/` change to `main` publishes the committed directory to Pages unchanged, after `tests/artifacts.mjs` rejects stale UI or mismatched core evidence. A same-origin service worker supplies isolation headers needed for SharedArrayBuffer; the first visit may reload once. HTTPS and service-worker support are required.
 
 ## Source and license
 
@@ -69,7 +69,7 @@ The browser test serves a Pages-style subpath without isolation headers. It chec
 
 [Download the complete corresponding source](https://github.com/Shubin123/dolphin_web/releases/tag/v0.1.1).
 
-The Pages workflow runs `npm ci`, the WASM smoke and library regression tests, and both browser E2E suites before publishing. Archive tests use generated disc fixtures; the optional live test cancels the stream after reading its header. Test programs and generators are committed under `tests/`; game images are not.
+Run the WASM smoke, library regression tests and both browser E2E suites locally (`npm run test:automation`) before committing `web/`; the Pages workflow only re-runs the smoke check. Archive tests use generated disc fixtures; the optional live test cancels the stream after reading its header. Test programs and generators are committed under `tests/`; game images are not.
 
 ### Input controls
 

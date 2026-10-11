@@ -25,8 +25,8 @@ save restoration from IndexedDB and cached-disc replay across a page reload,
 including the dedicated-worker OPFS writer used when Safari lacks
 `FileSystemFileHandle.createWritable()`. The original synthetic
 guest contains no graphics or commercial game code. These are compatibility
-checks, not game FPS measurements or actual iOS tests. Pages CI runs the suite
-before deployment.
+checks, not game FPS measurements or actual iOS tests. Run the suite locally
+before committing `web/`.
 
 Touch controls provide Move and Aim sticks, A/B, Wii 1/2, Nunchuk C/Z, plus,
 minus, Home and D-pad. Touching the screen aims the Wii pointer and presses A.

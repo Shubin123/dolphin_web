@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 export const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 export function safePath(path){if(typeof path!=='string'||!path||path.startsWith('/')||path.includes('\\')||path.split('/').some(part=>!part||part==='..'||part==='.'))throw new Error(`Unsafe asset path: ${path}`);}
@@ -23,4 +23,12 @@ export function verifyPackages(web){
  const abi=JSON.parse(readFileSync(resolve(web,'provenance/dolphin-core-abi-v1.json')));
  if(abi.coreId!==backend.coreId)throw new Error('Stale ABI record');
  return {backend,frontend};
+}
+// web/ is deployed as committed, so its UI output must match app/ exactly.
+export function verifyFrontendSource(app,web){
+ const walk=prefix=>readdirSync(resolve(app,prefix),{withFileTypes:true}).flatMap(entry=>{const path=prefix?`${prefix}/${entry.name}`:entry.name;return entry.isDirectory()?walk(path):[path];});
+ const built=new Map(JSON.parse(readFileSync(resolve(web,'frontend-build.json'))).files.map(file=>[file.path,file.sha256]));
+ const source=walk('');
+ for(const path of source)if(built.get(path)!==hash(readFileSync(resolve(app,path))))throw new Error(`web/ is stale for app/${path}; run npm run build and commit web/`);
+ for(const path of built.keys())if(!source.includes(path))throw new Error(`web/${path} has no app/ source; run npm run build and commit web/`);
 }
