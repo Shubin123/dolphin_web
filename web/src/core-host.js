@@ -1415,6 +1415,8 @@ const CACHED_INTERPRETER_DISABLE_BITS = {
   shortprefix:     1 << 21, // §28ca lower JIT min-prefix 4→2 (default-off; ?shortprefix=1 to enable)
   smearcompile:    1 << 22, // §28ce cap JIT compiles/slice (default-off; ?smearcompile=1 to enable)
   fastmemhoist:    1 << 23, // §28cz per-block fastmem bounds-check hoist (ENABLE polarity; default-off; ?fastmemhoist=1)
+  condcontinue:    1 << 24, // wasm regions: continue through conditional branches (default-on; ?wasmregions=0 disables)
+  regionfollow:    1 << 26, // wasm regions: follow b/bl and predicted blr (default-on; ?wasmregions=0 disables)
   // Aliases the plan / TL;DR uses interchangeably:
   fastinputpoll: 1 << 1, // legacy synonym for meleecall (input-poll lives there)
   fastmem:       1 << 7, // legacy synonym for fastsystem (load/store-ish helpers)
@@ -1515,6 +1517,13 @@ function requestedCachedInterpreterDisableMask() {
   // unchecked OOB WASM load) — kept off until A/B + correctness verified.
   if (params.get("fastmemhoist") === "1") {
     mask |= CACHED_INTERPRETER_DISABLE_BITS.fastmemhoist;
+  }
+  // Wasm regions: DEFAULT-ON in the core. Compiled regions continue through
+  // conditional branches, b, bl and predicted returns, so far fewer blocks go
+  // through the dispatcher (Animal Crossing town: 39.0% -> 45.7% game speed).
+  // Escape hatch, no rebuild: ?wasmregions=0 disables both parts.
+  if (params.get("wasmregions") === "0") {
+    mask |= CACHED_INTERPRETER_DISABLE_BITS.condcontinue | CACHED_INTERPRETER_DISABLE_BITS.regionfollow;
   }
   return mask >>> 0;
 }
