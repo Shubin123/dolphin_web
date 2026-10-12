@@ -501,13 +501,13 @@ export class UpstreamWorkerAdapter {
     this.onStatus(`Hardware WebGPU unavailable; using software: ${this.rendererFallbackReason}`);
   }
 
-  async mountGame(file) {
+  async mountGame(file, { widescreen = false } = {}) {
     const _t_mountStart = performance.now();
     console.log(`[boot-phase] mountGame() entry at perf.now=${_t_mountStart.toFixed(1)}ms (file=${file?.size ?? "?"}B name=${file?.name ?? "?"})`);
     await this.load();
     const _t_afterLoad = performance.now();
     console.log(`[boot-phase] mountGame() after this.load() at perf.now=${_t_afterLoad.toFixed(1)}ms (load took ${(_t_afterLoad - _t_mountStart).toFixed(1)}ms)`);
-    const response = await this.request("mountFile", { file });
+    const response = await this.request("mountFile", { file, widescreen: Boolean(widescreen) });
     const _t_afterMount = performance.now();
     console.log(`[boot-phase] mountGame() mountFile responded at perf.now=${_t_afterMount.toFixed(1)}ms (mountFile took ${(_t_afterMount - _t_afterLoad).toFixed(1)}ms)`);
     this.applyMetadata(response);

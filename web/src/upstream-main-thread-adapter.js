@@ -234,7 +234,7 @@ export class UpstreamMainThreadAdapter {
     };
   }
 
-  async mountGame(file) {
+  async mountGame(file, { widescreen = false } = {}) {
     await this.load();
     if (!file) {
       throw new Error("No disc file was provided");
@@ -263,6 +263,8 @@ export class UpstreamMainThreadAdapter {
     }
 
     this.coreBoot = { attempted: false, accepted: false, path, skippedReason: "" };
+    // Read by BootDisc: the Wii SYSCONF 4:3/16:9 mode for this boot.
+    this.module.dolphinWidescreen = Boolean(widescreen);
     if (this.api.bootDisc && file.size >= MIN_FULL_BOOT_BYTES) {
       this.coreBoot.attempted = true;
       this.coreBoot.accepted = Boolean(this.api.bootDisc(path));

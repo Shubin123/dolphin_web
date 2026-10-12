@@ -93,6 +93,7 @@ export class EmulatorHost {
     this.ppcWasmJitWarmupFrames = requestedPpcWasmJitWarmupFrames(this.videoBackend);
     this.ppcProfile = requestedPpcProfile();
     this.cpuOverclock = requestedCpuOverclock();
+    this.widescreen = false;
     this.emulationSpeed = requestedEmulationSpeed();
     this.presentationScale = requestedPresentationScale();
     this.presentationQueueSize = requestedPresentationQueueSize();
@@ -554,7 +555,7 @@ export class EmulatorHost {
 
     if (await this.adapterAvailable()) {
       try {
-        const mounted = await this.adapter.mountGame(file);
+        const mounted = await this.adapter.mountGame(file, { widescreen: this.widescreen });
         this.videoBackend = this.adapter.videoBackend || this.videoBackend;
         this.presentationPacing = this.adapter.presentationPacing || this.presentationPacing;
         this.wgpuVisualCadence = this.adapter.wgpuVisualCadence ?? this.wgpuVisualCadence;
@@ -733,6 +734,12 @@ export class EmulatorHost {
       samples: null,
       stats: "audio:unavailable"
     });
+  }
+
+  // Screen shape for the next boot. Wii games pick 4:3 or 16:9 from SYSCONF
+  // only when they start, so a change applies when a disc is next booted.
+  setWidescreen(enabled) {
+    this.widescreen = Boolean(enabled);
   }
 
   setAudioMuted(muted) {

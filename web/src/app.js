@@ -728,6 +728,9 @@ function wireAspectSelect() {
     const root = document.documentElement;
     root.style.setProperty("--aspect-w", String(Number(w) || 4));
     root.style.setProperty("--aspect-h", String(Number(h) || 3));
+    // The box alone only reshapes the picture; Wii games also need to be
+    // told, or they render 16:9 regardless. Applies on the next boot.
+    host.setWidescreen(Number(w) / Number(h) > 1.5);
   };
   let saved = null;
   try { saved = localStorage.getItem("wasmDolphinAspect"); } catch {}

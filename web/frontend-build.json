@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "coreId": "sha256:314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d",
+  "coreId": "sha256:4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a",
   "files": [
     {
       "path": "app-icon.svg",
@@ -24,8 +24,8 @@
     },
     {
       "path": "src/app.js",
-      "size": 65465,
-      "sha256": "175fba878ea5d621ab639aee29401a0af228ba07264601850eab39e0254dcf4b"
+      "size": 65663,
+      "sha256": "a93b65e2bc651740b43881146920884b2c6d49e7d6ff8349c764d0d584646c0e"
     },
     {
       "path": "src/azahar-theme.css",

@@ -987,7 +987,7 @@ async function handleMessage(type, payload) {
       });
       return metadataPayload();
     case "mountFile":
-      return mountFile(payload.file);
+      return mountFile(payload.file, { widescreen: payload.widescreen });
     case "setInputMask":
       inputMask = payload.mask >>> 0;
       api?.setInputMask(inputMask);
@@ -2489,10 +2489,12 @@ function bindApi(module) {
   };
 }
 
-async function mountFile(file) {
+async function mountFile(file, { widescreen = false } = {}) {
   if (!moduleInstance) {
     throw new Error("Upstream core must be loaded before mounting a disc");
   }
+  // Read by BootDisc: the Wii SYSCONF 4:3/16:9 mode for this boot.
+  moduleInstance.dolphinWidescreen = Boolean(widescreen);
 
   if (!file) {
     throw new Error("No disc file was provided to the upstream worker");

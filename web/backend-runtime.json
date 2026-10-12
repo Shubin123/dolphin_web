@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d",
+  "coreId": "sha256:4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a",
   "files": [
     {
       "path": "LICENSE",
@@ -11,22 +11,22 @@
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
       "size": 10862,
-      "sha256": "564f5b789127ea10a29e6443a32dceef7020a78be772e213601626403e78f40b"
+      "sha256": "ec093a6ce846fcf8d279e9c06989a4c21b0dbc80425c56e45d2ff004d7eb50aa"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
-      "size": 270365,
-      "sha256": "8ce6bfb8fae520fd4694a05bb43766d4f4e7bd73a576ab0244259d020f8ce315"
+      "size": 270438,
+      "sha256": "92fa162d664d3d0fdbb499a85eebe649469377a1b62fb987b04d9fe378fbcd74"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13238757,
-      "sha256": "314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d"
+      "size": 13238586,
+      "sha256": "4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17536,
-      "sha256": "5097acead36254666461f114bbd650d8a93583bb63b4b6defd66351e041e9aa6"
+      "sha256": "7d74c5721d98162280b1bad1dbc0e3bf4b2e1ba702ddc918fca586c9cc3af822"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
@@ -60,8 +60,8 @@
     },
     {
       "path": "src/core-host.js",
-      "size": 67817,
-      "sha256": "70bada11435aed561aa59c39640a2836d56441cbf5a74d5bf34e1ac2787470be"
+      "size": 68103,
+      "sha256": "dcb6627b85ad99b917950f99e38e5aafa6e7f1870522ae5d71395c6713e88635"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -160,23 +160,23 @@
     },
     {
       "path": "src/upstream-discio-worker.js",
-      "size": 623277,
-      "sha256": "1e34c2e84017448d5d6daf611aa9d00ef2b5cf8a1b8dd0ad7061609405e0369e"
+      "size": 623468,
+      "sha256": "bef963efe370c62881420d59b0c10b727f36b980bf05860f69ccb4162b6e9aff"
     },
     {
       "path": "src/upstream-main-thread-adapter.js",
-      "size": 20246,
-      "sha256": "bd719473098f192545148df4733ec9539bd4300e19753c5e04098d1484312133"
+      "size": 20402,
+      "sha256": "559a1fc68117085116a5e985e54be950da78e708c3ac13f937157e1652471909"
     },
     {
       "path": "src/upstream-worker-adapter.js",
-      "size": 44292,
-      "sha256": "1b8af4ac089a0500a2d9a06aa40cd88ed8c4e9ffe6e5f6ddb400533a3036dbde"
+      "size": 44354,
+      "sha256": "2436670530076cc2651369292e9fc73cd273214cfe6fbc9048099d41ec844e3c"
     },
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "114b7c4626906860658b5da6c3b1298c53a2ff192950f798f78855345a137880"
+      "sha256": "b97571a1941bb12ed47299d53bdf73a3c7a16d89dfe49c68453fdb1d1b80eb71"
     },
     {
       "path": "src/video-backend.js",
