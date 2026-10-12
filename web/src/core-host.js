@@ -1417,6 +1417,7 @@ const CACHED_INTERPRETER_DISABLE_BITS = {
   fastmemhoist:    1 << 23, // §28cz per-block fastmem bounds-check hoist (ENABLE polarity; default-off; ?fastmemhoist=1)
   condcontinue:    1 << 24, // wasm regions: continue through conditional branches (default-on; ?wasmregions=0 disables)
   regionfollow:    1 << 26, // wasm regions: follow b/bl and predicted blr (default-on; ?wasmregions=0 disables)
+  cfgregions:      1 << 27, // wasm CFG regions: forward branches and loops stay in wasm (default-on; ?cfgregions=0 or ?wasmregions=0 disables)
   // Aliases the plan / TL;DR uses interchangeably:
   fastinputpoll: 1 << 1, // legacy synonym for meleecall (input-poll lives there)
   fastmem:       1 << 7, // legacy synonym for fastsystem (load/store-ish helpers)
@@ -1521,9 +1522,16 @@ function requestedCachedInterpreterDisableMask() {
   // Wasm regions: DEFAULT-ON in the core. Compiled regions continue through
   // conditional branches, b, bl and predicted returns, so far fewer blocks go
   // through the dispatcher (Animal Crossing town: 39.0% -> 45.7% game speed).
-  // Escape hatch, no rebuild: ?wasmregions=0 disables both parts.
+  // CFG regions compile a small control-flow graph per region instead, so
+  // forward branches and loops also stay inside wasm.
+  // Escape hatches, no rebuild: ?cfgregions=0 falls back to linear regions;
+  // ?wasmregions=0 disables every region form.
   if (params.get("wasmregions") === "0") {
-    mask |= CACHED_INTERPRETER_DISABLE_BITS.condcontinue | CACHED_INTERPRETER_DISABLE_BITS.regionfollow;
+    mask |= CACHED_INTERPRETER_DISABLE_BITS.condcontinue | CACHED_INTERPRETER_DISABLE_BITS.regionfollow |
+      CACHED_INTERPRETER_DISABLE_BITS.cfgregions;
+  }
+  if (params.get("cfgregions") === "0") {
+    mask |= CACHED_INTERPRETER_DISABLE_BITS.cfgregions;
   }
   return mask >>> 0;
 }

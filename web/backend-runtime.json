@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:a5f6d810af20bf796df152910972d596d2061c689bb14897e34b832e51f18249",
+  "coreId": "sha256:314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d",
   "files": [
     {
       "path": "LICENSE",
@@ -10,28 +10,28 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
-      "size": 10686,
-      "sha256": "c11b59b85f1772c1f23c0a6b9edfecadef03ec7285cc58a9efabc3ba01ebe0c7"
+      "size": 10862,
+      "sha256": "564f5b789127ea10a29e6443a32dceef7020a78be772e213601626403e78f40b"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
-      "size": 270364,
-      "sha256": "f90ec2de676cc52a8f03bcc2da437db45430b1363cf93b651f71896d542ad281"
+      "size": 270365,
+      "sha256": "8ce6bfb8fae520fd4694a05bb43766d4f4e7bd73a576ab0244259d020f8ce315"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13235546,
-      "sha256": "a5f6d810af20bf796df152910972d596d2061c689bb14897e34b832e51f18249"
+      "size": 13238757,
+      "sha256": "314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17536,
-      "sha256": "032def6e780e27dfdb5f691847da17758875042035ed73fecc12ee3b95b17749"
+      "sha256": "5097acead36254666461f114bbd650d8a93583bb63b4b6defd66351e041e9aa6"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
-      "size": 20049,
-      "sha256": "ab38063bb10a2221f7d4e78e88853884f215c43cdb0bbd6119bd233bb73a8d88"
+      "size": 20342,
+      "sha256": "ce79760a82b01a1a2bc04a5e3dec9ddfc0e93edcf500d78659004b1d7664e77f"
     },
     {
       "path": "src/audio-pcm-producer.js",
@@ -60,8 +60,8 @@
     },
     {
       "path": "src/core-host.js",
-      "size": 67332,
-      "sha256": "978b8e13295dc34db85aa1531dd7e115a858c58be8bbc71b3301ea114fcbb70a"
+      "size": 67817,
+      "sha256": "70bada11435aed561aa59c39640a2836d56441cbf5a74d5bf34e1ac2787470be"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -176,7 +176,7 @@
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "97861cd7ac62b3fa38088979cf407dfa1eccb1f1a56ea59d935272c237ef8fef"
+      "sha256": "114b7c4626906860658b5da6c3b1298c53a2ff192950f798f78855345a137880"
     },
     {
       "path": "src/video-backend.js",

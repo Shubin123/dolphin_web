@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-11T02:45:07.135Z",
-  "coreId": "sha256:a5f6d810af20bf796df152910972d596d2061c689bb14897e34b832e51f18249",
+  "createdAt": "2026-10-12T20:04:32.145Z",
+  "coreId": "sha256:314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d",
   "repository": {
-    "commit": "4221cbb0ded3c51dee8d73b7961692ff29dbb237",
-    "status": "",
+    "commit": "f6806232f8e87e8193c9c7d064eeba5b4173c987",
+    "status": "M cores/dolphin/dolphin-core-upstream.build.json\n M cores/dolphin/dolphin-core-upstream.js\n M cores/dolphin/dolphin-core-upstream.wasm\n M provenance/dolphin-core-abi-v1.json",
     "cleanTree": true
   },
   "source": {
     "upstreamCommit": "e22551eae1c84a7e4d0b6a5c519ef4ed4ef69df1",
-    "patchSeriesSha256": "a2692da6d787e1687f5804642cf620a676c3aaf22ebd169c45dcc3cf9f2f8cc8",
-    "vendorResultTree": "9ac8033e2e51ba881347c8ef73d888337cc91eb9",
-    "sourceLockSha256": "ab38063bb10a2221f7d4e78e88853884f215c43cdb0bbd6119bd233bb73a8d88",
-    "vendorSnapshotSha256": "6bf314958d888f68afe0e5c728a001db97c5508ff753fd169b2f3371456d30ab",
+    "patchSeriesSha256": "0743596a2636b39d7a9156c15761d151e7612d7447e015e8ac2807da5cd7973c",
+    "vendorResultTree": "e4640dc2de4e8c58963130e56fe72edefcf0605b",
+    "sourceLockSha256": "ce79760a82b01a1a2bc04a5e3dec9ddfc0e93edcf500d78659004b1d7664e77f",
+    "vendorSnapshotSha256": "b37ec5bfd7647cfaa94b3b34be08759ad45a9abcdab904e81590a176627f9660",
     "localInputsSha256": "f6128fd2c16a488f9125c3097f06bdee3e5d1fbd5b9b94ef9aae6e49a59d8f86",
     "localInputs": [
       {
@@ -193,14 +193,14 @@
   "artifacts": {
     "js": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.js",
-      "size": 270364,
-      "sha256": "f90ec2de676cc52a8f03bcc2da437db45430b1363cf93b651f71896d542ad281",
+      "size": 270365,
+      "sha256": "8ce6bfb8fae520fd4694a05bb43766d4f4e7bd73a576ab0244259d020f8ce315",
       "hashMode": "lf-normalized"
     },
     "wasm": {
       "path": "/Users/admin/Documents/gitlab/dolphin_emscripten/cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13235546,
-      "sha256": "a5f6d810af20bf796df152910972d596d2061c689bb14897e34b832e51f18249",
+      "size": 13238757,
+      "sha256": "314dd3f7c35631f97b13ebbdde28219615622a588b6790802dad0c443e1de67d",
       "hashMode": "raw"
     },
     "wasmSections": [
@@ -216,8 +216,8 @@
       },
       {
         "id": 3,
-        "size": 12966,
-        "sha256": "32bd7b8ca92a14dad9441eb85bf0b947fb96021f15497c85400e97478b1a5217"
+        "size": 12980,
+        "sha256": "276e757c832a838cb38018af6a2be9013f707f7ad6facb9cd8ba2aed200eb269"
       },
       {
         "id": 4,
@@ -227,22 +227,22 @@
       {
         "id": 6,
         "size": 49,
-        "sha256": "cd3b68389db3f9784bbbb26b99a90c62bdc2558c108e7264234e6ad922ac3a82"
+        "sha256": "1f3d0a5a3131112f2853fd327aadab8537112c1a5262d266e6f3680c538c3174"
       },
       {
         "id": 7,
         "size": 1081,
-        "sha256": "ae3ac8194b0a2aa8a1e747bcd702eeccabac7dca18411498788fa24dc941fc07"
+        "sha256": "cf92454af00a1eda981d0a55898fb816a9903cd22d3a758a3a88a2298dbfe536"
       },
       {
         "id": 8,
         "size": 2,
-        "sha256": "f86a3f7879f28f832a05984e4f472fa26f8d9b4ab66117a9fd8a6e9b14d134c0"
+        "sha256": "ac5d484629bcd1181cdcd61f5da92a01b869bbbaf3d61ff2d828bb8573d23dc3"
       },
       {
         "id": 9,
         "size": 24128,
-        "sha256": "1013394f4be0c61964b1246a7cdac01daf1ca6d7341e0725029b89726639cb65"
+        "sha256": "c72dcbde21815e0f7a5a5aaf7f5486994f44846fe04fa56cec0f60a6f67d96c8"
       },
       {
         "id": 12,
@@ -251,13 +251,13 @@
       },
       {
         "id": 10,
-        "size": 10701195,
-        "sha256": "5d6d60c96b4341942746c5cc80b060ce0e23c31b052eed368af485ec72b88835"
+        "size": 10704329,
+        "sha256": "5adc88364746a16eeedd5a246e53951531abf53580879861f95fafb6f60c714a"
       },
       {
         "id": 11,
-        "size": 2491639,
-        "sha256": "bfa9e42435e166cd0dea45b611a717431e8dac3e6abf9d18c9450b498c855162"
+        "size": 2491702,
+        "sha256": "f9a49a108a6e8ffb34f50ac3099c95f83841b4d32b0a3504c9dbb868a1230cd9"
       }
     ]
   }
