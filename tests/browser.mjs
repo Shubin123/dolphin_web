@@ -67,7 +67,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/`);
   await page.waitForFunction(() => crossOriginIsolated && window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
   assert.equal(await page.evaluate(() => window.__host.coreKind), 'upstream');
-  const preferenceIds = ['settingSpeed','settingPresenter','settingWasmJit','settingAutoProfile','displayUpscaling','aspectSelect','volumeDial','mouseMode','controllerSelect','controllerDeadzone','touchMode','touchSize','touchOpacity','librarySource','librarySearch','libraryRegion','librarySort','libraryPageSize'];
+  const preferenceIds = ['settingSpeed','settingPresenter','settingWasmJit','settingAutoProfile','nunchukConnected','displayUpscaling','aspectSelect','volumeDial','mouseMode','controllerSelect','controllerDeadzone','touchMode','touchSize','touchOpacity','librarySource','librarySearch','libraryRegion','librarySort','libraryPageSize'];
   const preferences = () => page.evaluate(ids => Object.fromEntries(ids.map(id => {
     const control=document.getElementById(id);
     return [id,control.type==='checkbox'?control.checked:control.value];
@@ -263,7 +263,7 @@ try {
 
   // All preferences restore on a new visit before constructing the core.
   for (const [id,value] of [['settingSpeed','0.75'],['settingPresenter','2d'],['displayUpscaling','smooth'],['aspectSelect','16:9'],['mouseMode','off'],['controllerSelect','off'],['touchMode','on'],['librarySource','local'],['libraryRegion','USA'],['librarySort','size'],['libraryPageSize','50']]) await page.select(`#${id}`,value);
-  for (const id of ['settingWasmJit','settingAutoProfile']) await page.$eval(`#${id}`,control=>control.click());
+  for (const id of ['settingWasmJit','settingAutoProfile','nunchukConnected']) await page.$eval(`#${id}`,control=>control.click());
   for (const [id,value] of [['volumeDial','37'],['controllerDeadzone','0.32'],['touchSize','125'],['touchOpacity','65'],['librarySearch','Remote']]) await page.$eval(`#${id}`,(control,value)=>{control.value=value;control.dispatchEvent(new Event('input',{bubbles:true}));},value);
   await page.click('#overlayToggle');
   await page.$eval('[data-widget="game"] .widget-tool-collapse',button=>button.click());

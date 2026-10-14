@@ -52,11 +52,13 @@ test('settings and full resets remove only owned preferences and optionally layo
   values.set('dolphin-widget-layout', 'custom layout');
   values.set('dolphin-emulator-settings', 'custom settings');
   values.set('dolphin-mouse-mode', 'off');
+  values.set('dolphin-nunchuk-connected', 'false');
   values.set('unrelated-data', 'keep');
   resetPreferences();
   assert.equal(values.get('dolphin-widget-layout'), 'custom layout');
   assert(!values.has('dolphin-emulator-settings'));
   assert(!values.has('dolphin-mouse-mode'));
+  assert(!values.has('dolphin-nunchuk-connected'));
   resetPreferences({ layout: true });
   assert.deepEqual([...values], [['unrelated-data', 'keep']]);
 });

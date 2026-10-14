@@ -38,6 +38,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.ready === 'true',{timeout:60000});
   await (await page.$('#libraryFiles')).uploadFile(file);
   await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  await page.evaluate(()=>localStorage.setItem('dolphin-nunchuk-connected', 'false'));
   // Revisit to prove that Play boots a persisted image rather than the import.
   // A normal navigation also runs through the Pages isolation worker.
   await page.goto(testUrl.href);
@@ -62,6 +63,10 @@ try {
   // DOM -> SharedArrayBuffer -> native GameCube mapping and emulated Wii Remote.
   // Focus after clicking transport buttons previously swallowed all keyboard input.
   const nativeInput = () => page.evaluate(()=>window.__host.adapter.request('validationReadWebInput'));
+  assert.equal(await page.$eval('#nunchukConnected',el=>el.checked),false);
+  await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiExtension===0,{timeout:10000});
+  await page.locator('#nunchukConnected').click();
+  await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiExtension===1,{timeout:10000});
   // Default mouse hover must reach the native Wii pointer without a click.
   assert.equal(await page.$eval('#mouseMode',el=>el.value),'cstick');
   const hoverScreen=await page.$('#screen');await hoverScreen.scrollIntoView();
@@ -125,6 +130,18 @@ try {
     await page.keyboard.up(key);
     await page.waitForFunction(async field=>(await window.__host.adapter.request('validationReadWebInput'))[field]===0,{timeout:10000},field);
   }
+  // Switch the real Dolphin attachment while the guest is running, and keep
+  // the disconnect bit through ordinary input release and focus changes.
+  assert.equal((await nativeInput()).wiiExtension, 1);
+  await page.locator('#nunchukConnected').click();
+  await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiExtension===0,{timeout:10000});
+  await page.focus('#screen');
+  await page.keyboard.press('x');
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiExtension===0 && s.mask===(1<<27);},{timeout:10000});
+  assert.equal(await page.evaluate(()=>localStorage.getItem('dolphin-nunchuk-connected')), 'false');
+  await page.locator('#nunchukConnected').click();
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.wiiExtension===1 && s.mask===0;},{timeout:10000});
   // Real native state also covers touch, mouse axes and gamepad lifecycle.
   await page.$eval('[data-touch-button="B"]',el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:71,pointerType:'touch'})));
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiB===1,{timeout:10000});

@@ -25,7 +25,8 @@ export const BUTTONS = Object.freeze({
   WII_TILT_LEFT: 1 << 23,
   WII_TILT_RIGHT: 1 << 24,
   WII_TILT_FORWARD: 1 << 25,
-  WII_TILT_BACKWARD: 1 << 26
+  WII_TILT_BACKWARD: 1 << 26,
+  NUNCHUK_DISCONNECTED: 1 << 27
 });
 
 export const CONTROL_LABELS = Object.freeze([

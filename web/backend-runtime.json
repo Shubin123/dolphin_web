@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a",
+  "coreId": "sha256:1cb84bd1bccc4d3dffb91f9fdaa5d1fa8d15394486667585390dc164248841e9",
   "files": [
     {
       "path": "LICENSE",
@@ -10,23 +10,23 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
-      "size": 10862,
-      "sha256": "ec093a6ce846fcf8d279e9c06989a4c21b0dbc80425c56e45d2ff004d7eb50aa"
+      "size": 10734,
+      "sha256": "7069e36fbb3bed8a14aded792ee6a48bb32c3b6bc0d1d7370fdae7c12d0d2ed0"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
       "size": 270438,
-      "sha256": "92fa162d664d3d0fdbb499a85eebe649469377a1b62fb987b04d9fe378fbcd74"
+      "sha256": "def2b68a57e1793c840122e20ff4b60c8fb95116131d2f9c0772d4a0619f6eba"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13238586,
-      "sha256": "4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a"
+      "size": 13238941,
+      "sha256": "1cb84bd1bccc4d3dffb91f9fdaa5d1fa8d15394486667585390dc164248841e9"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
       "size": 17536,
-      "sha256": "7d74c5721d98162280b1bad1dbc0e3bf4b2e1ba702ddc918fca586c9cc3af822"
+      "sha256": "ecdcf446cbf2a61b2117e215a41d2d5756198643137e0a2eec826d765dc8ef39"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
@@ -125,8 +125,8 @@
     },
     {
       "path": "src/input.js",
-      "size": 9724,
-      "sha256": "933d29accb9933efed7a97ea690d8433f50b1a4564fa9f59f2f464b5a7f684bb"
+      "size": 9757,
+      "sha256": "ec6db2d3781a6069735a6f58ac6df1e588fd9d6aa9c60ca9fbd1dd5e4224369d"
     },
     {
       "path": "src/jit-cache-identity.js",
@@ -176,7 +176,7 @@
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "b97571a1941bb12ed47299d53bdf73a3c7a16d89dfe49c68453fdb1d1b80eb71"
+      "sha256": "dba0783e7377f66bb6ba5d5fdef4d29ee932e0c7704419ac7fa4fe4c7044f7f9"
     },
     {
       "path": "src/video-backend.js",

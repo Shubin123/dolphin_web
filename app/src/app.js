@@ -10,6 +10,7 @@ import { EmulatorHost } from "./core-host.js";
 import { startMainThreadProfiler } from "./main-profiler.js";
 import { createCausalTelemetry, deepMerge } from "./causal-telemetry.js";
 import {
+  BUTTONS,
   CONTROL_LABELS,
   DEFAULT_KEY_BINDINGS,
   formatControlLabel,
@@ -303,6 +304,7 @@ const saveStates = wireSaveStatePanel({
   }
 });
 wireTransport();
+document.querySelector("#nunchukConnected").addEventListener("change", () => syncInput("Nunchuk"));
 wireKeyboard();
 wireTouchControls();
 wireGamepadPolling();
@@ -920,6 +922,7 @@ async function mountFile(file, { progress = true } = {}) {
   try {
     await applyGameProfile(file);
     const game = await host.mountFile(file);
+    syncInput("Ready");
     // A failed adapter falls back to the demo core instead of throwing.
     if (host.mode === "dolphin") bootProgress.stage("boot");
     else bootProgress.fail(elements.statusPill.textContent || "The Dolphin core could not start.");
@@ -1385,7 +1388,9 @@ function syncInput(source) {
     analog.cStickY = pointer?.cStickY ?? 128;
   }
   const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed);
-  host.setInputState(inputStateFromPressed(combinedPressed, analog, digitalPressed));
+  const state = inputStateFromPressed(combinedPressed, analog, digitalPressed);
+  if (!document.querySelector("#nunchukConnected").checked) state.mask |= BUTTONS.NUNCHUK_DISCONNECTED;
+  host.setInputState(state);
   elements.inputSource.textContent = source;
 
   for (const chip of elements.controlGrid.children) {

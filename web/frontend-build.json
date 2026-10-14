@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "coreId": "sha256:4f53a9849b0c55eefe4b1397ab9eb9bc3ef2e16d46c658d02caaa1af99c0162a",
+  "coreId": "sha256:1cb84bd1bccc4d3dffb91f9fdaa5d1fa8d15394486667585390dc164248841e9",
   "files": [
     {
       "path": "app-icon.svg",
@@ -19,13 +19,13 @@
     },
     {
       "path": "index.html",
-      "size": 30937,
-      "sha256": "fe44838ea2472b0804af04904d1bd93e00a74e76239d5d437d352e97bd13c2a5"
+      "size": 31274,
+      "sha256": "b4d3601b64d64bf66331c016cf8c29695f7cfc82cffd1956865539158d06d490"
     },
     {
       "path": "src/app.js",
-      "size": 65663,
-      "sha256": "a93b65e2bc651740b43881146920884b2c6d49e7d6ff8349c764d0d584646c0e"
+      "size": 65925,
+      "sha256": "ea4be8dc5e1fdf3e3bfc78d87f187a65f5e3e46e8698ff65049b81ba45c83256"
     },
     {
       "path": "src/azahar-theme.css",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/preferences.js",
-      "size": 2350,
-      "sha256": "6350afa85838873ef0e5e6799e0dab553300cb0ff5472c228c93ef5311a8b8f6"
+      "size": 2434,
+      "sha256": "f9988251712b5aa0a4e6783d187c2d4c60134c408430cd27f1cf53486909d646"
     },
     {
       "path": "src/save-state-panel.js",

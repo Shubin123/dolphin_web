@@ -2,7 +2,7 @@
 export const SETTINGS_STORAGE_KEY = 'dolphin-emulator-settings';
 const PREFERENCE_KEYS = [
   SETTINGS_STORAGE_KEY, 'dolphin-auto-profile', 'dolphin-volume', 'dolphin-muted',
-  'dolphin-mouse-mode', 'dolphin-controller-mode', 'dolphin-controller-deadzone',
+  'dolphin-nunchuk-connected', 'dolphin-mouse-mode', 'dolphin-controller-mode', 'dolphin-controller-deadzone',
   'dolphin-display-upscaling', 'wasmDolphinAspect', 'wasmDolphinPanelOpen',
   'wasm-dolphin.debug-open', 'wasm-dolphin.osd-visible',
   'dolphin-keyboard-bindings', 'dolphin-touch-look', 'dolphin-touch-controls',
@@ -43,6 +43,7 @@ export function wirePreferences(root = document) {
   for (const [id, key, event] of [
     ['settingAutoProfile', 'dolphin-auto-profile'],
     ['volumeDial', 'dolphin-volume', 'input'],
+    ['nunchukConnected', 'dolphin-nunchuk-connected'],
     ['mouseMode', 'dolphin-mouse-mode'],
     ['controllerSelect', 'dolphin-controller-mode'],
     ['controllerDeadzone', 'dolphin-controller-deadzone', 'input']
