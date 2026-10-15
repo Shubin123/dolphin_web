@@ -436,9 +436,11 @@ function sampleCoreFpsRolling(coreFrame) {
 // frame counter not advancing in wall-clock time.
 let ppcWasmJitFuseLastFrame = -1;
 let ppcWasmJitFuseLastTime = 0;
+let ppcWasmJitFuseLastCompiles = 0;
 let ppcWasmJitTier = "guarded";
 let ppcWasmJitWarmupFrames = 3600;
 let ppcWasmJitWarmupExplicit = false;
+let ppcWasmJitTierExplicit = false;
 let ppcWasmJitVerifiedCheckpoint = false;
 let pacedPresentationActive = false;
 let nextPacedPresentationTime = 0;
@@ -544,6 +546,11 @@ const WASM_JIT_MIN_ACTIVE_FRAMES_BEFORE_FUSE = 240;
 const WASM_JIT_REGRESSION_FRACTION = 0.65;
 const WASM_JIT_REGRESSION_MIN_BASELINE_FPS = 18;
 const WASM_JIT_ABSOLUTE_FLOOR_FPS = 6;
+// A fuse window that compiled this many blocks is the JIT's own warm-up burst:
+// the core is busy compiling, not frozen or regressed. Donkey Kong Country
+// Returns compiles ~28k blocks cold, and judging those windows fused the JIT
+// off for 15-20 s of interpreter speed right after it engaged.
+const WASM_JIT_FUSE_COMPILE_BURST_BLOCKS = 256;
 const WASM_JIT_POST_ACTIVATION_STALL_THRESHOLD_MS = 5000;
 const WASM_JIT_POST_ACTIVATION_GRACE_FRAMES = 300;
 // After a temporary degraded-presentation disable, wait this many video frames
@@ -927,6 +934,7 @@ async function handleMessage(type, payload) {
         ppcWasmJitTier: payload.ppcWasmJitTier,
         ppcWasmJitWarmupFrames: payload.ppcWasmJitWarmupFrames,
         ppcWasmJitWarmupExplicit: payload.ppcWasmJitWarmupExplicit,
+        ppcWasmJitTierExplicit: payload.ppcWasmJitTierExplicit,
         ppcProfile: payload.ppcProfile,
         cpuOverclock: payload.cpuOverclock,
         emulationSpeed: payload.emulationSpeed,
@@ -1482,6 +1490,7 @@ async function loadCore({
   ppcWasmJitTier: requestedPpcWasmJitTier = "guarded",
   ppcWasmJitWarmupFrames: requestedPpcWasmJitWarmupFrames = DEFAULT_WASM_JIT_WARMUP_XFB_FRAMES,
   ppcWasmJitWarmupExplicit: requestedPpcWasmJitWarmupExplicit = false,
+  ppcWasmJitTierExplicit: requestedPpcWasmJitTierExplicit = false,
   ppcProfile = false,
   cpuOverclock = 1,
   emulationSpeed = 1,
@@ -2122,6 +2131,7 @@ async function loadCore({
   ppcWasmJitTier = requestedPpcWasmJitTier === "mixed" ? "mixed" : "guarded";
   ppcWasmJitWarmupFrames = normalizePpcWasmJitWarmupFrames(requestedPpcWasmJitWarmupFrames);
   ppcWasmJitWarmupExplicit = Boolean(requestedPpcWasmJitWarmupExplicit);
+  ppcWasmJitTierExplicit = Boolean(requestedPpcWasmJitTierExplicit);
   ppcWasmJitVerifiedCheckpoint = false;
   console.log(`[s28-jittier] worker init: requested=${JSON.stringify(requestedPpcWasmJitTier)} ` +
     `→ resolved ppcWasmJitTier=${ppcWasmJitTier} (engage will call ` +
@@ -3602,12 +3612,25 @@ function resetPpcWasmJitTiming(invalidateBaseline = false) {
   }
 }
 
-// A native-acknowledged Animal Crossing checkpoint is already past cold boot.
-// Keep the cold-start gate and stall fuse, and respect explicit warmup choices.
+// Donkey Kong Country Returns (SF8E01/J01/P01) gameplay is CPU bound on the
+// guarded tier: its 1-1 jungle measured 96% unthrottled guarded vs 107% mixed,
+// with one pixel differing by 6 levels in the restored fixture frame. The
+// mixed tier is the default for it alone; an explicit jittier still wins.
+function effectivePpcWasmJitTier() {
+  if (!ppcWasmJitTierExplicit && /^SF8/.test(api?.getGameId?.() ?? "")) return "mixed";
+  return ppcWasmJitTier;
+}
+
+// A native-acknowledged Animal Crossing or Donkey Kong Country Returns
+// checkpoint is already past cold boot. Keep the compile throttle and stall
+// fuse, and respect explicit warmup choices. DKCR restores were validated on
+// the hardware and software renderers; OGL keeps its safety floor.
 function canSkipPpcWasmJitBootWarmup() {
-  return ppcWasmJitVerifiedCheckpoint && !ppcWasmJitWarmupExplicit &&
-    rendererDiagnostics.configuredVideoBackend === "WebGPU-Real" &&
-    api?.getGameId?.() === "RUUE01";
+  if (!ppcWasmJitVerifiedCheckpoint || ppcWasmJitWarmupExplicit) return false;
+  const backend = rendererDiagnostics.configuredVideoBackend;
+  const gameId = api?.getGameId?.() ?? "";
+  if (gameId === "RUUE01") return backend === "WebGPU-Real";
+  return /^SF8/.test(gameId) && (backend === "WebGPU-Real" || backend === "Software Renderer");
 }
 
 function maybeEnablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
@@ -3664,9 +3687,10 @@ function maybeEnablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
   ppcWasmJitPreEngageFps = presentationFps;
   ppcWasmJitPreEngageCoreFps = ppcWasmJitCoreFpsRolling;
 
-  console.log(`[s28-jittier] ENGAGE: setPpcWasmJitEnabled(${ppcWasmJitTier === "mixed" ? 2 : 1}) ` +
-    `(ppcWasmJitTier=${ppcWasmJitTier}) @frame ${coreFrame}`);
-  api.setPpcWasmJitEnabled(ppcWasmJitTier === "mixed" ? 2 : 1);
+  const engageTier = effectivePpcWasmJitTier();
+  console.log(`[s28-jittier] ENGAGE: setPpcWasmJitEnabled(${engageTier === "mixed" ? 2 : 1}) ` +
+    `(ppcWasmJitTier=${engageTier}) @frame ${coreFrame}`);
+  api.setPpcWasmJitEnabled(engageTier === "mixed" ? 2 : 1);
   ppcWasmJitActive = true;
   ppcWasmJitEnabledAtFrame = coreFrame >>> 0;
   // §28s: re-arm the core-liveness tracker on every (re)engage so a
@@ -3751,16 +3775,22 @@ function maybeDisablePpcWasmJit(coreFrame = api?.getFrame?.() ?? 0) {
     if (dtMs >= 1500) {
       const dFrames = (cf - ppcWasmJitFuseLastFrame) >>> 0;
       const coreFps = (dFrames * 1000) / dtMs;
-      catastrophic = coreFps < WASM_JIT_ABSOLUTE_FLOOR_FPS;
+      const compiles = api?.getPpcWasmBlockCompileCount?.() ?? 0;
+      const compiling =
+        dFrames > 0 && compiles - ppcWasmJitFuseLastCompiles >= WASM_JIT_FUSE_COMPILE_BURST_BLOCKS;
+      catastrophic = !compiling && coreFps < WASM_JIT_ABSOLUTE_FLOOR_FPS;
       regressed =
+        !compiling &&
         ppcWasmJitPreEngageCoreFps >= WASM_JIT_REGRESSION_MIN_BASELINE_FPS &&
         coreFps < ppcWasmJitPreEngageCoreFps * WASM_JIT_REGRESSION_FRACTION;
       ppcWasmJitFuseLastFrame = cf;
       ppcWasmJitFuseLastTime = nowMs;
+      ppcWasmJitFuseLastCompiles = compiles;
     }
   } else {
     ppcWasmJitFuseLastFrame = cf;
     ppcWasmJitFuseLastTime = nowMs;
+    ppcWasmJitFuseLastCompiles = api?.getPpcWasmBlockCompileCount?.() ?? 0;
   }
 
   if (!regressed && !catastrophic) {

@@ -332,6 +332,7 @@ export class EmulatorHost {
             ppcWasmJitForce: this.ppcWasmJitForce,
             ppcWasmJitWarmupFrames: this.ppcWasmJitWarmupFrames,
             ppcWasmJitWarmupExplicit: hasExplicitJitWarmup(),
+            ppcWasmJitTierExplicit: hasExplicitJitTier(),
             ppcProfile: this.ppcProfile,
             cpuOverclock: this.cpuOverclock,
             emulationSpeed: this.emulationSpeed,
@@ -379,6 +380,7 @@ export class EmulatorHost {
             ppcWasmJitForce: this.ppcWasmJitForce,
             ppcWasmJitWarmupFrames: this.ppcWasmJitWarmupFrames,
             ppcWasmJitWarmupExplicit: hasExplicitJitWarmup(),
+            ppcWasmJitTierExplicit: hasExplicitJitTier(),
             ppcProfile: this.ppcProfile,
             cpuOverclock: this.cpuOverclock,
             emulationSpeed: this.emulationSpeed,
@@ -1204,6 +1206,12 @@ function requestedPpcWasmJit(videoBackend) {
 function requestedPpcWasmJitTier() {
   const params = new URLSearchParams(window.location.search);
   return params.get("jittier") === "mixed" || params.get("wasmjit") === "2" ? "mixed" : "guarded";
+}
+
+// The worker may choose a per-game tier only when the URL did not name one.
+function hasExplicitJitTier() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("jittier") || params.get("wasmjit") === "2";
 }
 
 function requestedPpcWasmJitForce() {
