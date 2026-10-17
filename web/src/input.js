@@ -98,6 +98,8 @@ const STANDARD_GAMEPAD_BUTTONS = Object.freeze({
   5: "R",
   8: "Z",
   9: "START",
+  10: "WII_SHAKE",
+  11: "NUNCHUK_SHAKE",
   12: "D_UP",
   13: "D_DOWN",
   14: "D_LEFT",
@@ -230,7 +232,8 @@ export function pressedFromGamepad(
 export function readGamepadInput(
   gamepad,
   digitalThreshold = DEFAULT_GAMEPAD_DIGITAL_DEADZONE,
-  analogDeadzone = DEFAULT_GAMEPAD_ANALOG_DEADZONE
+  analogDeadzone = DEFAULT_GAMEPAD_ANALOG_DEADZONE,
+  motionMode = "pointer"
 ) {
   const pressed = new Set();
   const state = { ...DEFAULT_PAD_STATE };
@@ -278,7 +281,25 @@ export function readGamepadInput(
   if (rightY <= -digitalThreshold) pressed.add("C_STICK_UP");
   if (rightY >= digitalThreshold) pressed.add("C_STICK_DOWN");
 
+  if (motionMode === "tilt") {
+    for (const direction of ["UP", "DOWN", "LEFT", "RIGHT"]) pressed.delete(`C_STICK_${direction}`);
+    state.cStickX = state.cStickY = 128;
+    for (const button of tiltFromAxes(rightX, rightY, digitalThreshold)) {
+      pressed.add(button);
+      state.mask |= BUTTONS[button];
+    }
+  }
+
   return { pressed, state };
+}
+
+export function tiltFromAxes(x, y, threshold = 0.35) {
+  const pressed = new Set();
+  if (x < -threshold) pressed.add("WII_TILT_LEFT");
+  if (x > threshold) pressed.add("WII_TILT_RIGHT");
+  if (y < -threshold) pressed.add("WII_TILT_FORWARD");
+  if (y > threshold) pressed.add("WII_TILT_BACKWARD");
+  return pressed;
 }
 
 export function mergePressedSets(...sets) {

@@ -353,13 +353,14 @@
                             <p>GameCube port 1 and Wii Remote + Nunchuk. Wii: X = A, Z = B, V/B = 1/2, Enter = +, C = −, Q/E = Nunchuk C/Z, H = Home. Keyboard: WASD main stick, IJKL C-stick, arrows D-pad, X/Z/V/B face buttons, Enter Start, Q/E triggers, C Z.</p>
                             <div id="keyboardBindings" class="control-grid"></div>
                             <button type="button" id="resetBindings">Reset keyboard bindings</button>
-                            <label>Mouse / Wii pointer <select id="mouseMode"><option value="cstick" selected>Wii pointer / C-stick</option><option value="stick">Main stick</option><option value="off">Disabled</option></select></label>
-                            <p>Mouse hover tracks the Wii pointer over the play area by default, including fullscreen. No click is needed to aim. Main stick: hold and drag, release to center. Left / right / middle buttons = A / B / −.</p>
+                            <label>Mouse / Wii pointer <select id="mouseMode"><option value="cstick" selected>Wii pointer / C-stick</option><option value="stick">Main stick</option><option value="tilt">Wii tilt (hold and drag)</option><option value="off">Disabled</option></select></label>
+                            <p>Mouse hover tracks the Wii pointer over the play area by default, including fullscreen. No click is needed to aim. Main stick: hold and drag, release to center. Left / right buttons = A / B. Middle click = Remote shake; Shift + middle click or rear side button = Nunchuk shake. In Wii tilt mode, hold and drag from the center; release to stop tilting. Minus remains on keyboard C.</p>
                             <p>Simulated Wii motion: Space = Remote shake, left Shift = Nunchuk shake, numpad 4/6/8/2 = tilt left/right/forward/backward. All bindings can be changed above.</p>
                             <label>Controller <select id="controllerSelect"><option value="auto">Automatic</option><option value="off">Disabled</option></select></label>
+                            <label>Controller right stick <select id="controllerMotionMode"><option value="pointer">Wii pointer / C-stick</option><option value="tilt">Wii tilt</option></select></label>
                             <label>Stick deadzone <input id="controllerDeadzone" type="range" min="0" max="0.5" step="0.01" value="0.18"></label>
                             <p id="controllerStatus" role="status">Pair in device Bluetooth settings, then press a controller button.</p>
-                            <p>USB and Bluetooth standard controllers: face buttons A/B/1/2, left stick = Nunchuk, right stick = Wii pointer, D-pad, Start = +, shoulders/triggers = Nunchuk C/Z, Select = −, Guide = Home. GameCube mappings also work. Physical Wii Remote sensor input requires browser support; motion is simulated with the bindings above.</p>
+                            <p>USB and Bluetooth standard controllers: face buttons A/B/1/2, left stick = Nunchuk, right stick = Wii pointer, D-pad, Start = +, shoulders/triggers = Nunchuk C/Z, Select = −, Guide = Home. GameCube mappings also work. Click the left / right stick to shake the Remote / Nunchuk. Select Wii tilt above to tilt with the right stick; release to center. These controls simulate motion; physical controller motion sensors are not required.</p>
                             </details>
                             </section>
 <section class="debug-panel" id="debugPanel" aria-label="Diagnostics" hidden>

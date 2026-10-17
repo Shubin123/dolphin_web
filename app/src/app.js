@@ -19,7 +19,8 @@ import {
   mergePressedSets,
   readGamepadInput,
   resolveKeyboardButton,
-  selectPreferredGamepad
+  selectPreferredGamepad,
+  tiltFromAxes
 } from "./input.js";
 import {
   buildPlayablePresetHref,
@@ -139,6 +140,7 @@ const keyboardPressed = new Set();
 let keyboardBindings = { ...DEFAULT_KEY_BINDINGS };
 try { const saved = JSON.parse(localStorage.getItem("dolphin-keyboard-bindings") || "null"); if (saved && typeof saved === "object" && !Array.isArray(saved)) keyboardBindings = Object.fromEntries(Object.entries(saved).filter(([code, control]) => typeof code === "string" && CONTROL_LABELS.includes(control))); } catch {}
 let mousePressed = new Set();
+let mouseMotionPressed = new Set();
 let mouseInputState = null;
 const mouseMode = document.querySelector("#mouseMode");
 const controllerSelect = document.querySelector("#controllerSelect");
@@ -1094,7 +1096,7 @@ function wireMouse() {
   listenOnCanvas("pointerdown", () => canvas.focus({ preventScroll: true }));
   canvas.style.touchAction = "none";
   const buttons = createButtonSource(pressed => { mousePressed = pressed; syncInput("Mouse"); }, minimumInputPressMs);
-  const release = () => { mouseInputState = null; buttons.reset(); };
+  const release = () => { mouseInputState = null; mouseMotionPressed.clear(); buttons.reset(); syncInput("Mouse"); };
   const applyMode = () => {
     viewport.dataset.mouseMode = mouseMode.value;
     release();
@@ -1108,18 +1110,24 @@ function wireMouse() {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
     event.preventDefault();
     canvas.setPointerCapture(event.pointerId);
-    const control = ["A", "Z", "B"][event.button];
+    const control = event.button === 1 ? (event.shiftKey ? "NUNCHUK_SHAKE" : "WII_SHAKE") : ({ 0: "A", 2: "B", 3: "WII_SHAKE", 4: "NUNCHUK_SHAKE" })[event.button];
     move(event);
-    if (control) buttons.down(event.button, control);
+    if (control && !(mouseMode.value === "tilt" && event.button === 0)) buttons.down(event.button, control);
   });
   function move(event) {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
-    if (mouseMode.value === "stick" && !canvas.hasPointerCapture(event.pointerId)) return;
+    if (["stick", "tilt"].includes(mouseMode.value) && !canvas.hasPointerCapture(event.pointerId)) return;
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     const axis = (position, start, size) => Math.round(128 + Math.max(-1, Math.min(1, (position - start) / size * 2 - 1)) * 96);
     const x = axis(event.clientX, rect.left, rect.width);
     const y = 256 - axis(event.clientY, rect.top, rect.height);
+    if (mouseMode.value === "tilt") {
+      mouseMotionPressed = tiltFromAxes((x - 128) / 96, (128 - y) / 96);
+      mouseInputState = null;
+      syncInput("Mouse");
+      return;
+    }
     const next = mouseMode.value === "stick" ? { stickX: x, stickY: y } : { cStickX: x, cStickY: y };
     if ((mouseMode.value === "stick" || pointerSource === "mouse") &&
         Object.keys(next).every(key => mouseInputState?.[key] === next[key])) return;
@@ -1135,6 +1143,7 @@ function wireMouse() {
   listenOnCanvas("pointerup", event => {
     if (event.pointerType !== "mouse") return;
     if (!event.buttons && mouseMode.value === "stick") mouseInputState = null;
+    if (!event.buttons && mouseMode.value === "tilt") { mouseMotionPressed.clear(); syncInput("Mouse"); }
     buttons.up(event.button);
   });
   viewport.addEventListener("pointerleave", event => {
@@ -1351,7 +1360,7 @@ function wireGamepadPolling() {
     }
 
     window.__touchControls?.setGamepadConnected(Boolean(firstPad));
-    const nextGamepadInput = firstPad ? readGamepadInput(firstPad, 0.55, Number(controllerDeadzone.value)) : null;
+    const nextGamepadInput = firstPad ? readGamepadInput(firstPad, 0.55, Number(controllerDeadzone.value), document.querySelector("#controllerMotionMode").value) : null;
     if (!legacyGamepadPoll && gamepadInputsEqual(lastGamepadInput, nextGamepadInput)) {
       return;
     }
@@ -1376,12 +1385,13 @@ function wireGamepadPolling() {
   window.addEventListener("gamepadconnected", wake);
   window.addEventListener("gamepaddisconnected", wake);
   controllerSelect.addEventListener("change", wake);
+  document.querySelector("#controllerMotionMode").addEventListener("change", wake);
   document.addEventListener("visibilitychange", wake);
   tick();
 }
 
 function syncInput(source) {
-  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed);
+  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed, mouseMotionPressed);
   const analog = { ...gamepadInputState, ...mouseInputState, ...touchInputState };
   // Retained absolute aim belongs to the device that most recently moved it.
   // A previous screen tap must not pin the cursor over later mouse/pad input.
@@ -1390,7 +1400,7 @@ function syncInput(source) {
     analog.cStickX = pointer?.cStickX ?? 128;
     analog.cStickY = pointer?.cStickY ?? 128;
   }
-  const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed);
+  const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed, mouseMotionPressed);
   const state = inputStateFromPressed(combinedPressed, analog, digitalPressed);
   if (!document.querySelector("#nunchukConnected").checked) state.mask |= BUTTONS.NUNCHUK_DISCONNECTED;
   host.setInputState(state);

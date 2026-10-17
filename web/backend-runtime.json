@@ -130,8 +130,8 @@
     },
     {
       "path": "src/input.js",
-      "size": 9757,
-      "sha256": "ec6db2d3781a6069735a6f58ac6df1e588fd9d6aa9c60ca9fbd1dd5e4224369d"
+      "size": 10467,
+      "sha256": "cc71d9658ec0568e4488745a2d6e612bd8210eff78e47965985ef9f7c5a7e5f2"
     },
     {
       "path": "src/jit-cache-identity.js",

@@ -291,6 +291,19 @@ try {
       return Math.abs(s.pointerX-(x*2-1))<.04&&Math.abs(s.pointerY-(1-y*2))<.04;
     },{timeout:10000},{x,y});
   }
+  // Mouse motion must reach native Wii groups and release cleanly.
+  const motionBounds = await (await page.$('#screen')).boundingBox();
+  await page.mouse.move(motionBounds.x+motionBounds.width/2,motionBounds.y+motionBounds.height/2);
+  await page.mouse.down({button:'middle'});
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).remoteShake===1,{timeout:10000});
+  await page.mouse.up({button:'middle'});
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).remoteShake===0,{timeout:10000});
+  await page.select('#mouseMode','tilt');
+  await page.mouse.down();
+  await page.mouse.move(motionBounds.x+motionBounds.width*.1,motionBounds.y+motionBounds.height/2);
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.tiltLeft===1&&s.wiiA===0;},{timeout:10000});
+  await page.mouse.up();
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.tiltLeft===0&&s.wiiA===0;},{timeout:10000});
   await page.select('#mouseMode','off');
   await page.evaluate(()=>{
     window.__nativeTestPads=[{index:0,id:'Native E2E controller',mapping:'standard',connected:true,axes:[0.6,0,0.6,0],buttons:Array.from({length:17},(_,i)=>({pressed:i===0,value:i===0?1:0}))}];
@@ -301,6 +314,18 @@ try {
     const state=await window.__host.adapter.request('validationReadWebInput');
     return state.wiiA===1&&state.nunchukStickX>.3&&state.nunchukStickX<.7&&state.pointerX>.3&&state.pointerX<.7;
   },{timeout:10000});
+  // Standard stick clicks provide simulated motion without sensor hardware.
+  await page.evaluate(()=>{const p=window.__nativeTestPads[0];p.axes=[0,0,0,0];p.buttons=p.buttons.map((_,i)=>({pressed:i===10,value:i===10?1:0}));});
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).remoteShake===1,{timeout:10000});
+  await page.evaluate(()=>{const p=window.__nativeTestPads[0];p.buttons=p.buttons.map((_,i)=>({pressed:i===11,value:i===11?1:0}));});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.remoteShake===0&&s.nunchukShake===1;},{timeout:10000});
+  await page.select('#controllerMotionMode','tilt');
+  await page.evaluate(()=>{const p=window.__nativeTestPads[0];p.buttons=p.buttons.map(()=>({pressed:false,value:0}));p.axes=[0,0,-.8,0];});
+  await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.tiltLeft===1&&s.nunchukShake===0&&s.pointerX===0;},{timeout:10000});
+  await page.evaluate(()=>{window.__nativeTestPads[0].axes=[0,0,0,0];});
+  await page.waitForFunction(async()=>(await window.__host.adapter.request('validationReadWebInput')).tiltLeft===0,{timeout:10000});
+  await page.select('#controllerMotionMode','pointer');
+  await page.evaluate(()=>{const p=window.__nativeTestPads[0];p.axes=[.6,0,.6,0];p.buttons[0]={pressed:true,value:1};});
   await page.select('#controllerSelect','off');
   await page.waitForFunction(async()=>{
     const state=await window.__host.adapter.request('validationReadWebInput');return state.wiiA===0&&state.stickX===128;
