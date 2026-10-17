@@ -25,6 +25,15 @@ try {
   const invalidState = join(temp,'invalid.sav'); await writeFile(invalidState, new Uint8Array(8));
   browser = await puppeteer.launch({executablePath:process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--enable-unsafe-webgpu', ...(process.env.CI ? ['--no-sandbox'] : [])]});
   const page = await browser.newPage(); const errors=[];
+  // Native-input coverage uses a fixed catalog: a live refresh can replace
+  // the cached Play button and change the widget height during a click.
+  await page.evaluateOnNewDocument(() => {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => String(input?.url || input) === 'https://archive.org/metadata/Wii_ISO'
+      ? Promise.resolve(new Response(JSON.stringify({files:[{name:'Dolphin CPU homebrew.iso',size:16*1024*1024}]}),
+          {headers:{'content-type':'application/json'}}))
+      : originalFetch(input, init);
+  });
   page.on('pageerror',error=>{errors.push(error.message);console.log('PAGE ERROR',error.message)});
   page.on('console',message=>{if(message.type()==='error') console.log('CONSOLE',message.text())});
   const testUrl = new URL(process.env.DOLPHIN_URL || `http://127.0.0.1:${server.address().port}/`);
@@ -37,14 +46,17 @@ try {
   await page.waitForFunction(()=>crossOriginIsolated && window.__host && document.querySelector('#romInput'),{timeout:60000});
   await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.ready === 'true',{timeout:60000});
   await (await page.$('#libraryFiles')).uploadFile(file);
-  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.catalogLoaded === 'true' && document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   await page.evaluate(()=>localStorage.setItem('dolphin-nunchuk-connected', 'false'));
   // Revisit to prove that Play boots a persisted image rather than the import.
   // A normal navigation also runs through the Pages isolation worker.
   await page.goto(testUrl.href);
-  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.catalogLoaded === 'true' && document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
-  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000});
+  await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted,{timeout:60000}).catch(async error=>{
+    console.log('Cached Play boot failure',await page.evaluate(()=>({game:window.__host?.game,mode:window.__host?.mode,libraryStatus:document.querySelector('#libraryStatus')?.textContent,status:document.querySelector('#hudStatus')?.textContent,buttons:[...document.querySelectorAll('#libraryReadyList button')].map(b=>({text:b.textContent,disabled:b.disabled}))})));
+    throw error;
+  });
   // The generated guest draws nothing, so the loading bar stays in its boot
   // stage instead of finishing on a first visible frame.
   const loading=await page.$eval('.boot-progress',el=>({hidden:el.hidden,stage:el.querySelector('.boot-progress-stage').textContent}));
@@ -367,7 +379,7 @@ try {
   // Slot metadata and selection survive a new document; loading restores the
   // same native checkpoint after booting the cached game again.
   await page.goto(testUrl.href);
-  await page.waitForFunction(()=>document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
+  await page.waitForFunction(()=>document.querySelector('.library-section')?.dataset.catalogLoaded === 'true' && document.querySelector('#libraryReadyList button')?.disabled === false,{timeout:60000});
   assert.equal(await page.$eval('#saveButton',el=>el.disabled),true,'saving requires a mounted game');
   await page.locator('#libraryReadyList button').click(); // Re-queries if the list re-renders.
   await page.waitForFunction(()=>window.__host?.game?.coreBoot?.accepted && !document.querySelector('#loadButton').disabled,{timeout:60000}).catch(async error=>{
