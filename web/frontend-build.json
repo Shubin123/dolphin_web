@@ -19,8 +19,8 @@
     },
     {
       "path": "index.html",
-      "size": 31820,
-      "sha256": "93162dc400b5434e460fe983fbf8473cca72dd7cdcd49f1a2ab37ce4441f80d2"
+      "size": 31753,
+      "sha256": "6f25f765be86b6c147c7b623dbf6dbb288a513154d41551a94ff38d806b6baf2"
     },
     {
       "path": "progress/mario-galaxy-2.json",
@@ -29,8 +29,8 @@
     },
     {
       "path": "src/app.js",
-      "size": 67119,
-      "sha256": "7e2bcc79cb4ea58f8b005fa1738e56568605ae467f1c2d174af83247cfdedc0f"
+      "size": 67108,
+      "sha256": "0f61b793d699a7ced81f9bd93a1f4231eb5e36f45ebf9cc1d3c491b65f5d69c0"
     },
     {
       "path": "src/azahar-theme.css",

@@ -1170,7 +1170,7 @@ function wireUpscaling() {
   const preference = "dolphin-display-upscaling";
   try {
     const saved = localStorage.getItem(preference);
-    if (["default", "smooth", "crisp"].includes(saved)) select.value = saved;
+    if (["smooth", "crisp"].includes(saved)) select.value = saved;
   } catch {}
   const apply = () => {
     // Browser composition scales the existing game surface, including an

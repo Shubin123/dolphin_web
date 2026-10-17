@@ -78,7 +78,7 @@ try {
   // Display scaling uses composition; selecting it must preserve the existing
   // frame dimensions, core settings and default filtering across a reload.
   const displayBefore = await page.$eval('#screen', el => ({width:el.width,height:el.height,filter:getComputedStyle(el).imageRendering}));
-  assert.equal(await page.$eval('#displayUpscaling',el=>el.value),'default');
+  assert.equal(await page.$eval('#displayUpscaling',el=>el.value),'smooth');
   const originalUrl = page.url();
   await page.select('#displayUpscaling','smooth');
   assert.deepEqual(await page.$eval('#screen',el=>({width:el.width,height:el.height,filter:getComputedStyle(el).imageRendering})),{...displayBefore,filter:'auto'});
@@ -86,7 +86,7 @@ try {
   assert.equal(await page.evaluate(()=>localStorage.getItem('dolphin-display-upscaling')),'smooth');
   await page.select('#displayUpscaling','crisp');
   assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).imageRendering),'pixelated');
-  await page.select('#displayUpscaling','default');
+  await page.select('#displayUpscaling','smooth');
   assert.equal(await page.$eval('#screen',el=>getComputedStyle(el).imageRendering),displayBefore.filter);
   const conditionalScript = await page.evaluate(async () => {
     const response = await fetch('./conditional-script.js', {
@@ -172,7 +172,7 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/dolphin_web/?inputPersistence=1`, {waitUntil:"networkidle0"});
   await page.waitForFunction(() => window.__host && document.querySelector('.library-section')?.dataset.ready === 'true', {timeout:60000});
   assert.equal(await page.$eval('#displayUpscaling',el=>el.value),'smooth');
-  await page.select('#displayUpscaling','default');
+  await page.select('#displayUpscaling','smooth');
   assert.match(await page.$eval('[data-binding="A"]', el => el.textContent), /KeyU/);
   await page.$eval('#resetBindings', el => el.click());
   await page.select('#librarySource','local');

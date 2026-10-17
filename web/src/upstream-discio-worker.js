@@ -46,7 +46,8 @@ import {
 } from "./wgpu-renderer-runtime.js";
 import {
   FRESH_FRAME_DELIVERY,
-  freshFrameDeliveryForPacing
+  freshFrameDeliveryForPacing,
+  startDisplayRefreshLoop
 } from "./presentation-pacing.js";
 import { createGpuCompletionTracker } from "./gpu-completion-telemetry.js";
 import {
@@ -3238,7 +3239,7 @@ function startPresentationLoop() {
   }
 }
 
-// §28cl: 60Hz re-paint loop for tick pacing. Cheap — drawFrameToWebGpu
+// Display-refresh re-paint loop for tick pacing. Cheap — drawFrameToWebGpu
 // already runs in <2ms typical; re-painting the same buffer at 60Hz costs
 // the same as a fresh frame would have. The new-frame presentFrame path
 // is unchanged so latency stays at direct-mode levels; this only fills
@@ -3246,9 +3247,7 @@ function startPresentationLoop() {
 let _tickRepaintTimer = null;
 function startTickRepaintLoop() {
   if (_tickRepaintTimer) return;
-  const TICK_MS = 16; // ~60 Hz cadence
-  const SKIP_IF_RECENT_MS = 14; // don't double-paint within one frame of a real paint
-  _tickRepaintTimer = setInterval(() => {
+  _tickRepaintTimer = startDisplayRefreshLoop(intervalMs => {
     if (!presentationLoopActive) return;
     // Hardware WGPU presents through the command-ring context. Once it has
     // submitted a real present, repainting the cached CPU frame here would
@@ -3256,7 +3255,7 @@ function startTickRepaintLoop() {
     if (cmdRingOwnsCanvas) return;
     if (!_lastFrameCopyValid || _lastFrameLength <= 0) return;
     const now = performance.now();
-    if (lastPresentedAt > 0 && (now - lastPresentedAt) < SKIP_IF_RECENT_MS) return;
+    if (lastPresentedAt > 0 && (now - lastPresentedAt) < intervalMs * 0.85) return;
     // Re-paint the STABLE snapshot (not the live s_framebuffer pointer, which
     // the core overwrites mid-frame → flicker). Bypasses recordPresentedFrame
     // so the presentation-fps metric continues to reflect *unique* content
@@ -3300,7 +3299,7 @@ function startTickRepaintLoop() {
     }
     tickRepaintCount += 1;
     lastPresentedAt = now;
-  }, TICK_MS);
+  });
 }
 
 function schedulePresentationLoop() {
