@@ -1,21 +1,47 @@
 name: GitHub Pages
 # web/ is committed, prebuilt output. Backend `npm run build:wasm` / `npm run
 # sync:web` and frontend `npm run build` produce it locally; this workflow only
-# verifies the committed inventories and publishes the directory unchanged.
+# tests the committed output and publishes the directory unchanged.
 on:
   push:
     branches: [main]
-    paths: [web/**]
+    paths: [app/**, web/**, tests/**, tools/**, package.json, package-lock.json, .github/workflows/pages.yml]
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
-  pages: write
-  id-token: write
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Locate Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Verify assets and run native browser E2E
+        run: npm run test:automation
+      - name: Save test results for this code checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-checkpoint-${{ github.sha }}
+          path: logs/automation/
+          if-no-files-found: warn
   deploy:
+    needs: test
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:

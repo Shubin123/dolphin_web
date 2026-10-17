@@ -134,8 +134,8 @@
     {
       "path": "src/upstream-discio-worker.js",
       "hashMode": "lf-normalized",
-      "size": 623468,
-      "sha256": "bef963efe370c62881420d59b0c10b727f36b980bf05860f69ccb4162b6e9aff"
+      "size": 623668,
+      "sha256": "26efc2a3d42bb755e8198cb858625f48b153278555c1a9d8baa97b6a6abeec31"
     },
     {
       "path": "src/wgpu-renderer-worker-probe.js",
@@ -340,6 +340,12 @@
       "hashMode": "lf-normalized",
       "size": 4234,
       "sha256": "23b16db791533807e74c515632996c4041680ced303ca441f443f648f0338267"
+    },
+    {
+      "path": "src/wgpu-fragment-depth.js",
+      "hashMode": "lf-normalized",
+      "size": 1791,
+      "sha256": "91f6274e196cfe8c42bb6cecddadfdc9339a7e350ef4da148d2850be2d2279af"
     }
   ],
   "memoryContract": {

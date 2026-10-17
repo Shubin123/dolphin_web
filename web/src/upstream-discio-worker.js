@@ -12,6 +12,7 @@ import {
 } from "./upstream-worker-protocol.js";
 import { parseDolHeader } from "./dol.js";
 import { decodeWgpuSamplerState } from "./wgpu-sampler-state.js";
+import { reverseFragmentDepth } from "./wgpu-fragment-depth.js";
 import { decodePrebuiltCache } from "./prebuilt-jit-cache-format.js";
 import {
   JIT_CACHE_ENTRY_KEY_SCHEMA,
@@ -13825,6 +13826,7 @@ function replayCreateShader(id, blobPtr, blobLen, stage) {
     const local = new Uint8Array(blobLen);
     local.set(shared);
     wgsl = webGpuTextDecoder.decode(local);
+    if (stage === 2 && !GX_NATIVE_DEPTH) wgsl = reverseFragmentDepth(wgsl);
     // Strip `discard` from fragment shaders. Dolphin bakes the GX alpha test
     // into the pixel shader as a discard; if it rejects every world fragment
     // the EFB keeps its clear colour and the geometry is invisible -- which is
@@ -13885,6 +13887,7 @@ function replayCreateShader(id, blobPtr, blobLen, stage) {
     }
   } catch (e) {
     webGpuObjects.shaderFail += 1;
+    recordRendererError("shader-decode", e?.message || e);
     if (!self._webGpuShaderDecodeErr) {
       self._webGpuShaderDecodeErr = true;
       console.log(`[webgpu-cmd-shader] WGSL decode failed: ${e?.message || e}`);
