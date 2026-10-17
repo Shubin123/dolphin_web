@@ -152,6 +152,7 @@ console.log(`[boot-phase] discio-worker module-eval at perf.now=${performance.no
 let coreUrl = DEFAULT_UPSTREAM_CORE_URL;
 let moduleInstance = null;
 let api = null;
+let effectiveCpuThread = false;
 let wgpuDiagnosticQuiet = false;
 let wgpuDiagnosticLogFilter = installWgpuDiagnosticLogFilter({ enabled: false });
 let mounted = false;
@@ -2109,7 +2110,8 @@ async function loadCore({
   } else {
     rendererDiagnostics.videoBackendEvidence = "SetVideoBackend export unavailable";
   }
-  api.setCpuThread?.(Boolean(cpuThread));
+  effectiveCpuThread = Boolean(cpuThread);
+  api.setCpuThread?.(effectiveCpuThread);
   api.setCpuCore?.(cpuCore);
   ppcWasmJitRequested = Boolean(ppcWasmJit);
   ppcWasmJitForce = Boolean(requestedPpcWasmJitForce);
@@ -2786,6 +2788,7 @@ function metadataPayload() {
     height: api?.frameHeight() ?? 240,
     frame: api?.getFrame() ?? 0,
     gameId: api?.getGameId() ?? "",
+    cpuThread: effectiveCpuThread,
     title: api?.getGameTitle() ?? "",
     makerId: api?.getMakerId() ?? "",
     platform: api?.getPlatform() ?? "",

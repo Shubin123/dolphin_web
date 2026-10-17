@@ -1,3 +1,4 @@
+import { gameCpuThread, readDiscGameId } from "./game-compatibility.js";
 import { automaticVideoRequested, requestedVideoBackend } from "./video-backend.js";
 import { DolphinCoreAdapter, dolphinBundleAvailable } from "./dolphin-adapter.js";
 import { SaveStateSlots } from "./save-states.js";
@@ -555,7 +556,18 @@ export class EmulatorHost {
 
     if (await this.adapterAvailable()) {
       try {
+        // Native CPU mode is fixed by CoreInit, before DiscIO mounting.
+        // Read only the uncompressed disc header to choose compatibility first.
+        if (this.coreKind === "upstream") {
+          this.adapter.cpuThread = gameCpuThread({
+            gameId: await readDiscGameId(file),
+            videoBackend: this.videoBackend,
+            requested: requestedCpuThread(this.videoBackend),
+            explicit: ["single", "dual", "auto"].includes(new URLSearchParams(window.location.search).get("cpu"))
+          });
+        }
         const mounted = await this.adapter.mountGame(file, { widescreen: this.widescreen });
+        if (typeof mounted.cpuThread === "boolean") this.cpuThread = mounted.cpuThread;
         this.videoBackend = this.adapter.videoBackend || this.videoBackend;
         this.presentationPacing = this.adapter.presentationPacing || this.presentationPacing;
         this.wgpuVisualCadence = this.adapter.wgpuVisualCadence ?? this.wgpuVisualCadence;
@@ -1024,6 +1036,7 @@ export class EmulatorHost {
       loadedCheckpointPpcPc:
         this.mode === "dolphin" ? this.adapter.loadedCheckpointPpcPc : null,
       cpuCoreName: this.mode === "dolphin" ? this.adapter.cpuCoreName : "",
+      cpuThread: this.mode === "dolphin" ? this.cpuThread : null,
       ppcWasmBlockCompileCount:
         this.mode === "dolphin" ? this.adapter.ppcWasmBlockCompileCount : 0,
       ppcWasmBlockRunCount: this.mode === "dolphin" ? this.adapter.ppcWasmBlockRunCount : 0,

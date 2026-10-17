@@ -24,13 +24,13 @@
     },
     {
       "path": "progress/mario-galaxy-2.json",
-      "size": 803,
-      "sha256": "03f35e3faad1175ee394779a455676456dd7abd5daf9ed9eda7b12fb5e73ba86"
+      "size": 1458,
+      "sha256": "a3a7c0b6d36d1c60c9cd0cde2c41390ca5a2bd21911a37428a5e6224caec7ec3"
     },
     {
       "path": "src/app.js",
-      "size": 65925,
-      "sha256": "ea4be8dc5e1fdf3e3bfc78d87f187a65f5e3e46e8698ff65049b81ba45c83256"
+      "size": 66100,
+      "sha256": "25057d1aeb48a4acd8c5b52a5033afc88f501dae81cedf1027b6f17141eebd5c"
     },
     {
       "path": "src/azahar-theme.css",

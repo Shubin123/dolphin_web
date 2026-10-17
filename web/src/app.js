@@ -348,6 +348,9 @@ function handleFrame(info) {
   lastRuntimeUiState = uiState;
   if (!elements.screenHud.hidden) updateScreenHud(info);
   updateRuntimeControls(info);
+  if (typeof info.cpuThread === "boolean") {
+    elements.settingsSummary.textContent = describeSettings({ ...currentSettings, cpu: info.cpuThread ? "dual" : "single" });
+  }
 
   if (!elements.debugPanel.hidden) {
     updateDebugMetrics(info);

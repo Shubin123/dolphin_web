@@ -541,6 +541,7 @@ export class UpstreamWorkerAdapter {
       coreTicks: response.coreTicks,
       ppcPc: response.ppcPc,
       cpuCoreName: response.cpuCoreName,
+      cpuThread: response.cpuThread,
       ppcWasmBlockCompileCount: response.ppcWasmBlockCompileCount,
       ppcWasmBlockRunCount: response.ppcWasmBlockRunCount
     };

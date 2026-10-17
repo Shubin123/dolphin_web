@@ -80,8 +80,8 @@
     {
       "path": "src/core-host.js",
       "hashMode": "lf-normalized",
-      "size": 68103,
-      "sha256": "dcb6627b85ad99b917950f99e38e5aafa6e7f1870522ae5d71395c6713e88635"
+      "size": 68872,
+      "sha256": "576c974396af52fa70454f5714b59fe63a2d64dfa5322624ca5f92d4baca6360"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -134,8 +134,8 @@
     {
       "path": "src/upstream-discio-worker.js",
       "hashMode": "lf-normalized",
-      "size": 623668,
-      "sha256": "26efc2a3d42bb755e8198cb858625f48b153278555c1a9d8baa97b6a6abeec31"
+      "size": 623778,
+      "sha256": "780902a5ca54a37d02e7ed5f8595d81f0881bfe8db528179eba6777b9ea8948f"
     },
     {
       "path": "src/wgpu-renderer-worker-probe.js",
@@ -158,8 +158,8 @@
     {
       "path": "src/upstream-worker-adapter.js",
       "hashMode": "lf-normalized",
-      "size": 44354,
-      "sha256": "2436670530076cc2651369292e9fc73cd273214cfe6fbc9048099d41ec844e3c"
+      "size": 44391,
+      "sha256": "a28714d61aea8943276b226bb63e2da9296b223bd86ec5702db5d76bf6eedc04"
     },
     {
       "path": "src/upstream-worker-protocol.js",
@@ -346,6 +346,12 @@
       "hashMode": "lf-normalized",
       "size": 1791,
       "sha256": "91f6274e196cfe8c42bb6cecddadfdc9339a7e350ef4da148d2850be2d2279af"
+    },
+    {
+      "path": "src/game-compatibility.js",
+      "hashMode": "lf-normalized",
+      "size": 1428,
+      "sha256": "9c59c41d9ecc5c0fdbcfcb77ef76f29b3603f946fb5c28ef98b015d0430ffe00"
     }
   ],
   "memoryContract": {
