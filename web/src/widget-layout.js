@@ -9,8 +9,14 @@
  *  - drag its bottom-right corner to change how many columns it spans and
  *    how tall it is (double-click the corner to reset its size);
  *  - the title buttons collapse it, cycle its width, or hide it;
+ *  - an "auto" width matches the screen's columns, so a widget under the
+ *    screen fills that space at any window size;
  *  - the hamburger menu lists every widget, sets the widget width and
  *    spacing, and resets everything to the default layout.
+ *
+ * The screen is a tile in the same grid: beside the widgets it spans as many
+ * columns as fit the window height, and widgets pack to its right and under
+ * it. With "widgets below" (or too few columns) it takes the whole first row.
  *
  * The layout is kept in localStorage; the page works without it.
  */
@@ -20,10 +26,15 @@
 
     const grid = document.getElementById('widget-grid');
     const mainLayout = document.querySelector('.main-layout');
-    if (!grid || !mainLayout) return;
+    const screen = mainLayout?.querySelector(':scope > .play-area');
+    if (!grid || !mainLayout || !screen) return;
+    // The widget grid and its panel are display: contents, so every card is
+    // laid out by the workspace grid next to the screen.
+    mainLayout.classList.add('unified-grid');
 
     const STORAGE_KEY = 'dolphin-widget-layout';
     const MAX_SPAN = 4;
+    const AUTO_SPAN = 0;  // as wide as the screen tile
     const MIN_HEIGHT = 80;
     const ROW_UNIT = 4;   // matches grid-auto-rows in index.html
     const DEFAULT_WIDGET_WIDTH = 260;
@@ -35,12 +46,14 @@
         cards.set(card.dataset.widget, card);
     }
     const titles = new Map();
+    const defaultSpan = card => card.dataset.defaultSpan === 'auto'
+        ? AUTO_SPAN : Number.parseInt(card.dataset.defaultSpan || '1', 10);
 
     function defaults() {
         const widgets = {};
         for (const [id, card] of cards) {
             widgets[id] = {
-                span: Number.parseInt(card.dataset.defaultSpan || '1', 10),
+                span: defaultSpan(card),
                 height: null,
                 hidden: false,
                 collapsed: false,
@@ -75,7 +88,7 @@
             const w = stored.widgets?.[id];
             if (!w) continue;
             const target = state.widgets[id];
-            target.span = clampNum(w.span, 1, MAX_SPAN, target.span);
+            target.span = clampNum(w.span, AUTO_SPAN, MAX_SPAN, target.span);
             target.height = Number.isFinite(w.height) ? Math.max(MIN_HEIGHT, w.height) : null;
             target.hidden = w.hidden === true;
             target.collapsed = w.collapsed === true;
@@ -91,30 +104,60 @@
 
     // Column count follows the same rule as the CSS auto-fill track list.
     function metrics() {
-        const width = grid.clientWidth;
+        const width = mainLayout.clientWidth;
         const colMin = Math.min(width, state.widgetWidth);
         const cols = Math.max(1, Math.floor((width + state.gap) / (colMin + state.gap)));
         const colWidth = (width - state.gap * (cols - 1)) / cols;
         return { cols, colWidth };
     }
 
-    function applySpans() {
-        const { cols } = metrics();
-        for (const [id, card] of cards) {
-            const span = Math.min(state.widgets[id].span, cols);
-            const column = span > 1 ? `span ${span}` : '';
-            if (card.style.gridColumn !== column) card.style.gridColumn = column;
-        }
-        for (const card of cards.values()) applyRows(card);
+    // Beside the widgets, the screen takes the most columns whose width still
+    // fits the window height (the console's measured --crt-chrome is the
+    // non-picture height), always leaving at least two widget columns.
+    function screenSpan({ cols, colWidth }) {
+        if (!state.beside || cols < 3) return cols;
+        const root = getComputedStyle(document.documentElement);
+        const chrome = Number.parseFloat(root.getPropertyValue('--crt-chrome')) || 210;
+        const aspect = (Number(root.getPropertyValue('--aspect-w')) || 4) /
+            (Number(root.getPropertyValue('--aspect-h')) || 3);
+        const fit = Math.max(0, window.innerHeight - chrome) * aspect;
+        const span = Math.floor((fit + state.gap) / (colWidth + state.gap));
+        return Math.max(1, Math.min(cols - 2, span));
     }
 
-    // Each widget covers enough 4px row units for its height plus the gap.
-    function applyRows(card) {
-        if (card.hidden) return;
-        const height = card.getBoundingClientRect().height;
-        const row = `span ${Math.max(1, Math.ceil((height + state.gap) / ROW_UNIT))}`;
-        if (card.style.gridRowEnd !== row) card.style.gridRowEnd = row;
+    function applySpans() {
+        const m = metrics();
+        const screenCols = Math.min(screenSpan(m), m.cols);
+        const full = screenCols >= m.cols;
+        screen.classList.toggle('is-full-row', full);
+        setGrid(screen, full ? '1 / -1' : `1 / span ${screenCols}`, `1 / span ${rowSpan(screen)}`);
+        // Beside the widgets, the first auto-width widget is pinned directly
+        // under the screen; everything else packs densely in widget order.
+        const anchor = full ? null : state.order.find(id =>
+            state.widgets[id].span === AUTO_SPAN && !state.widgets[id].hidden);
+        for (const [id, card] of cards) {
+            const w = state.widgets[id];
+            const span = w.span === AUTO_SPAN ? screenCols : Math.min(w.span, m.cols);
+            if (card.hidden) continue;
+            if (id === anchor) {
+                setGrid(card, `1 / span ${span}`, `${1 + rowSpan(screen)} / span ${rowSpan(card)}`);
+            } else {
+                setGrid(card, span > 1 ? `span ${span}` : '', `span ${rowSpan(card)}`);
+            }
+        }
+        for (const item of grid.querySelectorAll(':scope > :not(.card)')) {
+            if (!item.hidden) setGrid(item, item.style.gridColumn, `span ${rowSpan(item)}`);
+        }
     }
+
+    function setGrid(item, column, row) {
+        if (item.style.gridColumn !== column) item.style.gridColumn = column;
+        if (item.style.gridRow !== row) item.style.gridRow = row;
+    }
+
+    // Each item covers enough 4px row units for its height plus the gap.
+    const rowSpan = item => Math.max(1,
+        Math.ceil((item.getBoundingClientRect().height + state.gap) / ROW_UNIT));
 
     function applyCard(id) {
         const card = cards.get(id);
@@ -132,8 +175,8 @@
     }
 
     function apply() {
-        grid.style.setProperty('--widget-w', `${state.widgetWidth}px`);
-        grid.style.setProperty('--widget-gap', `${state.gap}px`);
+        mainLayout.style.setProperty('--widget-w', `${state.widgetWidth}px`);
+        mainLayout.style.setProperty('--widget-gap', `${state.gap}px`);
         mainLayout.classList.toggle('widgets-below', !state.beside);
         for (const id of state.order) grid.appendChild(cards.get(id));
         for (const id of cards.keys()) applyCard(id);
@@ -187,7 +230,9 @@
                 const { cols } = metrics();
                 const limit = Math.min(MAX_SPAN, cols);
                 const current = Math.min(state.widgets[id].span, limit);
-                update(id, { span: current >= limit ? 1 : current + 1 });
+                // Cycles 1, 2, ... up to the column count, then auto.
+                const next = current === AUTO_SPAN ? 1 : current >= limit ? AUTO_SPAN : current + 1;
+                update(id, { span: next });
             }),
             toolButton('widget-tool-hide', 'Hide (restore from the ☰ menu)', '✕',
                 () => update(id, { hidden: true })),
@@ -232,7 +277,7 @@
         handle.addEventListener('pointerup', end);
         handle.addEventListener('pointercancel', end);
         handle.addEventListener('dblclick', () => {
-            update(id, { span: Number.parseInt(card.dataset.defaultSpan || '1', 10), height: null });
+            update(id, { span: defaultSpan(card), height: null });
         });
     }
 
@@ -283,11 +328,13 @@
     const scheduleSpans = () => {
         if (!resizeFrame) resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; applySpans(); });
     };
-    new ResizeObserver(scheduleSpans).observe(grid);
-    // Content changes (a log line, an opened <details>) change a widget's
-    // height; its row span follows.
+    new ResizeObserver(scheduleSpans).observe(mainLayout);
+    // The screen's column count depends on the window height too.
+    window.addEventListener('resize', scheduleSpans, { passive: true });
+    // Content changes (a log line, an opened <details>, the aspect ratio)
+    // change an item's height; its row span follows.
     const cardObserver = new ResizeObserver(scheduleSpans);
-    for (const card of cards.values()) cardObserver.observe(card);
+    for (const item of [screen, ...grid.children]) cardObserver.observe(item);
 
     // ── Hamburger menu ─────────────────────────────────────────────────
     const menu = $('layout-menu');
@@ -339,6 +386,7 @@
             actions.className = 'layout-widget-actions';
             const span = document.createElement('select');
             span.setAttribute('aria-label', `${titles.get(id)} width`);
+            span.add(new Option('Auto', String(AUTO_SPAN)));
             for (let n = 1; n <= MAX_SPAN; n++) span.add(new Option(`${n} col`, String(n)));
             span.value = String(w.span);
             span.addEventListener('change', () => update(id, { span: Number(span.value) }));
@@ -388,6 +436,8 @@
         reset,
         getState: () => JSON.parse(JSON.stringify(state)),
         columns: () => metrics().cols,
+        screenColumns: () => Math.min(screenSpan(metrics()), metrics().cols),
+        AUTO_SPAN,
         setMenuOpen,
     };
 })();

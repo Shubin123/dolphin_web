@@ -16,7 +16,7 @@ export async function initLibrary({ mountFile, bootProgress = noProgress }) {
   const section = document.createElement('section');
   section.className = 'library-section card';
   section.dataset.widget = 'library';
-  section.dataset.defaultSpan = '2';
+  section.dataset.defaultSpan = 'auto';
   section.setAttribute('aria-label', 'Game library');
   section.innerHTML = `<h2>Game Library <span id="libraryCount">0</span></h2>
     <div class="library-toolbar"><select id="librarySource" aria-label="Library source"><option value="archive">Internet Archive · Wii ISO</option><option value="local">My cached games</option></select>

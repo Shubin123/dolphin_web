@@ -922,11 +922,18 @@ h2 {
   z-index: 20;
 }
 
+/* Only a shown bubble is rendered, so an idle one near the edge never widens
+   the page. */
+.tip:not(:hover, :focus-visible)::after { display: none; }
+
 .tip:hover::after,
 .tip:focus-visible::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+  animation: tip-in 110ms ease;
 }
+
+@keyframes tip-in { from { opacity: 0; } }
 
 @media (hover: none) {
   .tip::after { display: none; }

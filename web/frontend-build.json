@@ -34,8 +34,8 @@
     },
     {
       "path": "src/azahar-theme.css",
-      "size": 26550,
-      "sha256": "74693f5a738f02ed7be603121f3094c3fbf7bb0e6e08745305d6f690ed85e76b"
+      "size": 29512,
+      "sha256": "b274f6b5d3e438f2a003fbaf3ac01775047fa7d9fb0878f11caf7ae7bb2f79ae"
     },
     {
       "path": "src/boot-progress.js",
@@ -59,8 +59,8 @@
     },
     {
       "path": "src/library.js",
-      "size": 15578,
-      "sha256": "1b258fd763dc4e2004df6d8201cb21b28fcb59e7e0053692fc04a526d1b8769e"
+      "size": 15581,
+      "sha256": "03ee9f387fd84712b0bcda8b5e46441a859620347521213807f7576e4b844e79"
     },
     {
       "path": "src/mobile-controls.js",
@@ -94,13 +94,13 @@
     },
     {
       "path": "src/styles.css",
-      "size": 27652,
-      "sha256": "f4b771b8aa8c1c72cff9cbdec454b4d4a52f0401657154cfb61a15996f75b993"
+      "size": 27882,
+      "sha256": "cd096b64380a9a58435f94e8520539553fb7ce39265bb24045a53a85791fe3d8"
     },
     {
       "path": "src/widget-layout.js",
-      "size": 15891,
-      "sha256": "b082b0d370cb1bf5378b1f9fb44236a15de1de32f0403783a7a0b75974a157bc"
+      "size": 18874,
+      "sha256": "5231468e1e86dd90dfea6cd4ef61fd247360d5feaee8d55195d5f1cfc08b531d"
     },
     {
       "path": "src/wii-catalog.json",
