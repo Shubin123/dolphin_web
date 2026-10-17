@@ -23,6 +23,11 @@
       "sha256": "b4d3601b64d64bf66331c016cf8c29695f7cfc82cffd1956865539158d06d490"
     },
     {
+      "path": "progress/mario-galaxy-2.json",
+      "size": 803,
+      "sha256": "03f35e3faad1175ee394779a455676456dd7abd5daf9ed9eda7b12fb5e73ba86"
+    },
+    {
       "path": "src/app.js",
       "size": 65925,
       "sha256": "ea4be8dc5e1fdf3e3bfc78d87f187a65f5e3e46e8698ff65049b81ba45c83256"

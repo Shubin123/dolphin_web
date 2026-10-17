@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "SB4J01",
+  "status": "partial",
+  "gist": "https://gist.github.com/Shubin123/ad9800d42116e41e2f3f38f88e9a5c0b",
+  "verified": ["WebGPU file-selection sky and three textured planets restored"],
+  "unresolved": ["Fresh-boot prologue stays blank after Start", "Playable gameplay has not been verified"],
+  "investigation": {
+    "guestWait": "GXDrawDone GPU-completion wait",
+    "renderCommandQueue": "drained",
+    "nextControl": "Disable interrupt-related CPU fast paths before the transition"
+  },
+  "saveStates": {
+    "publication": "destination awaiting clarification",
+    "limitation": "Raw Wii states may require matching external NAND game-save files"
+  },
+  "coverage": "Menu visual check and homebrew browser E2E; no in-game framebuffer regression pass"
+}
