@@ -1106,6 +1106,7 @@ function wireMouse() {
   window.addEventListener("blur", release);
   document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
   listenOnCanvas("contextmenu", event => { if (mouseMode.value !== "off") event.preventDefault(); });
+  listenOnCanvas("auxclick", event => { if (mouseMode.value !== "off") event.preventDefault(); });
   listenOnCanvas("pointerdown", event => {
     if (event.pointerType !== "mouse" || mouseMode.value === "off") return;
     event.preventDefault();
@@ -1142,6 +1143,8 @@ function wireMouse() {
   if ("onpointerrawupdate" in window) viewport.addEventListener("pointerrawupdate", move);
   listenOnCanvas("pointerup", event => {
     if (event.pointerType !== "mouse") return;
+    // Chrome handles Back/Forward on pointerup even when pointerdown was canceled.
+    if (event.button >= 3 && mouseMode.value !== "off") event.preventDefault();
     if (!event.buttons && mouseMode.value === "stick") mouseInputState = null;
     if (!event.buttons && mouseMode.value === "tilt") { mouseMotionPressed.clear(); syncInput("Mouse"); }
     buttons.up(event.button);

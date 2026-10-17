@@ -304,6 +304,24 @@ try {
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.tiltLeft===1&&s.wiiA===0;},{timeout:10000});
   await page.mouse.up();
   await page.waitForFunction(async()=>{const s=await window.__host.adapter.request('validationReadWebInput');return s.tiltLeft===0&&s.wiiA===0;},{timeout:10000});
+  // Real Back/Forward mouse events must shake without navigating away.
+  await page.select('#mouseMode','cstick');
+  const sideSession=await page.target().createCDPSession();
+  await page.evaluate(()=>{history.pushState({},'', '#motion-before');history.pushState({},'', '#motion-after');history.back();});
+  await page.waitForFunction(()=>location.hash==='#motion-before',{timeout:10000});
+  const sideEvent=async(type,button,buttons)=>sideSession.send('Input.dispatchMouseEvent',{type,button,buttons,clickCount:1,x:motionBounds.x+motionBounds.width/2,y:motionBounds.y+motionBounds.height/2});
+  for(const [button,buttons,field]of[['forward',16,'nunchukShake'],['back',8,'remoteShake']]){
+    await sideEvent('mousePressed',button,buttons);
+    await page.waitForFunction(async field=>(await window.__host.adapter.request('validationReadWebInput'))[field]===1,{timeout:10000},field);
+    await sideEvent('mouseReleased',button,0);
+    await page.waitForFunction(async field=>(await window.__host.adapter.request('validationReadWebInput'))[field]===0,{timeout:10000},field);
+    await new Promise(resolve=>setTimeout(resolve,200));
+    assert.equal(await page.evaluate(()=>location.hash),'#motion-before','motion side button must not navigate history');
+  }
+  await page.select('#mouseMode','off');
+  await sideEvent('mousePressed','forward',16);await sideEvent('mouseReleased','forward',0);
+  await page.waitForFunction(()=>location.hash==='#motion-after',{timeout:10000});
+  await page.evaluate(url=>history.replaceState({},'',url),testUrl.href);
   await page.select('#mouseMode','off');
   await page.evaluate(()=>{
     window.__nativeTestPads=[{index:0,id:'Native E2E controller',mapping:'standard',connected:true,axes:[0.6,0,0.6,0],buttons:Array.from({length:17},(_,i)=>({pressed:i===0,value:i===0?1:0}))}];

@@ -7,7 +7,9 @@
     "WebGPU file-selection sky and three textured planets restored",
     "Fresh boot with single-core scheduling passes Start and the prologue",
     "Textured opening playable scene and keyboard movement confirmed in screenshots",
-    "Automatic SB4J01 ISO/WBFS compatibility selection passes Start with the normal guarded JIT enabled"
+    "Automatic SB4J01 ISO/WBFS compatibility selection passes Start with the normal guarded JIT enabled",
+    "Mario spin animation verified after Luma joins using keyboard Space, middle mouse and simulated standard Gamepad L3",
+    "Nunchuk shake also produces Mario spin via left Shift, mouse Forward side button and simulated standard Gamepad R3"
   ],
   "unresolved": [
     "Later stages and other releases have not been checked",
@@ -23,10 +25,17 @@
     "publication": "destination awaiting clarification",
     "limitation": "Raw Wii states may require matching external NAND game-save files",
     "localCheckpoint": {
-      "name": "single-gameplay.sav",
-      "bytes": 44418129,
-      "sha256": "721ae691cfdba01ee69009df0f1e6d266b741dde611303b207422805fbcd8cdb"
+      "name": "motion-spin-ready.sav",
+      "bytes": 44532445,
+      "sha256": "b5a5211e8f484a63a9b2aa0e8e436e93bca5edbe95a5059142f073c19622cdbb"
     }
   },
-  "coverage": "Manual fresh-boot opening gameplay screenshots and native input check, plus homebrew browser E2E; no full-game or deterministic framebuffer regression pass"
+  "coverage": "Manual fresh-boot opening gameplay screenshots and native input check, plus homebrew browser E2E; no full-game or deterministic framebuffer regression pass",
+  "motionControls": {
+    "remoteShake": "In-game spin animation and native press/release confirmed for keyboard, mouse and standard Gamepad API input",
+    "tilt": "Native input tests passed; later tilt-dependent gameplay not checked",
+    "controllerHardware": "Gamepad API snapshots simulated; physical controller hardware not attached",
+    "evidence": "Manual reviewed screenshots from the same local checkpoint; not an exact-frame regression",
+    "nunchukShake": "In-game spin and native press/release confirmed for left Shift, mouse Forward side button and standard Gamepad API R3"
+  }
 }
