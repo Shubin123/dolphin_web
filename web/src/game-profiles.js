@@ -1,3 +1,5 @@
+import { readDiscGameId } from "./game-compatibility.js";
+
 // Per-game renderer defaults, derived from measured sweeps of the test library.
 //
 // Both video paths are correct for most titles but differ enormously in unique
@@ -31,6 +33,7 @@ export const GAME_PROFILES = {
   GALE01: { renderer: "hardware", why: "60 vs 22 fps; character select verified" },
 
   // --- software: hardware path broken or worse -----------------------------
+  SMNE01: { renderer: "software", why: "WebGPU omits title scenery and characters; software restores the saved-checkpoint framebuffer" },
   GMSE01: { renderer: "software", why: "background missing on hardware (issue #8)" },
   GCDE08: { renderer: "software", why: "renders black on hardware" },
   GRSEAF: { renderer: "software", why: "does not progress on hardware" },
@@ -90,6 +93,10 @@ function readAscii(buffer, offset, length) {
 export async function readGameId(file) {
   if (!file || typeof file.slice !== "function") return null;
   try {
+    // WBFS stores its uncompressed disc header at the occupied disc slot,
+    // rather than at any of the fixed container offsets below.
+    const discId = await readDiscGameId(file);
+    if (ID_PATTERN.test(discId)) return discId;
     // One read covering every probe offset, rather than several range reads.
     const head = await file.slice(0, 0x8010).arrayBuffer();
     for (const probe of ID_PROBES) {
