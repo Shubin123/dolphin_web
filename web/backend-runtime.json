@@ -100,8 +100,8 @@
     },
     {
       "path": "src/game-profiles.js",
-      "size": 6275,
-      "sha256": "d3c6cba97847755d992d19e14ab59f1c7974950b4d3cad872994489ef5f66eec"
+      "size": 6137,
+      "sha256": "301f30296d6dc4f37eaf11d3a68f970e7df655e121380f5042c41db8d681d9a1"
     },
     {
       "path": "src/gpu-completion-telemetry.js",

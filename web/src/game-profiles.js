@@ -33,7 +33,6 @@ export const GAME_PROFILES = {
   GALE01: { renderer: "hardware", why: "60 vs 22 fps; character select verified" },
 
   // --- software: hardware path broken or worse -----------------------------
-  SMNE01: { renderer: "software", why: "WebGPU omits title scenery and characters; software restores the saved-checkpoint framebuffer" },
   GMSE01: { renderer: "software", why: "background missing on hardware (issue #8)" },
   GCDE08: { renderer: "software", why: "renders black on hardware" },
   GRSEAF: { renderer: "software", why: "does not progress on hardware" },
