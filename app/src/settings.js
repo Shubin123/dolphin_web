@@ -12,6 +12,7 @@ export const PLAYABLE_PRESET = Object.freeze({
   wasmjit: "1",
   jittier: "guarded",
   forcejit: "0",
+  frameinterp: "0",
   oc: "1",
   queue: "4",
   fastsw: "1",
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   wasmjit: "1",
   jittier: "guarded",
   forcejit: "0",
+  frameinterp: "0",
   queue: "4",
   fastsw: "1",
   metrics: "0"
@@ -47,6 +49,7 @@ const CHOICE_SETS = Object.freeze({
   wasmjit: new Set(["0", "1"]),
   jittier: new Set(["guarded", "mixed"]),
   forcejit: new Set(["0", "1"]),
+  frameinterp: new Set(["0", "1"]),
   queue: new Set(["2", "4", "8", "12"]),
   fastsw: new Set(["0", "1", "2", "3"]),
   metrics: new Set(["0", "1"])
@@ -88,6 +91,7 @@ export function readSettingsFromSearch(search) {
     wasmjit: params.get("wasmjit") === "0" ? "0" : DEFAULT_SETTINGS.wasmjit,
     jittier: params.get("wasmjit") === "2" ? "mixed" : normalizeChoice("jittier", params.get("jittier") || DEFAULT_SETTINGS.jittier),
     forcejit: params.get("forcejit") === "1" ? "1" : DEFAULT_SETTINGS.forcejit,
+    frameinterp: params.get("frameinterp") === "1" ? "1" : DEFAULT_SETTINGS.frameinterp,
     queue: normalizeChoice("queue", params.get("queue") || DEFAULT_SETTINGS.queue),
     fastsw: normalizeChoice("fastsw", params.get("fastsw") || DEFAULT_SETTINGS.fastsw),
     metrics: params.get("metrics") === "1" ? "1" : DEFAULT_SETTINGS.metrics
@@ -114,6 +118,7 @@ export function buildSettingsHref(href, settings) {
   writeSetting(url.searchParams, "wasmjit", nextSettings.wasmjit, DEFAULT_SETTINGS.wasmjit);
   writeSetting(url.searchParams, "jittier", nextSettings.jittier, DEFAULT_SETTINGS.jittier);
   writeSetting(url.searchParams, "forcejit", nextSettings.forcejit, DEFAULT_SETTINGS.forcejit);
+  writeSetting(url.searchParams, "frameinterp", nextSettings.frameinterp, DEFAULT_SETTINGS.frameinterp);
   writeSetting(url.searchParams, "queue", nextSettings.queue, DEFAULT_SETTINGS.queue);
   writeSetting(url.searchParams, "fastsw", nextSettings.fastsw, DEFAULT_SETTINGS.fastsw);
   writeSetting(url.searchParams, "metrics", nextSettings.metrics, DEFAULT_SETTINGS.metrics);

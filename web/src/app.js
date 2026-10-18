@@ -114,6 +114,7 @@ const elements = {
   settingCpu: document.querySelector("#settingCpu"),
   settingFastSw: document.querySelector("#settingFastSw"),
   settingForceJit: document.querySelector("#settingForceJit"),
+  settingFrameInterp: document.querySelector("#settingFrameInterp"),
   settingJitTier: document.querySelector("#settingJitTier"),
   settingOglProxy: document.querySelector("#settingOglProxy"),
   settingPacing: document.querySelector("#settingPacing"),
@@ -548,6 +549,7 @@ function populateSettingsForm(settings) {
   elements.settingJitTier.value = settings.jittier;
   elements.settingWasmJit.checked = settings.wasmjit === "1";
   elements.settingForceJit.checked = settings.forcejit === "1";
+  elements.settingFrameInterp.checked = settings.frameinterp === "1";
   elements.settingMetrics.checked = settings.metrics === "1";
 }
 
@@ -566,6 +568,7 @@ function collectSettingsForm() {
     wasmjit: elements.settingWasmJit.checked ? "1" : "0",
     jittier: elements.settingJitTier.value,
     forcejit: elements.settingForceJit.checked ? "1" : "0",
+    frameinterp: elements.settingFrameInterp.checked ? "1" : "0",
     metrics: elements.settingMetrics.checked ? "1" : "0"
   };
 }

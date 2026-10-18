@@ -43,7 +43,11 @@ import {
 } from "./wgpu-replay-diagnostics.js";
 import { instantiateDemoCore } from "./wasm/demo-core.js";
 import { createCausalTelemetry, deepMerge } from "./causal-telemetry.js";
-import { legacyTickQueueRequested } from "./presentation-pacing.js";
+import {
+  displayPacingRequested,
+  frameInterpolationRequested,
+  legacyTickQueueRequested,
+} from "./presentation-pacing.js";
 import { requestedGpuCompletionDiagnostics } from "./gpu-completion-telemetry.js";
 import { requestedWgpuDirtyRangeProjection } from "./wgpu-dirty-range-projection.js";
 import { requestedWgpuPassPackageProjection } from "./wgpu-pass-package-projection.js";
@@ -101,6 +105,8 @@ export class EmulatorHost {
     this.presenterBackend = requestedPresenterBackend();
     this.presentationPacing = requestedPresentationPacing(this.videoBackend);
     this.legacyTickQueue = legacyTickQueueRequested(window.location.search);
+    this.displayPacing = displayPacingRequested(window.location.search);
+    this.frameInterpolation = frameInterpolationRequested(window.location.search);
     this.oglProxyMode = requestedOglProxyMode();
     this.oglTestClear = requestedOglTestClear();
     this.fastSoftwareRaster = requestedFastSoftwareRaster();
@@ -390,6 +396,8 @@ export class EmulatorHost {
             softwareFallbackPacing: requestedPresentationPacing("Software Renderer"),
             presentationPacing: this.presentationPacing,
             legacyTickQueue: this.legacyTickQueue,
+            displayPacing: this.displayPacing,
+            frameInterpolation: this.frameInterpolation,
             oglProxyMode: this.oglProxyMode,
             oglTestClear: this.oglTestClear,
             fastSoftwareRaster: this.fastSoftwareRaster,

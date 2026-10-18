@@ -91,3 +91,12 @@ test('optimal preset restores adaptive JIT warmup while ordinary settings preser
   assert.equal(preset.searchParams.get('shortprefix'), null);
   assert.equal(preset.searchParams.get('disable'), null);
 });
+
+test("frame interpolation is an opt-in setting carried by ?frameinterp=1", () => {
+  assert.equal(readSettingsFromSearch("").frameinterp, "0");
+  assert.equal(readSettingsFromSearch("?frameinterp=1").frameinterp, "1");
+  const on = new URL(buildSettingsHref("https://example.test/", { ...readSettingsFromSearch(""), frameinterp: "1" }));
+  assert.equal(on.searchParams.get("frameinterp"), "1");
+  const off = new URL(buildSettingsHref("https://example.test/?frameinterp=1", readSettingsFromSearch("")));
+  assert.equal(off.searchParams.has("frameinterp"), false);
+});

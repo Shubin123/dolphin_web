@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "dolphin-browser-runtime",
-  "coreId": "sha256:1cb84bd1bccc4d3dffb91f9fdaa5d1fa8d15394486667585390dc164248841e9",
+  "coreId": "sha256:1c22fd3317d6b46b0bfe42e7c721f067ea53bd15d000e55cf7a3bf3c0aaed795",
   "files": [
     {
       "path": "LICENSE",
@@ -10,28 +10,28 @@
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.build.json",
-      "size": 10734,
-      "sha256": "7069e36fbb3bed8a14aded792ee6a48bb32c3b6bc0d1d7370fdae7c12d0d2ed0"
+      "size": 10671,
+      "sha256": "eabde71630855e86b7bed17ec94b695b2a743699665d336dd0f1fe9be6e50c28"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.js",
       "size": 270438,
-      "sha256": "def2b68a57e1793c840122e20ff4b60c8fb95116131d2f9c0772d4a0619f6eba"
+      "sha256": "ac10fd394e1743b49fe7a9a00c106bb58a1826ed15f39d1750b265134c3ba29e"
     },
     {
       "path": "cores/dolphin/dolphin-core-upstream.wasm",
-      "size": 13238941,
-      "sha256": "1cb84bd1bccc4d3dffb91f9fdaa5d1fa8d15394486667585390dc164248841e9"
+      "size": 13240224,
+      "sha256": "1c22fd3317d6b46b0bfe42e7c721f067ea53bd15d000e55cf7a3bf3c0aaed795"
     },
     {
       "path": "provenance/dolphin-core-abi-v1.json",
-      "size": 17926,
-      "sha256": "b8140ea37c394fe5d028347cc058085a99b4ee66611602a568879e8249376b54"
+      "size": 18125,
+      "sha256": "1d80c9dfbfd0135fdaee3d8824b2538ea5b5f32d9904eabbfc2c27af898a513d"
     },
     {
       "path": "provenance/dolphin-source.lock.json",
-      "size": 20342,
-      "sha256": "ce79760a82b01a1a2bc04a5e3dec9ddfc0e93edcf500d78659004b1d7664e77f"
+      "size": 20626,
+      "sha256": "87f39f2a1f149d20e401ee84a0f5dafb4147fc07bdc9cd6e0ec6d7dabab6c3c3"
     },
     {
       "path": "src/audio-pcm-producer.js",
@@ -60,8 +60,8 @@
     },
     {
       "path": "src/core-host.js",
-      "size": 68872,
-      "sha256": "576c974396af52fa70454f5714b59fe63a2d64dfa5322624ca5f92d4baca6360"
+      "size": 69192,
+      "sha256": "f509f876fa22c0d891e4c1f4463241ede0b4c33ff104f0d212b7558390d777f8"
     },
     {
       "path": "src/diagnostic-log-filter.js",
@@ -155,8 +155,8 @@
     },
     {
       "path": "src/presentation-pacing.js",
-      "size": 1467,
-      "sha256": "8f031bc88117ddd2a323c4dc4305d49b1dc33793e9d76382a2088ec38f32a342"
+      "size": 5683,
+      "sha256": "f26925c393d82664a5ca1272077cb1d556febbf16f6486c5dbd9ca121eaa63aa"
     },
     {
       "path": "src/save-states.js",
@@ -165,8 +165,8 @@
     },
     {
       "path": "src/upstream-discio-worker.js",
-      "size": 623692,
-      "sha256": "e8690b166b0f887a2d5a7dbd3345f68e3ab82f636b9a815af37045381f5ced83"
+      "size": 631939,
+      "sha256": "368de47d47dbe40670bc533494d49a6ca9d53dd607418f9a679c60184c9f0ea7"
     },
     {
       "path": "src/upstream-main-thread-adapter.js",
@@ -175,13 +175,13 @@
     },
     {
       "path": "src/upstream-worker-adapter.js",
-      "size": 44391,
-      "sha256": "a28714d61aea8943276b226bb63e2da9296b223bd86ec5702db5d76bf6eedc04"
+      "size": 44650,
+      "sha256": "a450ef834bdc2125fca590369fa737bdddf4e958bf04930d0d5b4e0d5fcf903e"
     },
     {
       "path": "src/upstream-worker-protocol.js",
       "size": 5096,
-      "sha256": "dba0783e7377f66bb6ba5d5fdef4d29ee932e0c7704419ac7fa4fe4c7044f7f9"
+      "sha256": "cda5e35361494df50d7d8e1d049efefc0c74e7335f7a0b46bbadb105012e6de2"
     },
     {
       "path": "src/video-backend.js",
@@ -212,6 +212,11 @@
       "path": "src/wgpu-fragment-depth.js",
       "size": 1791,
       "sha256": "91f6274e196cfe8c42bb6cecddadfdc9339a7e350ef4da148d2850be2d2279af"
+    },
+    {
+      "path": "src/wgpu-frame-interpolator.js",
+      "size": 9449,
+      "sha256": "6e5d82b667f02378770d196bee16370d3249c0f0826de074b45f233687e1edfd"
     },
     {
       "path": "src/wgpu-geometry-packet.js",

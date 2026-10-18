@@ -46,10 +46,12 @@ import {
 } from "./wgpu-renderer-runtime.js";
 import {
   FRESH_FRAME_DELIVERY,
+  createDisplayFramePacer,
   freshFrameDeliveryForPacing,
   startDisplayRefreshLoop
 } from "./presentation-pacing.js";
 import { createGpuCompletionTracker } from "./gpu-completion-telemetry.js";
+import { createWgpuFrameInterpolator } from "./wgpu-frame-interpolator.js";
 import {
   createInputVisibleLatencyTracker,
   parsePadPollStats
@@ -454,6 +456,8 @@ let pacedPresentationPrimed = false;
 let pacedPresentationStartedAt = 0;
 let presentationPacingMode = "smooth";
 let legacyTickQueue = false;
+let displayPacingRequestedForLoad = true;
+let frameInterpolationRequestedForLoad = false;
 let inputStateSabView = null;
 let lastInputStateGeneration = 0;
 // Detached OGL mode: worker owns a standalone OffscreenCanvas for the GL
@@ -937,6 +941,8 @@ async function handleMessage(type, payload) {
         presentationQueueSize: payload.presentationQueueSize,
         presentationPacing: payload.presentationPacing,
         legacyTickQueue: payload.legacyTickQueue,
+        displayPacing: payload.displayPacing,
+        frameInterpolation: payload.frameInterpolation,
         presenterBackend: payload.presenterBackend,
         oglProxyMode: payload.oglProxyMode,
         oglTestClear: payload.oglTestClear,
@@ -1492,6 +1498,8 @@ async function loadCore({
   presentationQueueSize = DEFAULT_PRESENTATION_QUEUE,
   presentationPacing = "smooth",
   legacyTickQueue: requestedLegacyTickQueue = false,
+  displayPacing: requestedDisplayPacing = true,
+  frameInterpolation: requestedFrameInterpolation = false,
   presenterBackend = "webgl",
   oglProxyMode = "proxy",
   oglTestClear = false,
@@ -2195,6 +2203,8 @@ async function loadCore({
   else if (presentationPacing === "direct") presentationPacingMode = "direct";
   else presentationPacingMode = "smooth";
   legacyTickQueue = Boolean(requestedLegacyTickQueue);
+  displayPacingRequestedForLoad = requestedDisplayPacing !== false;
+  frameInterpolationRequestedForLoad = Boolean(requestedFrameInterpolation);
   const _t_coreinit = performance.now();
   api.coreInit?.();
   console.log(`[boot-phase] api.coreInit() took ${(performance.now() - _t_coreinit).toFixed(1)}ms`);
@@ -3032,7 +3042,7 @@ function framePayload({ forceCausalTelemetry = false } = {}) {
       ppcProfileStats,
       webGpuStateCacheStats,
       `metrics:${collectMetrics ? "on" : "off"}`,
-      `jit:${jitState} warm:${ppcWasmJitWarmupFrames} present ${renderBackend} signal:${frameSignalHeap ? "wait" : "poll"} mode:${presentationPacingMode} delivery:${freshFrameDeliveryForPacing(presentationPacingMode, legacyTickQueue)} legacytickqueue:${legacyTickQueue ? 1 : 0} fps:${presentationFps} raw:${presentationRawFps} loop:${presentationLoopFps} gap:${presentationP95IntervalMs}/${presentationMaxIntervalMs}ms long:${presentationLongFrameCount} queue:${frameQueue.length}/${presentationQueueLimit} qmax:${presentationQueueDepthHighWater} qage:${presentationQueueAgeMs.toFixed(1)}/${presentationQueueAgeMaxMs.toFixed(1)}ms fresh:${immediateFreshFrameCount}/${queuedFreshFrameCount} tickpaint:${tickRepaintCount} underrun:${presentationWindowUnderrunCount} drop:${presentationWindowDropCount} frames:${presentedFrame} visualfps:${visualChangeFps} visualsrc:${visualSampleSource} wd:${watchdogRecoveryCount}/${watchdogFireCount}` +
+      `jit:${jitState} warm:${ppcWasmJitWarmupFrames} present ${renderBackend} signal:${frameSignalHeap ? "wait" : "poll"} mode:${presentationPacingMode} delivery:${freshFrameDeliveryForPacing(presentationPacingMode, legacyTickQueue)} legacytickqueue:${legacyTickQueue ? 1 : 0} fps:${presentationFps} raw:${presentationRawFps} loop:${presentationLoopFps} gap:${presentationP95IntervalMs}/${presentationMaxIntervalMs}ms long:${presentationLongFrameCount} queue:${frameQueue.length}/${presentationQueueLimit} qmax:${presentationQueueDepthHighWater} qage:${presentationQueueAgeMs.toFixed(1)}/${presentationQueueAgeMaxMs.toFixed(1)}ms fresh:${immediateFreshFrameCount}/${queuedFreshFrameCount} tickpaint:${tickRepaintCount} pace:${wgpuDisplayPacer ? 1 : 0} interp:${wgpuInterpolatedFrameCount} underrun:${presentationWindowUnderrunCount} drop:${presentationWindowDropCount} frames:${presentedFrame} visualfps:${visualChangeFps} visualsrc:${visualSampleSource} wd:${watchdogRecoveryCount}/${watchdogFireCount}` +
       // §28v: extra on-screen telemetry for the user's screenshots —
       // JIT cache size/new-compiles (compile-burst visibility) +
       // WebGPU executor draw/miss/skip counters (render-health: is
@@ -3300,6 +3310,181 @@ function startTickRepaintLoop() {
     tickRepaintCount += 1;
     lastPresentedAt = now;
   });
+}
+
+// Hardware WebGPU display pacing. The replay renders each game frame's
+// backbuffer pass into an offscreen slot; a display-refresh loop copies one
+// slot to the canvas per game period, so a 60 Hz game holds exactly two
+// refreshes of a 120 Hz screen instead of 1-3. Guest timing is unchanged.
+const WGPU_DISPLAY_SLOT_LIMIT = 5;
+let wgpuDisplayPacer = null;
+let wgpuDisplayPacerStop = null;
+let wgpuDisplaySlots = [];
+let wgpuDisplayCopyErrors = 0;
+let wgpuDisplaySlotSeq = 0;
+let wgpuFrameInterpolator = null;
+let wgpuFrameInterpolatorDevice = null;
+let wgpuFrameInterpolatorChecks = 0;
+let wgpuInterpolatedFrameCount = 0;
+// The slot the current frame's backbuffer passes render into, until present.
+let wgpuPendingDisplaySlot = null;
+
+function startWgpuDisplayPacing() {
+  if (wgpuDisplayPacer || !displayPacingRequestedForLoad || !renderGpu?.context ||
+      !renderCanvas || detachedWgpuCanvas || DIAG_EFB_TO_CANVAS) {
+    return false;
+  }
+  // A timer cannot follow the display, so pacing to it would add latency
+  // without removing judder; keep presenting on arrival instead.
+  if (typeof self.requestAnimationFrame !== "function") return false;
+  wgpuDisplayPacer = createDisplayFramePacer();
+  wgpuDisplayPacerStop = startDisplayRefreshLoop(refreshWgpuDisplay);
+  postStatus("WGPU display pacing on (game-rate release at display refresh)");
+  return true;
+}
+
+function stopWgpuDisplayPacing() {
+  wgpuDisplayPacerStop?.();
+  wgpuDisplayPacerStop = null;
+  wgpuDisplayPacer = null;
+  for (const slot of wgpuDisplaySlots) {
+    try { slot.tex.destroy(); } catch (e) {}
+  }
+  wgpuDisplaySlots = [];
+  wgpuFrameInterpolator?.destroy();
+  wgpuFrameInterpolator = null;
+  wgpuFrameInterpolatorDevice = null;
+}
+
+// A free offscreen backbuffer matching the canvas, or null to present directly.
+function acquireWgpuDisplaySlot() {
+  if (!wgpuDisplayPacer && !startWgpuDisplayPacing()) return null;
+  const device = renderGpu.device;
+  const width = renderCanvas.width, height = renderCanvas.height;
+  wgpuDisplaySlots = wgpuDisplaySlots.filter(slot => {
+    const stale = slot.device !== device || slot.width !== width || slot.height !== height;
+    if (stale && !slot.busy) {
+      try { slot.tex.destroy(); } catch (e) {}
+      return false;
+    }
+    return true;
+  });
+  let slot = wgpuDisplaySlots.find(candidate => !candidate.busy &&
+    candidate.device === device && candidate.width === width && candidate.height === height);
+  if (!slot && wgpuDisplaySlots.length < WGPU_DISPLAY_SLOT_LIMIT) {
+    const usage = self.GPUTextureUsage;
+    slot = {
+      device, width, height, busy: false, coreFrame: 0,
+      tex: device.createTexture({
+        label: `wgpu-display-slot-${wgpuDisplaySlots.length}`,
+        size: [width, height],
+        format: renderGpu.format,
+        usage: usage.RENDER_ATTACHMENT | usage.COPY_SRC | usage.TEXTURE_BINDING
+      })
+    };
+    wgpuDisplaySlots.push(slot);
+  }
+  if (slot) slot.busy = true;
+  return slot || null;
+}
+
+function queueWgpuDisplaySlot(slot, coreFrame) {
+  slot.coreFrame = coreFrame;
+  slot.seq = ++wgpuDisplaySlotSeq;
+  for (const dropped of wgpuDisplayPacer.push(slot, performance.now())) dropped.busy = false;
+}
+
+function releaseWgpuDisplaySlot(slot) {
+  if (slot) slot.busy = false;
+}
+
+function refreshWgpuDisplay(intervalMs) {
+  if (!wgpuDisplayPacer || !renderGpu?.context) return;
+  const now = performance.now();
+  const { show, retired } = wgpuDisplayPacer.refresh(now, intervalMs);
+  for (const slot of retired) slot.busy = false;
+  // Between two game frames, optionally synthesize an in-between image
+  // instead of repeating the current one. Both frames are already finished,
+  // so the guest is unaffected.
+  const current = wgpuDisplayPacer.shown;
+  const next = show ? null : wgpuDisplayPacer.peek();
+  const phase = wgpuDisplayPacer.phase(now);
+  const interpolate = Boolean(frameInterpolationRequestedForLoad && current && next &&
+    phase > 0.15 && phase < 0.95 &&
+    current.width === next.width && current.height === next.height &&
+    current.device === renderGpu.device);
+  if (!show && !interpolate) return;
+  let target, encoder;
+  try {
+    target = renderGpu.context.getCurrentTexture();
+    encoder = renderGpu.device.createCommandEncoder({ label: "wgpu-display-pace" });
+  } catch (error) {
+    recordRendererError("display-pacing", error?.message || error);
+    return;
+  }
+  if (interpolate && encodeWgpuInterpolatedFrame(encoder, current, next, target, phase)) {
+    renderGpu.device.queue.submit([encoder.finish()]);
+    wgpuInterpolatedFrameCount += 1;
+    recordPresentedFrame(current.coreFrame);
+    return;
+  }
+  if (!show) return;
+  try {
+    encoder.copyTextureToTexture(
+      { texture: show.tex },
+      { texture: target },
+      [Math.min(show.width, target.width), Math.min(show.height, target.height), 1]
+    );
+    renderGpu.device.queue.submit([encoder.finish()]);
+    recordPresentedFrame(show.coreFrame);
+  } catch (error) {
+    wgpuDisplayCopyErrors += 1;
+    recordRendererError("display-pacing", error?.message || error);
+    if (wgpuDisplayCopyErrors >= 3) {
+      // Fall back to presenting on arrival rather than freezing the canvas.
+      stopWgpuDisplayPacing();
+      displayPacingRequestedForLoad = false;
+    }
+  }
+}
+
+function encodeWgpuInterpolatedFrame(encoder, current, next, target, phase) {
+  const device = renderGpu.device;
+  try {
+    if (!wgpuFrameInterpolator || wgpuFrameInterpolatorDevice !== device) {
+      wgpuFrameInterpolator?.destroy();
+      wgpuFrameInterpolator = createWgpuFrameInterpolator(device, renderGpu.format);
+      wgpuFrameInterpolatorDevice = device;
+      device.pushErrorScope("validation");
+      wgpuFrameInterpolatorChecks = 3;
+    } else if (wgpuFrameInterpolatorChecks > 0) {
+      device.pushErrorScope("validation");
+    }
+    wgpuFrameInterpolator.encode(encoder, {
+      a: current.tex,
+      b: next.tex,
+      pairKey: `${current.seq}:${next.seq}`,
+      target,
+      width: Math.min(current.width, target.width),
+      height: Math.min(current.height, target.height),
+      alpha: phase
+    });
+    if (wgpuFrameInterpolatorChecks > 0) {
+      wgpuFrameInterpolatorChecks -= 1;
+      device.popErrorScope().then(error => {
+        if (!error) return;
+        recordRendererError("frame-interpolation", error.message);
+        console.log(`[frame-interp] disabled: ${error.message}`);
+        frameInterpolationRequestedForLoad = false;
+      }).catch(() => {});
+    }
+    return true;
+  } catch (error) {
+    recordRendererError("frame-interpolation", error?.message || error);
+    console.log(`[frame-interp] disabled: ${error?.message || error}`);
+    frameInterpolationRequestedForLoad = false;
+    return false;
+  }
 }
 
 function schedulePresentationLoop() {
@@ -4627,6 +4812,8 @@ async function setupSoftwarePresenter(canvas, presenterBackend, hardwareRequired
   rendererDiagnostics.requestedPresenterBackend = presenterBackend;
   renderCanvas = canvas;
   renderContext = null;
+  stopWgpuDisplayPacing();
+  wgpuPendingDisplaySlot = null;
   renderGpu = null;
   renderGl = null;
   renderGlState = null;
@@ -4880,7 +5067,11 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
         api?.setWebGpuGeometryPackEnabled?.(wgpuGeometryPackEnabled ? 1 : 0);
         api?.setWebGpuGeometryRangeEnabled?.(wgpuGeometryRangeEnabled ? 1 : 0);
       },
-      clearActiveDevice: () => { renderGpu = null; },
+      clearActiveDevice: () => {
+        stopWgpuDisplayPacing();
+        wgpuPendingDisplaySlot = null;
+        renderGpu = null;
+      },
       setBackend: (backend) => { renderBackend = backend; },
       postStatus,
     });
@@ -4907,7 +5098,7 @@ function configureWebGpuCanvas(canvas, device, format) {
       device,
       format,
       alphaMode: "opaque",
-      usage: textureUsage.RENDER_ATTACHMENT |
+      usage: textureUsage.RENDER_ATTACHMENT | textureUsage.COPY_DST |
         ((wgpuReplayClassifier || inputReadbackDiagnostics) ? textureUsage.COPY_SRC : 0) |
         (wgpuVisualCadenceEnabled ? textureUsage.TEXTURE_BINDING : 0)
     });
@@ -5239,7 +5430,7 @@ function drawFrameBytesToWebGpu(width, height, frameView) {
       alphaMode: "opaque",
       device: gpu.device,
       format: gpu.format,
-      usage: textureUsage.RENDER_ATTACHMENT |
+      usage: textureUsage.RENDER_ATTACHMENT | textureUsage.COPY_DST |
         ((wgpuReplayClassifier || inputReadbackDiagnostics) ? textureUsage.COPY_SRC : 0) |
         (wgpuVisualCadenceEnabled ? textureUsage.TEXTURE_BINDING : 0)
     });
@@ -11523,7 +11714,7 @@ function drainWebGpuCmdRing(source = "presentation") {
                   device: renderGpu.device,
                   format: renderGpu.format,
                   alphaMode: "opaque",
-                  usage: self.GPUTextureUsage.RENDER_ATTACHMENT |
+                  usage: self.GPUTextureUsage.RENDER_ATTACHMENT | self.GPUTextureUsage.COPY_DST |
                     ((wgpuReplayClassifier || inputReadbackDiagnostics) ?
                       self.GPUTextureUsage.COPY_SRC : 0) |
                     (wgpuVisualCadenceEnabled ? self.GPUTextureUsage.TEXTURE_BINDING : 0)
@@ -11557,7 +11748,11 @@ function drainWebGpuCmdRing(source = "presentation") {
                 }
               }
             }
-            const cur = renderGpu.context.getCurrentTexture();
+            // Paced display: a frame's backbuffer passes all render into one
+            // offscreen slot, shown later by refreshWgpuDisplay. Without a
+            // slot, render straight to the canvas as before.
+            if (!wgpuPendingDisplaySlot) wgpuPendingDisplaySlot = acquireWgpuDisplaySlot();
+            const cur = wgpuPendingDisplaySlot?.tex || renderGpu.context.getCurrentTexture();
             lastBackbufferTexture = cur;
             currentBackbufferSourceTextureId = 0;
             colorView = cur.createView();
@@ -13035,6 +13230,8 @@ function drainWebGpuCmdRing(source = "presentation") {
           diagDrainGrids();
           mapWgpuVisualCadenceSlot(visualCadenceSlot, submittedPresent);
           if (!submittedPresent) {
+            releaseWgpuDisplaySlot(wgpuPendingDisplaySlot);
+            wgpuPendingDisplaySlot = null;
             const rejectionReason = lastSubmitFailureReason ||
               (wgpuReplayFatal?.scope === "submit-error" ? "submit-error" :
                 wgpuReplayFatal ? "replay-fatal" : "unknown");
@@ -13067,7 +13264,13 @@ function drainWebGpuCmdRing(source = "presentation") {
           // the legacy repaint loop cannot race this submitted frame before
           // the current command-ring drain returns.
           cmdRingOwnsCanvas = true;
-          recordPresentedFrame(api?.getFrame?.() ?? 0);
+          if (wgpuPendingDisplaySlot) {
+            // Counted when refreshWgpuDisplay actually shows it.
+            queueWgpuDisplaySlot(wgpuPendingDisplaySlot, api?.getFrame?.() ?? 0);
+            wgpuPendingDisplaySlot = null;
+          } else {
+            recordPresentedFrame(api?.getFrame?.() ?? 0);
+          }
           scheduleDetachedWgpuBitmap(q);
           webGpuExecStats.present++;
           if (webGpuExecStats.present - webGpuExecStats.lastLog >= 120) {
