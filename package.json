@@ -11,7 +11,7 @@
     "test:browser": "node tests/browser.mjs",
     "test:layout": "node tests/layout-browser.mjs",
     "check": "npm run smoke && npm test",
-    "test:e2e": "node tests/browser.mjs && node tests/layout-browser.mjs && node tests/core-browser.mjs && node tests/renderer-browser.mjs",
+    "test:e2e": "node tests/browser.mjs && node tests/layout-browser.mjs && node tests/core-browser.mjs && node tests/renderer-browser.mjs && npm run test:lan",
     "test:regression": "npm test",
     "test:core": "node tests/core-browser.mjs",
     "test:live": "node tests/live-archive.mjs",
@@ -21,7 +21,8 @@
     "watch": "node tools/watch-ui.mjs",
     "import:runtime": "node tools/import-runtime.mjs",
     "test:ios": "node tests/ios-webkit.mjs",
-    "test:automation": "node tools/test-automation.mjs"
+    "test:automation": "node tools/test-automation.mjs",
+    "test:lan": "node tests/lan-browser.mjs && node tests/lan-lobby-browser.mjs"
   },
   "devDependencies": {
     "playwright": "^1.64.0",

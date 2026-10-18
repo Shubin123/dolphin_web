@@ -19,8 +19,8 @@
     },
     {
       "path": "index.html",
-      "size": 32144,
-      "sha256": "1b43f56f2e5e509020ac083bc9d7647995e63e29342a00ce19ecacfd108e248e"
+      "size": 35098,
+      "sha256": "d28423eedab64c35939901c97bdb271317453b16efc939eb289a8772d29dc346"
     },
     {
       "path": "progress/mario-galaxy-2.json",
@@ -29,8 +29,8 @@
     },
     {
       "path": "src/app.js",
-      "size": 67313,
-      "sha256": "4e6eda9fe2fbb4796d6d96250a1cf77c2e32655715e936f6f469128a36d14ee1"
+      "size": 67623,
+      "sha256": "9d3efdef006ab8e44baa4b93e240b71da7aefeb52cc3c30c51f5f9a36b853b9a"
     },
     {
       "path": "src/azahar-theme.css",
@@ -51,6 +51,16 @@
       "path": "src/button-source.js",
       "size": 1104,
       "sha256": "5e17b2abf64d32e8f4b4f1417629b2fced509db0aa121e43b6b60a50dd63f809"
+    },
+    {
+      "path": "src/lan-server.js",
+      "size": 1608,
+      "sha256": "f28a51d364bce5661d16c82af41c5acafbcf5a8ab8cb52050bffd7160e11a89d"
+    },
+    {
+      "path": "src/lan.js",
+      "size": 12699,
+      "sha256": "657229e8e34669184d8ab3ed5d85573ff1d4963a6b0acc5cc9e55c086234f5b7"
     },
     {
       "path": "src/library-download.js",
@@ -94,8 +104,8 @@
     },
     {
       "path": "src/styles.css",
-      "size": 27882,
-      "sha256": "cd096b64380a9a58435f94e8520539553fb7ce39265bb24045a53a85791fe3d8"
+      "size": 28247,
+      "sha256": "51d36c3ea5dd8a4a0eeb0868165a805b044888bb9a1047973f3948e34dada341"
     },
     {
       "path": "src/widget-layout.js",

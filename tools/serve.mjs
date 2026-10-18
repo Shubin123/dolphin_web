@@ -1,3 +1,4 @@
+import { createLobbyHandler } from "./lan-lobbies.mjs";
 import { spawn } from "node:child_process";
 import { createReadStream, statSync } from "node:fs";
 import { createServer } from "node:http";
@@ -43,7 +44,9 @@ function resolveRequestPath(url) {
   }
 }
 
-const server = createServer((request, response) => {
+const handleLobby = createLobbyHandler();
+const server = createServer(async (request, response) => {
+  if (await handleLobby(request, response)) return;
   const filePath = resolveRequestPath(request.url || "/");
 
   if (!filePath) {

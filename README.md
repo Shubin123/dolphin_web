@@ -84,3 +84,17 @@ Wii mappings: X/Z = A/B, V/B = 1/2, Enter/C = +/−, H = Home, Q/E = Nunchuk C/Z
 ### iOS validation
 
 `npm run test:ios` verifies real WASM execution and persistent saves in mobile-emulated WebKit, including the Pages isolation path and native touch inputs. Physical iPhone/iPad performance remains untested; there is no iOS guarantee. See [device validation and memory limits](docs/ios.md).
+
+### LAN play and saves
+
+Run `npm start` to start the included local play server and website. The server keeps lobbies in memory; restarting it closes them. For other devices, set `HOST=0.0.0.0` and expose the server through HTTPS using a trusted reverse proxy; plain HTTP LAN addresses lack browser security features required by the emulator. Public and private lobbies both belong to this LAN server; there is no global lobby service.
+
+In **LAN Play**, enter the play server's URL on both devices and choose **Connect to server**. Open a game on the host, optionally select **Public lobby**, then choose **Host lobby**. Public lobbies appear in the server's lobby list. Private lobbies stay unlisted: share the private invitation shown to the host, then paste it on the guest and choose **Join lobby**. Public means discoverable on that server; private means invitation-only, not a user account or password system.
+
+LAN controls and save sharing are enabled only while connected to the play server and a paired lobby peer. Leaving the lobby, disconnecting, or losing server contact closes peer play, releases controls and disables sharing. The server checks sessions by polling; a failed request disconnects the client and idle server sessions expire after 15 seconds. Received saves are cleared when the peer disconnects. Use **Leave lobby** to keep browsing the server or **Disconnect from server** to end the session.
+
+The host streams canvas video; guest buttons control the host's same player alongside local input. Audio stays on the host. This is remote play, not native Dolphin NetPlay, a second controller port, or emulated game networking. Connections use direct WebRTC with no STUN/TURN service or media relay; the play server handles lobby discovery and signaling; network isolation/firewalls can prevent pairing. Keep both pages open and disconnect before changing games or renderers.
+
+After connecting, either device can send an existing downloaded `.sav` up to 64 MB. Received saves remain in memory until downloaded or explicitly loaded; loading requires the matching game and core build. Use Save states to capture/download progress first. Memory card and Wii NAND sharing are not supported.
+
+`npm run test:lan` tests two real browser peers: signaling, decoded video, remote input messages and release, bidirectional chunked save bytes, invalid files, and disconnect cleanup. These local-browser checks do not certify connectivity between physical LAN devices. The native execution tests in `npm run test:e2e` also pair through the LAN server lobby widget and verify that remote A input and disconnect release reach Dolphin.

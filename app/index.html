@@ -190,6 +190,38 @@
                             <p class="muted save-state-note">Save stores your current progress; saving again replaces that slot. To continue later, open the same game and choose Load. Slots stay in this browser for the same emulator build. Download .sav for a backup. The Save state / Load state buttons use the selected slot, including in fullscreen.</p>
                             </section>
 
+                            <section class="panel-block card" data-widget="lanplay" id="lanPlay">
+                            <h2>LAN Play</h2>
+                            <p class="muted">Share the host screen and Wii controls on one network. Host runs the game; guest controls the same player. Video only, no streamed audio. Open this site over HTTPS (or localhost) on both devices.</p>
+                            <label>Play server URL<input id="lanServerUrl" type="url" placeholder="https://play-server.example"></label>
+                            <button id="lanConnect" type="button">Connect to server</button>
+                            <button id="lanDisconnect" type="button">Disconnect from server</button>
+                            <fieldset id="lanLobbyActions" disabled>
+                            <legend>Server lobbies</legend>
+                            <label>Lobby name<input id="lanLobbyName" maxlength="60" value="LAN game"></label>
+                            <label><input id="lanPublic" type="checkbox">Public lobby (listed on this server)</label>
+                            <button id="lanHost" type="button">Host lobby</button>
+                            <label>Private invitation or public lobby ID<input id="lanInvite"></label>
+                            <button id="lanJoin" type="button">Join lobby</button>
+                            <button id="lanLeave" type="button">Leave lobby</button>
+                            <p id="lanRoom" role="status">No lobby joined.</p>
+                            <ul id="lanLobbies" aria-label="Public lobbies"></ul>
+                            </fieldset>
+                            <p id="lanStatus" role="status" aria-live="polite">Disconnected.</p>
+                            <video id="lanVideo" controls autoplay playsinline muted hidden></video>
+                            <div id="lanControls" aria-label="Remote controls"></div>
+                            </section>
+                            <section class="panel-block card" data-widget="lansaves">
+                            <h2>LAN Saves</h2>
+                            <p class="muted">Connect to a play server and join a lobby through LAN Play, then send a downloaded .sav (up to 64 MB). Received files load only when you choose Load, with the matching game and emulator build. These are save states, not memory card files.</p>
+                            <fieldset id="lanSaveActions" disabled><legend>Connected lobby saves</legend>
+                            <label>Send .sav<input id="lanSend" type="file" accept=".sav"></label>
+                            <p id="lanReceived" role="status">No save received.</p>
+                            <button id="lanDownload" type="button" disabled>Download received save</button>
+                            <button id="lanLoad" type="button" disabled>Load received save</button>
+                            </fieldset>
+                            </section>
+
                             <form class="settings-panel card" data-widget="settings" data-default-span="2" id="settingsForm">
                             <h2>Settings</h2>
 <span id="settingsSummary">Startup</span>

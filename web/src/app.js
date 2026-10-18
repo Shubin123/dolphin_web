@@ -1,3 +1,4 @@
+import { wireLanWidgets } from "./lan.js";
 import { createButtonSource } from "./button-source.js";
 import { wireMobileControls } from "./mobile-controls.js";
 import { wireSaveStatePanel } from "./save-state-panel.js";
@@ -156,6 +157,7 @@ let gamepadInputState = null;
 let lastGamepadInput = null;
 let pointerSource = null;
 let combinedPressed = new Set();
+let lanPressed = new Set();
 let lastFrameInfo = null;
 let lastRuntimeUiTime = -Infinity;
 let lastRuntimeUiState = "";
@@ -305,6 +307,10 @@ const saveStates = wireSaveStatePanel({
     }
     return host.adapter.loadStateFile(new Uint8Array(await file.arrayBuffer()));
   }
+});
+wireLanWidgets({ host, getCanvas: () => elements.screen, allowedControls: CONTROL_LABELS,
+  controls: buttons => { lanPressed = new Set(buttons); syncInput("LAN"); },
+  loadSave: file => saveStates.upload(file)
 });
 wireTransport();
 document.querySelector("#nunchukConnected").addEventListener("change", () => syncInput("Nunchuk"));
@@ -1397,7 +1403,7 @@ function wireGamepadPolling() {
 }
 
 function syncInput(source) {
-  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed, mouseMotionPressed);
+  combinedPressed = mergePressedSets(keyboardPressed, touchPressed, gamepadPressed, mousePressed, mouseMotionPressed, lanPressed);
   const analog = { ...gamepadInputState, ...mouseInputState, ...touchInputState };
   // Retained absolute aim belongs to the device that most recently moved it.
   // A previous screen tap must not pin the cursor over later mouse/pad input.
@@ -1406,7 +1412,7 @@ function syncInput(source) {
     analog.cStickX = pointer?.cStickX ?? 128;
     analog.cStickY = pointer?.cStickY ?? 128;
   }
-  const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed, mouseMotionPressed);
+  const digitalPressed = mergePressedSets(keyboardPressed, touchPressed, mousePressed, mouseMotionPressed, lanPressed);
   const state = inputStateFromPressed(combinedPressed, analog, digitalPressed);
   if (!document.querySelector("#nunchukConnected").checked) state.mask |= BUTTONS.NUNCHUK_DISCONNECTED;
   host.setInputState(state);

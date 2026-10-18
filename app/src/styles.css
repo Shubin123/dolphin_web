@@ -1295,3 +1295,9 @@ body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-are
 @media (prefers-reduced-motion: reduce) {
   .boot-progress, .boot-progress-fill { transition: none; }
 }
+
+#lanPlay fieldset, #lanSaveActions { min-width: 0; }
+#lanPlay input:not([type="checkbox"]), #lanSend { display: block; width: 100%; min-width: 0; box-sizing: border-box; }
+#lanRoom, #lanLobbies { overflow-wrap: anywhere; }
+#lanVideo { width: 100%; background: #000; }
+#lanControls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; touch-action: none; }

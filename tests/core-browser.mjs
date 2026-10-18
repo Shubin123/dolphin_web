@@ -1,3 +1,4 @@
+import { createLobbyHandler } from '../tools/lan-lobbies.mjs';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdtemp, rm } from 'node:fs/promises';
@@ -6,7 +7,9 @@ import { tmpdir } from 'node:os';
 import puppeteer from 'puppeteer-core';
 import { makeHomebrewDisc } from './helpers/homebrew-disc.mjs';
 const root = resolve('web');
+const lobbyHandler = createLobbyHandler();
 const server = createServer(async (request,response) => {
+  if (await lobbyHandler(request, response)) return;
   try {
     const path = decodeURIComponent(new URL(request.url,'http://localhost').pathname);
     const file = resolve(root, path.slice(1) || 'index.html');
@@ -117,6 +120,35 @@ try {
     const state=await window.__host.adapter.request('validationReadWebInput');
     return state.mask===0 && state.buttons===0 && state.wiiA===0;
   },{timeout:10000});
+  // Pair through a server lobby and prove remote input reaches the native core.
+  assert.equal(await page.$eval('#lanLobbyActions', el => el.disabled), true);
+  assert.equal(await page.$eval('#lanSaveActions', el => el.disabled), true);
+  await page.$eval('#lanConnect', button => button.click());
+  await page.waitForFunction(() => !document.querySelector('#lanLobbyActions').disabled);
+  await page.$eval('#lanHost', button => button.click());
+  await page.waitForFunction(() => document.querySelector('#lanRoom').textContent.includes('Private invitation:'));
+  await page.evaluate(async () => {
+    const { createLanSession } = await import('./src/lan.js');
+    const { createPlayServer } = await import('./src/lan-server.js');
+    window.lanGuest = createLanSession();
+    window.guestServer = createPlayServer({ onDisconnect: () => window.lanGuest.close(), onUpdate: async update => {
+      for (const event of update.events) if (event.type === 'signal') {
+        const answer = await window.lanGuest.answer(JSON.stringify(event.description));
+        await window.guestServer.request('signal', { description: JSON.parse(answer) });
+      }
+    } });
+    await window.guestServer.connect(location.origin);
+    const code = document.querySelector('#lanRoom').textContent.split('Private invitation: ')[1];
+    await window.guestServer.request('join', { code });
+  });
+  await page.waitForFunction(() => window.lanGuest.connected);
+  await page.evaluate(() => window.lanGuest.controls(['A']));
+  await page.waitForFunction(async () => (await window.__host.adapter.request('validationReadWebInput')).wiiA === 1, {timeout:10000});
+  await page.$eval('#lanDisconnect', button => button.click());
+  await page.waitForFunction(async () => (await window.__host.adapter.request('validationReadWebInput')).wiiA === 0, {timeout:10000});
+  assert.equal(await page.$eval('#lanSaveActions', el => el.disabled), true);
+  await page.evaluate(() => window.guestServer.disconnect());
+  console.log('PASS: play-server lobby gating, native remote A consumption and disconnect release.');
   // A quick tap must survive long enough for native input polling.
   await page.keyboard.press('x');
   await page.waitForFunction(async()=> (await window.__host.adapter.request('validationReadWebInput')).wiiA===1,{timeout:10000,polling:10});
@@ -230,8 +262,8 @@ try {
   assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) .save-slot-game',el=>el.textContent),await page.evaluate(()=>window.__host.game.name.replace(/\.(iso|gcm|rvz|wbfs|wad|dol|elf|ciso|gcz)$/i,'')),'saved slots show the game name');
   await page.waitForFunction(()=>!document.querySelector('#saveStatePanel .save-slot:nth-child(2) button[aria-label="Load slot 2"]').disabled,{timeout:60000});
   const beforeSlotLoad=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
-  await page.click('#loadButton');
-  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
+  await page.$eval('#loadButton', button => button.click());
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000}).catch(async error => { console.log('Save-load diagnostic', await page.$eval('[data-save-status]', el => el.textContent)); throw error; });
   const loadedSlot=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   assert(loadedSlot.loadedCheckpointGeneration>beforeSlotLoad.loadedCheckpointGeneration,'Load must restore a native checkpoint');
   assert(loadedSlot.loadedCheckpointTicks<=beforeSlotLoad.coreTicks,'Load must restore earlier guest execution');
@@ -394,7 +426,7 @@ try {
     throw error;
   });
   assert.equal(await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',el=>el.checked),true);
-  await page.click('#loadButton');
+  await page.$eval('#loadButton', button => button.click());
   await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
   const persistedSlot=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   assert.deepEqual(await storedSlotDigest(),savedDigest,'reopening must preserve the exact saved bytes');
@@ -444,7 +476,7 @@ try {
   assert.deepEqual(await storedSlotDigest(),savedDigest,'reset must keep native save-state bytes');
   assert.equal(await page.evaluate(()=>window.__audio.muted),false,'reset restores automatic audio on game boot');
   await page.$eval('#saveStatePanel .save-slot:nth-child(2) input',control=>control.click());
-  await page.click('#loadButton');
+  await page.$eval('#loadButton', button => button.click());
   await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent==='Loaded slot 2.',{timeout:60000});
   const resetLoaded=await page.evaluate(()=>window.__host.adapter.request('validationReadCoreProgress'));
   assert(resetLoaded.loadedCheckpointGeneration>0,'save states must still load after resetting all preferences');
